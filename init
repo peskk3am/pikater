@@ -1,0 +1,5 @@
+$a Agent_ARFFReader Reader null
+$a Agent_RBFNetwork rbf1 -B 1
+$a Agent_RBFNetwork rbf2 -B 2
+# $a Agent_MultilayerPerceptron mp1 null
+$a Agent_Manager manager rbf1 rbf2

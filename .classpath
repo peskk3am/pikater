@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry exported="true" kind="lib" path="D:/diplomka/jade/jade/lib/jadeTools.jar"/>
+	<classpathentry exported="true" kind="lib" path="D:/diplomka/jade/jade/lib/http.jar"/>
+	<classpathentry exported="true" kind="lib" path="D:/diplomka/jade/jade/lib/iiop.jar"/>
+	<classpathentry exported="true" kind="lib" path="D:/diplomka/jade/jade/lib/jade.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files/Weka-3-4/weka-src.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files/Weka-3-4/remoteExperimentServer.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files/Weka-3-4/weka.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
