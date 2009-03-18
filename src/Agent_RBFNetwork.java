@@ -43,7 +43,6 @@ public class Agent_RBFNetwork extends Agent_ComputingAgent{
 			// train classifier
 			RBFNetwork cls = new RBFNetwork();
 			try {
-				System.out.println("delka"+OPTIONS.length);
 				if (OPTIONS.length > 0){
 					cls.setOptions(OPTIONS);
 				}
@@ -53,11 +52,7 @@ public class Agent_RBFNetwork extends Agent_ComputingAgent{
 				
 				// write out net parameters
 				System.out.print(getLocalName()+": ");
-				for (String s : OPTIONS) {
-					System.out.print(s+" ");
-				}
-				System.out.println();
-				
+
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

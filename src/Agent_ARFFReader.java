@@ -21,7 +21,8 @@ public class Agent_ARFFReader extends Agent {
 	// data read from file
 	protected Instances data;
 	// path to the file
-	private String path = "D:/diplomka/eclipse/diplomka/";
+	// private String path = "D:/diplomka/eclipse/diplomka/";
+	private String path = System.getProperty("user.dir")+"\\";
 	private boolean working = false;
 
 	

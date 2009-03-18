@@ -78,13 +78,13 @@ public abstract class Agent_ComputingAgent extends Agent{
              // description.addProtocols(InteractionProtocol.FIPA_REQUEST);
              description.setName(getAID());
              
-             // the service descriptioon describes a particular service we
+             // the service description describes a particular service we
              // provide.
              ServiceDescription servicedesc = new ServiceDescription();
-             //the name of the service provded (we just re-use our agent name)
+             //the name of the service provided (we just re-use our agent name)
              servicedesc.setName(getLocalName());
              
-             //The service type should be a unique string associtated with
+             //The service type should be a unique string associated with
              //the service.
              servicedesc.setType(getAgentType()); 
 
@@ -95,8 +95,15 @@ public abstract class Agent_ComputingAgent extends Agent{
              // servicedesc.addProtocols(InteractionProtocol.FIPA_REQUEST);
              
              description.addServices(servicedesc);
-             // servicedest.setT
 
+
+             // add "computing agent service"
+             ServiceDescription servicedesc_g = new ServiceDescription();
+
+             servicedesc_g.setName(getLocalName());
+             servicedesc_g.setType("ComputingAgent"); 
+             description.addServices(servicedesc_g);
+             
              
              //register synchronously registers us with the DF, we may
              //prefer to do this asynchronously using a behaviour.
