@@ -263,7 +263,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 protected boolean getData(){ 
 		 // send message to ARFFReader agent
          
-		 // The list of known seller agents
+		 // The list of known reader agents
 		 AID[] ARFFReaders;
 		 AID reader;
 		 
@@ -274,7 +274,7 @@ public abstract class Agent_ComputingAgent extends Agent{
          template.addServices(sd);
          try {
          	DFAgentDescription[] result = DFService.search(this, template); 
-         	System.out.println("Found the following ARFFReader agent:");
+         	System.out.println("Found the following ARFFReader agents:");
          	ARFFReaders = new AID[result.length];
            
            for (int i = 0; i < result.length; ++i) {

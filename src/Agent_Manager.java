@@ -29,7 +29,7 @@ public class Agent_Manager extends Agent{
 	private int nResponders;	
 	
 	protected void setup(){
-			
+			// register with DF
 			DFAgentDescription dfd = new DFAgentDescription();
 			ServiceDescription sd = new ServiceDescription();   
 			sd.setType("Manager"); 
@@ -44,15 +44,38 @@ public class Agent_Manager extends Agent{
 			}  
 		  	System.out.println("Manager "+getLocalName()+" is alive and waiting for CFP...");
 		  			  	
+		  	// find responders
+			AID[] Responders = null;
+
+		  	DFAgentDescription template = new DFAgentDescription();
+            ServiceDescription sd_responder = new ServiceDescription();
+            sd_responder.setType("ComputingAgent");
+	        template.addServices(sd_responder);
+	        try {
+	         	DFAgentDescription[] result = DFService.search(this, template); 
+	         	System.out.println("Found the following computing agents:");
+	            nResponders = result.length;
+
+	         	Responders = new AID[nResponders];
+	            
+	           for (int i = 0; i < nResponders; ++i) {
+	        	   Responders[i] = result[i].getName();
+		           System.out.println(Responders[i].getName());
+	           }
+
+	         }
+	         catch (FIPAException fe) {
+	           fe.printStackTrace();
+	         }
+		  	
 		  	
 		  	Object[] args = getArguments();
-		  	if (args != null && args.length > 0) {
-		  		nResponders = args.length;
+		  	if (Responders != null && nResponders > 0) {
 		  		System.out.println("Number of responders: "+nResponders);
 		  		
 		  		// Fill the CFP message
 		  		ACLMessage msg = new ACLMessage(ACLMessage.CFP);
-		  		for (int i = 0; i < args.length; ++i) {
+		  		for (int i = 0; i < nResponders; ++i) {
 		  			msg.addReceiver(new AID((String) args[i], AID.ISLOCALNAME));
 		  		}
 					msg.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
