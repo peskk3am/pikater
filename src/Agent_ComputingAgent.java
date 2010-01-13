@@ -1,13 +1,16 @@
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+//import java.io.BufferedReader;
+//import java.io.FileNotFoundException;
+//import java.io.FileReader;
+//import java.io.IOException;
+import java.io.*;
 
 import java.util.*;
 
 import weka.core.Instances;
+import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.functions.MultilayerPerceptron;
+import weka.classifiers.functions.RBFNetwork;
 
 
 import jade.core.AID;
@@ -36,23 +39,172 @@ import jade.content.onto.basic.*;
 import jade.content.lang.sl.*;
 
 public abstract class Agent_ComputingAgent extends Agent{
+
+
+	 public enum states {
+		    NEW, TRAINED 
+		 }
 	 
-	 protected String fileName;
+	 /* common properties for all computing agents */
+	 public String fileName;
+	 public states state;
+
 	 
-	 // data read from file
-	 protected Instances data;
-	 
+	 protected Instances data; // data read from fileName file
+	 Instances train;  // TODO - divide data
+	 Instances test;
+
 	 protected String[] OPTIONS;
 	 protected String[] OPTIONS_;
 	 protected String[] OPTIONS_ARGS;
 	 
 	 protected Object[] args;
 	 
-	 boolean working = false;
+	 	 
+	 boolean working = false;  // TODO -> state?
 	
-	 protected abstract double proceed();
+	 protected abstract void train();
+	 protected abstract double test();
+	 
 	 protected abstract String getAgentType();
+	 
+	 protected abstract Object getModelObject();
+	 protected abstract boolean setModelObject(Classifier _cls);
+
 	 // protected abstract void registerWithDF();
+
+	 
+	 protected boolean registerWithDF(){
+         //register with the DF
+         
+         DFAgentDescription description = new DFAgentDescription();
+         // the description is the root description for each agent 
+         // and how we prefer to communicate. 
+         // description.addLanguages(language.getName());
+         // description.addOntologies(ontology.getName());
+         // description.addProtocols(InteractionProtocol.FIPA_REQUEST);
+         description.setName(getAID());
+         
+         // the service description describes a particular service we
+         // provide.
+         ServiceDescription servicedesc = new ServiceDescription();
+         //the name of the service provided (we just re-use our agent name)
+         servicedesc.setName(getLocalName());
+         
+         //The service type should be a unique string associated with
+         //the service.s
+         String typeDesc;
+         if (state == states.TRAINED){ // add fileName to service description
+        	 typeDesc = getAgentType() +" trained on "+fileName;
+         }
+         else{
+        	 typeDesc = getAgentType();
+         }
+         servicedesc.setType(typeDesc); 
+
+         //the service has a list of supported languages, ontologies
+         //and protocols for this service.
+         // servicedesc.addLanguages(language.getName());
+         // servicedesc.addOntologies(ontology.getName());
+         // servicedesc.addProtocols(InteractionProtocol.FIPA_REQUEST);
+         
+         description.addServices(servicedesc);
+
+
+         // add "computing agent service"
+         ServiceDescription servicedesc_g = new ServiceDescription();
+
+         servicedesc_g.setName(getLocalName());
+         servicedesc_g.setType("ComputingAgent"); 
+         description.addServices(servicedesc_g);
+         
+         
+         //register synchronously registers us with the DF, we may
+         //prefer to do this asynchronously using a behaviour.
+         try {
+                 DFService.register(this,description);
+                 System.out.println(getLocalName() + ": successfully registered with DF; service type: "+typeDesc);
+                 return true;
+         }catch(FIPAException e){
+                 System.err.println(getLocalName() + ": error registering with DF, exiting:" + e);
+                 // doDelete();
+                 return false;
+                 
+         }
+	 }  // end registerWithDF
+	 
+	 
+	 protected void deregisterWithDF(){
+		   try {
+			     DFService.deregister(this);
+		   } catch (FIPAException e) {
+				   System.err.println(getLocalName() + " failed to deregister with DF.");
+			       // doDelete();
+		   }  
+	 }  // end deregisterWithDF
+	 
+
+	 public boolean saveAgent(){
+		 try{
+			 ObjectOutputStream oos = new ObjectOutputStream(
+			                            new FileOutputStream("saved/"+getLocalName()+".model"));
+			 
+ 		     // save model + header
+ 		     Vector v = new Vector();
+ 		     v.add(getModelObject());
+ 		     v.add(new Instances(data, 0));
+ 		     v.add(fileName);
+ 		     v.add(state);
+
+ 			 oos.writeObject(v);
+			 oos.flush();
+			 oos.close();
+			 System.out.println("Saving... : Description:"+this.toString());
+			 return true;
+
+		 }
+		 catch (Exception e){
+		 	System.out.println(e);
+		 	return false;
+		 }
+	 } // end saveAgent
+
+
+	 public boolean loadAgent(String agentName){
+		 try{
+			 // deserialize model + header
+			 ObjectInputStream ois = new ObjectInputStream(
+                     new FileInputStream("saved/"+agentName+".model"));
+			 Vector v = (Vector) ois.readObject();
+			 
+			 Classifier cls = (Classifier) v.get(0);   // TODO this isn't general enough - cls doesn't have to be derived from Classifier
+			 Instances header = (Instances) v.get(1);  // TODO this is not used so far
+			 // System.out.println(agentName+" Header: "+header); 
+			 fileName = (String) v.get(2);
+			 state = (states) v.get(3);
+			 
+			 // TODO watch "working" variable
+			 setModelObject(cls);			 
+			 ois.close();		 
+			 
+			 System.out.println("Loading... : Description: "+this.toString());
+			 System.out.println("                          fileName: "+fileName);
+			 System.out.println("                          state: "+state);
+			 
+			 
+			 // re-register with DF
+			 // TODO what if it fails?
+			 // deregisterWithDF();
+			 // registerWithDF();
+			 
+			 return true;
+		 }
+		 catch (Exception e){
+			 	System.out.println(e);
+			 	return false;
+		}
+	 }  // end loadAgent
+
 	 
 	 
 	 protected void setup() {		 
@@ -68,55 +220,6 @@ public abstract class Agent_ComputingAgent extends Agent{
              // seed  = System.currentTimeMillis();
              // System.out.println(getLocalName()+ ": Has started, waiting for information queries");
              
-             //register with the DF
-             
-             DFAgentDescription description = new DFAgentDescription();
-             // the description is the root description for each agent 
-             // and how we prefer to communicate. 
-             // description.addLanguages(language.getName());
-             // description.addOntologies(ontology.getName());
-             // description.addProtocols(InteractionProtocol.FIPA_REQUEST);
-             description.setName(getAID());
-             
-             // the service description describes a particular service we
-             // provide.
-             ServiceDescription servicedesc = new ServiceDescription();
-             //the name of the service provided (we just re-use our agent name)
-             servicedesc.setName(getLocalName());
-             
-             //The service type should be a unique string associated with
-             //the service.
-             servicedesc.setType(getAgentType()); 
-
-             //the service has a list of supported languages, ontologies
-             //and protocols for this service.
-             // servicedesc.addLanguages(language.getName());
-             // servicedesc.addOntologies(ontology.getName());
-             // servicedesc.addProtocols(InteractionProtocol.FIPA_REQUEST);
-             
-             description.addServices(servicedesc);
-
-
-             // add "computing agent service"
-             ServiceDescription servicedesc_g = new ServiceDescription();
-
-             servicedesc_g.setName(getLocalName());
-             servicedesc_g.setType("ComputingAgent"); 
-             description.addServices(servicedesc_g);
-             
-             
-             //register synchronously registers us with the DF, we may
-             //prefer to do this asynchronously using a behaviour.
-             try{
-                     DFService.register(this,description);
-             }catch(FIPAException e){
-                     System.err.println(getLocalName() + ": error registering with DF, exiting:" + e);
-                     doDelete();
-                     return;
-                     
-             }
-		 
-		 
 	  	System.out.println(getAgentType()+" "+getLocalName()+" is alive...");
 
 		args = getArguments();
@@ -124,19 +227,27 @@ public abstract class Agent_ComputingAgent extends Agent{
 		OPTIONS_ARGS = new String[args.length];
 		
 		if (args != null && args.length > 0) {
-		
-			// parameters of the network
-			for (int i=0; i < args.length; i++){
-				OPTIONS_ARGS[i] = (String) args[i];
-			}
-			/*
-			// write out parameters
-			for (String s : OPTIONS_ARGS) {
-				System.out.print(s+" ");
-			}
-			*/	
+		    if (args[0].equals("load")){
+		    	loadAgent(getLocalName());
+		    	args = new String[0];
+		    }
+		    else{
+			
+				// parameters of the network
+				for (int i=0; i < args.length; i++){
+					OPTIONS_ARGS[i] = (String) args[i];
+				}
+				
+				// write out parameters
+				for (String s : OPTIONS_ARGS) {
+					System.out.print(s+" ");
+				}
+					
+		    }
 		}
-	  	
+		 
+		registerWithDF();
+
 	  	MessageTemplate template = MessageTemplate.and(
 	  	  		MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET),
 	  	  		MessageTemplate.MatchPerformative(ACLMessage.CFP) );
@@ -144,7 +255,8 @@ public abstract class Agent_ComputingAgent extends Agent{
 	  			addBehaviour(new ContractNetResponder(this, template) {
 	  				protected ACLMessage prepareResponse(ACLMessage cfp) throws NotUnderstoodException, RefuseException {
 	  					System.out.println("Agent "+getLocalName()+": CFP received from "+cfp.getSender().getName()+". Parameters are "+cfp.getContent());
-	// 602939833 Vrtatko  				    	
+  				    		
+  				    	
 	  					if (!working) {					
 	  						System.out.println("Agent "+getLocalName()+": goal accepted.");
 	  						String parameters = cfp.getContent();
@@ -177,12 +289,14 @@ public abstract class Agent_ComputingAgent extends Agent{
 	  						//}
 	  						
 	  						// write out OPTIONS
-	  						for (int i=0; i<OPTIONS.length; i++){
-	  							System.out.println(i+" "+OPTIONS[i]);
-	  						}
+  							//System.out.println("OPTIONS array:");
+	  						//for (int i=0; i<OPTIONS.length; i++){
+	  						//	System.out.println("   "+i+" "+OPTIONS[i]);
+	  						//}
 	  						
 	  						
 	  						getData(); // if == false, no reader agent found
+	  						
 	  						
 	  						double result = 100;
 	  						boolean done = false; 
@@ -202,7 +316,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 		  				        // Reply received
 		  				    	try{
 		  				    		data = (Instances) reply.getContentObject();
-		  				    		System.out.println("Data:"+data);  
+		  				    		System.out.println("Data: "+data);  
 		  						    
 		  							/* 
 		  							 The class index indicate the target attribute used for
@@ -213,7 +327,13 @@ public abstract class Agent_ComputingAgent extends Agent{
 		  							*/		  						    
 		  				    		data.setClassIndex(data.numAttributes() - 1);
 		  				    		
-		  				    		result = proceed();
+			  						test = data;
+			  						train = data;
+		  				    		
+		  				    		if (state != states.TRAINED) { train(); }
+		  				    		// saveAgent();
+		  				    		// loadAgent(getLocalName());
+		  				    		result = test();
 		  				    	}
 		  				    	catch (Exception e){
 		  							// TODO Auto-generated catch block
@@ -239,6 +359,8 @@ public abstract class Agent_ComputingAgent extends Agent{
 	  						System.out.println("Agent "+getLocalName()+": is working now");
 	  						throw new RefuseException("Agent "+getLocalName()+" is busy");
 	  					}
+	  					
+	  					
 	  				}
 	  				
 	  				protected ACLMessage prepareResultNotification(ACLMessage cfp, ACLMessage propose,ACLMessage accept) throws FailureException {
@@ -259,6 +381,18 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 } // end setup
 	 
 	 
+	 
+	 public boolean setConfiguration(String[] CONFIGURATION){
+		  /* INPUT: weka parameters
+		  * Fills the OPTIONS array.
+		  */
+		 OPTIONS = CONFIGURATION;
+		 
+		 return true;
+	 }  // end loadConfiguration
+	 
+	
+ 
 	 
 	 protected boolean getData(){ 
 		 // send message to ARFFReader agent

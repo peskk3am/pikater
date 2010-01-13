@@ -29,7 +29,9 @@ public class Agent_Manager extends Agent{
 	private int nResponders;	
 	
 	protected void setup(){
-			// register with DF
+			doWait(1500);  // 1.5 seconds
+		
+		    // register with DF
 			DFAgentDescription dfd = new DFAgentDescription();
 			ServiceDescription sd = new ServiceDescription();   
 			sd.setType("Manager"); 
@@ -51,8 +53,10 @@ public class Agent_Manager extends Agent{
             ServiceDescription sd_responder = new ServiceDescription();
             sd_responder.setType("ComputingAgent");
 	        template.addServices(sd_responder);
+	        
+	        DFAgentDescription[] result = null;
 	        try {
-	         	DFAgentDescription[] result = DFService.search(this, template); 
+	         	result = DFService.search(this, template); 
 	         	System.out.println("Found the following computing agents:");
 	            nResponders = result.length;
 
@@ -64,7 +68,7 @@ public class Agent_Manager extends Agent{
 	           }
 
 	         }
-	         catch (FIPAException fe) {
+	         catch (FIPAException fe) {  // TODO osetrit, kdyz result zustane prazdny
 	           fe.printStackTrace();
 	         }
 		  	
@@ -76,7 +80,8 @@ public class Agent_Manager extends Agent{
 		  		// Fill the CFP message
 		  		ACLMessage msg = new ACLMessage(ACLMessage.CFP);
 		  		for (int i = 0; i < nResponders; ++i) {
-		  			msg.addReceiver(new AID((String) args[i], AID.ISLOCALNAME));
+		  			//msg.addReceiver(new AID((String) args[i], AID.ISLOCALNAME));
+		  		    msg.addReceiver(result[i].getName());
 		  		}
 					msg.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
 					// We want to receive a reply in 30 secs
@@ -99,7 +104,8 @@ public class Agent_Manager extends Agent{
 							if (failure.getSender().equals(myAgent.getAMS())) {
 								// FAILURE notification from the JADE runtime: the receiver
 								// does not exist
-								System.out.println("Responder does not exist");
+								System.out.println("Manager: Responder does not exist");
+								System.out.println("  "+failure.getSender());
 							}
 							else {
 								System.out.println("Agent "+failure.getSender().getName()+" failed");

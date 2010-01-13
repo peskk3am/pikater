@@ -1,8 +1,10 @@
 import jade.core.AID;
 import jade.core.Agent;
+import jade.domain.DFService;
 
 import jade.wrapper.PlatformController;
 import jade.wrapper.AgentController;
+import jade.wrapper.StaleProxyException;
 
 import java.io.*;
 
@@ -34,6 +36,7 @@ public class Agent_Initiator extends Agent{
                 String delims = "[ ]+";
                 String[] params = line.split(delims);
                 if (params[0].equals("$a")){
+                	
                 	String[] rest_of_the_array;
                 	
                 	rest_of_the_array = new String[params.length - 3];
@@ -42,9 +45,13 @@ public class Agent_Initiator extends Agent{
                 	}
                 	
                 	CreateAgent(params[1], params[2], rest_of_the_array);
-                	
+                	                	
                 }
-                
+                if (params[0].equals("$l")){
+                		String[] p = {"load"};
+						CreateAgent(params[1], params[2], p );
+
+                }
                 
                 line = bufRead.readLine();
                 

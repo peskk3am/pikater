@@ -1,13 +1,11 @@
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-
+import java.io.*;
 
 import weka.core.Instances;
+import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 //import weka.classifiers.trees.J48;
 import weka.classifiers.functions.RBFNetwork;
+import weka.gui.visualize.PrintablePanel;
 
 
 import jade.core.AID;
@@ -26,38 +24,63 @@ import jade.lang.acl.UnreadableException;
 
  */
 public class Agent_RBFNetwork extends Agent_ComputingAgent{
-     
+	 private RBFNetwork cls; 
+	
+	 protected RBFNetwork getModelObject(){
+		 return cls;
+	 }
+
+	 protected boolean setModelObject(Classifier _cls){
+		 try {		 
+			 cls = (RBFNetwork) _cls;
+			 return true;
+		 }
+		 catch (Exception e){
+			 	System.out.println(e);
+			 	return false;
+		}
+	 }
+	 
 	 protected String getAgentType(){
 		 return "RBFNetwork";
 	 }
 	 
-	 
-	 protected double proceed(){
-		 double result = 100;
+     
+	 protected void train(){
 		 working = true;   
-		 System.out.println("Agent "+getLocalName()+": Proceeding...");
+		 System.out.println("Agent "+getLocalName()+": Training...");
 		       
-			Instances train = data;
-			Instances test = data;
-	                 
-			// train classifier
-			RBFNetwork cls = new RBFNetwork();
-			try {
-				if (OPTIONS.length > 0){
-					cls.setOptions(OPTIONS);
-				}
-				
-				cls.buildClassifier(train);
-				OPTIONS = cls.getOptions();
-				
-				// write out net parameters
-				System.out.print(getLocalName()+": ");
 
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+		 cls = new RBFNetwork();
+		 try {
+			if (OPTIONS.length > 0){
+				cls.setOptions(OPTIONS);
 			}
-		    
+			
+			cls.buildClassifier(train);
+			
+			state = states.TRAINED;  // change agent state
+			
+			OPTIONS = cls.getOptions();
+			
+			// write out net parameters
+			System.out.print(getLocalName()+": ");
+
+	 	 } catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		 }
+		 
+		 working = false;
+     }  // end train
+     
+     
+	 protected double test(){
+		 working = true;   
+		 
+		 double result = 100;
+		 System.out.println("Agent "+getLocalName()+": Testing...");
+                
 			// evaluate classifier and print some statistics
 			Evaluation eval;
 			try {
@@ -65,14 +88,15 @@ public class Agent_RBFNetwork extends Agent_ComputingAgent{
 				eval.evaluateModel(cls, test);
 				System.out.println(eval.toSummaryString(getLocalName()+" agent: "+"\nResults\n=======\n", false));
 				result = eval.errorRate();
+				// VisualizePanel();
 				
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		    
-		    working = false;
+		 return result;
+	 }  // end test
+	 
 		    
-		    return result;
-	} // end proceed
 }
