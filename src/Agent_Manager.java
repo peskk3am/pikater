@@ -2,7 +2,6 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.Vector;
 
-import ontology.O_Ontology;
 
 import jade.core.AID;
 import jade.core.Agent;

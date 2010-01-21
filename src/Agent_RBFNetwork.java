@@ -44,8 +44,13 @@ public class Agent_RBFNetwork extends Agent_ComputingAgent{
 	 protected String getAgentType(){
 		 return "RBFNetwork";
 	 }
+	
 	 
-     
+	 protected void getParameters(){
+		 System.out.println(cls.listOptions());
+	 }
+	 
+	 
 	 protected void train(){
 		 working = true;   
 		 System.out.println("Agent "+getLocalName()+": Training...");
@@ -64,7 +69,7 @@ public class Agent_RBFNetwork extends Agent_ComputingAgent{
 			OPTIONS = cls.getOptions();
 			
 			// write out net parameters
-			System.out.print(getLocalName()+": ");
+			System.out.println(getLocalName()+" "+getOptions());
 
 	 	 } catch (Exception e) {
 			// TODO Auto-generated catch block

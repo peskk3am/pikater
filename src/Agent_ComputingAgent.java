@@ -28,6 +28,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 import jade.proto.ContractNetResponder;
+import jade.proto.AchieveREResponder;
 
 import ontology.*;
 
@@ -43,12 +44,15 @@ public abstract class Agent_ComputingAgent extends Agent{
 
 	 public enum states {
 		    NEW, TRAINED 
-		 }
+	 }
+	 	 
 	 
 	 /* common properties for all computing agents */
 	 public String fileName;
 	 public states state;
 
+	 
+	 protected Vector<MyWekaOption> Options;
 	 
 	 protected Instances data; // data read from fileName file
 	 Instances train;  // TODO - divide data
@@ -71,8 +75,8 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 protected abstract Object getModelObject();
 	 protected abstract boolean setModelObject(Classifier _cls);
 
-	 // protected abstract void registerWithDF();
-
+	 protected abstract void getParameters();
+	 
 	 
 	 protected boolean registerWithDF(){
          //register with the DF
@@ -221,7 +225,8 @@ public abstract class Agent_ComputingAgent extends Agent{
              // System.out.println(getLocalName()+ ": Has started, waiting for information queries");
              
 	  	System.out.println(getAgentType()+" "+getLocalName()+" is alive...");
-
+	  	
+	  		  	
 		args = getArguments();
 
 		OPTIONS_ARGS = new String[args.length];
@@ -333,6 +338,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 		  				    		if (state != states.TRAINED) { train(); }
 		  				    		// saveAgent();
 		  				    		// loadAgent(getLocalName());
+		  				  	  	
 		  				    		result = test();
 		  				    	}
 		  				    	catch (Exception e){
@@ -347,6 +353,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 		  			
 	  						}
 	  				      
+	  						getParameters();
 	  						
 	  						// provide a proposal
 	  						ACLMessage propose = cfp.createReply();
@@ -377,12 +384,118 @@ public abstract class Agent_ComputingAgent extends Agent{
 	  			} );
 	  		    
 
+	  			
+	  			
+	  		  	
+	  		  	MessageTemplate template_inform = MessageTemplate.and(
+	  		  		MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST),
+	  		  		MessageTemplate.MatchPerformative(ACLMessage.REQUEST) );
+	  		  		
+	  				addBehaviour(new AchieveREResponder(this, template_inform) {
+	  					protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException, RefuseException {
+	  						System.out.println("Agent "+getLocalName()+": REQUEST received from "+request.getSender().getName()+". Action is "+request.getContent());
+	  						if (!working) {
+	  							// We agree to perform the action. Note that in the FIPA-Request
+	  							// protocol the AGREE message is optional. Return null if you
+	  							// don't want to send it.						
+	  							
+	  							System.out.println("Agent "+getLocalName()+": Agree");
+	  							ACLMessage agree = request.createReply();
+	  							agree.setPerformative(ACLMessage.AGREE);
+	  							return agree;
+	  						}
+	  						else {
+	  							// We refuse to perform the action
+	  							System.out.println("Agent "+getLocalName()+": Refuse");
+	  							throw new RefuseException("check-failed");
+	  						}
+	  					}  // end prepareResponse
+	  					
+	  					protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException {
+	  						OPTIONS_ = request.getContent().split(" ", 2);
+	  						
+	  						fileName = OPTIONS_[0];
+	  						getData();
+	  						
+	  						setOptions(OPTIONS_[1].split(" "));
+	  							  						
+	  						double result = 100;
+	  						boolean done = false; 
+	  						
+	  						boolean success = false;
+	  						
+	  						Date start = new Date();
+	  						long start_long = start.getTime();
+	  						long now;
+	  						while(!done){ 							
+	  						  now = start.getTime();
+	  						  // give up after 10 seconds
+	  						  if (now > start_long+10000){
+	  							  done = true;
+	  						  }
+		  					  MessageTemplate template_msg_from_reader = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+		  						  ACLMessage reply = myAgent.receive(template_msg_from_reader);
+		  				      if (reply != null) {		  				        
+		  				    	  // Reply received
+			  						try{
+			  				    		data = (Instances) reply.getContentObject();
+			  				    		System.out.println("Data: "+data);  
+			  						    
+			  							/* 
+			  							 The class index indicate the target attribute used for
+			  							 classification. By default, in an ARFF File, it's the 
+			  							 last attribute, that's why it's set to numAttributes-1.
+			  							 You must set it if your instances are used as a parameter
+			  							 of a weka function (ex: weka.classifiers.Classifier.buildClassifier(data))
+			  							*/		  						    
+			  				    		data.setClassIndex(data.numAttributes() - 1);
+			  				    		
+				  						test = data;
+				  						train = data;
+			  				    		
+			  				    		if (state != states.TRAINED) { train(); }
+			  				    		// saveAgent();
+			  				    		// loadAgent(getLocalName());
+			  				  	  	
+			  				    		result = test();
+			  				    		success = true;
+			  				    	}
+			  				    	catch (Exception e){
+			  							// TODO Auto-generated catch block
+			  							e.printStackTrace();
+			  							success = false;
+			  				    	}
+				  					done = true; 
+			  						  
+
+		  				      }  // end if (reply != null)
+		  				      else{
+		  				    	  block();
+		  				      }
+	  						}  // end while (!done)
+	  					
+	  						if (success) {
+	  							System.out.println("Agent "+getLocalName()+": Action successfully performed, result is: "+result);
+	  							ACLMessage inform = request.createReply();
+	  							inform.setPerformative(ACLMessage.INFORM);
+	  							inform.setContent(String.valueOf(result));
+	  							return inform;
+	  						}
+	  						else {
+	  							System.out.println("Agent "+getLocalName()+": Action failed");
+	  							throw new FailureException("unexpected-error");
+	  						}
+	  					
+	  					
+	  					}  //  end prepareResultNotification
+	  					
+	  				} );
 	 
 	 } // end setup
 	 
 	 
 	 
-	 public boolean setConfiguration(String[] CONFIGURATION){
+	 public boolean setOptions(String[] CONFIGURATION){
 		  /* INPUT: weka parameters
 		  * Fills the OPTIONS array.
 		  */
@@ -391,7 +504,16 @@ public abstract class Agent_ComputingAgent extends Agent{
 		 return true;
 	 }  // end loadConfiguration
 	 
-	
+	 public String getOptions(){
+		// write out OPTIONS
+
+		String strOPTIONS = ""; 
+	    strOPTIONS += "OPTIONS:";
+		for (int i=0; i<OPTIONS.length; i++){
+			strOPTIONS += " "+OPTIONS[i];
+		}
+		return strOPTIONS;
+	 }
  
 	 
 	 protected boolean getData(){ 
