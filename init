@@ -8,4 +8,4 @@ $a Agent_MultilayerPerceptron mp1
 
 $a Agent_Random r
 
-# $a Agent_Manager manager
+$a Agent_Manager manager

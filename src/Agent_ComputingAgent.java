@@ -49,8 +49,8 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 
 	 /* common properties for all computing agents */
 	 public String fileName;
-	 public states state;
-
+	 public states state = states.NEW;
+	 public boolean hasGotRightData = false;
 	 
 	 protected Vector<MyWekaOption> Options;
 	 
@@ -68,7 +68,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 boolean working = false;  // TODO -> state?
 	
 	 protected abstract void train();
-	 protected abstract double test();
+	 protected abstract Evaluation test();
 	 
 	 protected abstract String getAgentType();
 	 
@@ -253,138 +253,8 @@ public abstract class Agent_ComputingAgent extends Agent{
 		 
 		registerWithDF();
 
-	  	MessageTemplate template = MessageTemplate.and(
-	  	  		MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET),
-	  	  		MessageTemplate.MatchPerformative(ACLMessage.CFP) );
-	  	
-	  			addBehaviour(new ContractNetResponder(this, template) {
-	  				protected ACLMessage prepareResponse(ACLMessage cfp) throws NotUnderstoodException, RefuseException {
-	  					System.out.println("Agent "+getLocalName()+": CFP received from "+cfp.getSender().getName()+". Parameters are "+cfp.getContent());
-  				    		
-  				    	
-	  					if (!working) {					
-	  						System.out.println("Agent "+getLocalName()+": goal accepted.");
-	  						String parameters = cfp.getContent();
-	  						
-	  						OPTIONS  = parameters.split(" ");
-	  						OPTIONS_ = new String[OPTIONS.length-1+args.length]; 
-	  						
-	  						if (OPTIONS.length > 0) {
-	  							// first argument ... file name
-	  							fileName = (String) OPTIONS[0];
-	  							System.out.println("File name: "+fileName);
-	  						}
-	  						else{
-	  							// ERROR
-	  						}
-	  					
-	  						for(int i=1; i<OPTIONS.length; i++){  // delete first element
-	  						   OPTIONS_[i-1] = OPTIONS[i];
-	  						}
-	  						
-	  						// add OPTIONS_ARGS
-	  						for (int i=0; i<args.length; i++){
-	  							OPTIONS_[i+OPTIONS.length-1] = OPTIONS_ARGS[i];
-	  						}
-	  						// put options back to OPTIONS
-	  						OPTIONS = OPTIONS_;
-	  						
-	  						//if (OPTIONS[0] == null){
-	  						//	OPTIONS = null; // prazdny seznam
-	  						//}
-	  						
-	  						// write out OPTIONS
-  							//System.out.println("OPTIONS array:");
-	  						//for (int i=0; i<OPTIONS.length; i++){
-	  						//	System.out.println("   "+i+" "+OPTIONS[i]);
-	  						//}
-	  						
-	  						
-	  						getData(); // if == false, no reader agent found
-	  						
-	  						
-	  						double result = 100;
-	  						boolean done = false; 
-	  						
-	  						Date start = new Date();
-	  						long start_long = start.getTime();
-	  						long now;
-	  						while(!done){ 							
-	  						  now = start.getTime();
-	  						  // give up after 10 seconds
-	  						  if (now > start_long+10000){
-	  							  done = true;
-	  						  }
-	  					  	  MessageTemplate template_msg_from_reader = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
-	  						  ACLMessage reply = myAgent.receive(template_msg_from_reader);
-		  				      if (reply != null) {
-		  				        // Reply received
-		  				    	try{
-		  				    		data = (Instances) reply.getContentObject();
-		  				    		System.out.println("Data: "+data);  
-		  						    
-		  							/* 
-		  							 The class index indicate the target attribute used for
-		  							 classification. By default, in an ARFF File, it's the 
-		  							 last attribute, that's why it's set to numAttributes-1.
-		  							 You must set it if your instances are used as a parameter
-		  							 of a weka function (ex: weka.classifiers.Classifier.buildClassifier(data))
-		  							*/		  						    
-		  				    		data.setClassIndex(data.numAttributes() - 1);
-		  				    		
-			  						test = data;
-			  						train = data;
-		  				    		
-		  				    		if (state != states.TRAINED) { train(); }
-		  				    		// saveAgent();
-		  				    		// loadAgent(getLocalName());
-		  				  	  	
-		  				    		result = test();
-		  				    	}
-		  				    	catch (Exception e){
-		  							// TODO Auto-generated catch block
-		  							e.printStackTrace();
-		  				    	}
-			  					done = true;
-		  				      }
-		  				      else {
-		  				        block();
-		  				      }
-		  			
-	  						}
-	  				      
-	  						getParameters();
-	  						
-	  						// provide a proposal
-	  						ACLMessage propose = cfp.createReply();
-	  						propose.setPerformative(ACLMessage.PROPOSE);
-	  						propose.setContent(String.valueOf(result));
-	  						return propose;
-	  					}
-	  					else {
-	  						// refuse to provide a proposal
-	  						System.out.println("Agent "+getLocalName()+": is working now");
-	  						throw new RefuseException("Agent "+getLocalName()+" is busy");
-	  					}
-	  					
-	  					
-	  				}
-	  				
-	  				protected ACLMessage prepareResultNotification(ACLMessage cfp, ACLMessage propose,ACLMessage accept) throws FailureException {
-	  					System.out.println("Agent "+getLocalName()+": Proposal accepted");
-
-	  					ACLMessage inform = accept.createReply();
-	  					inform.setPerformative(ACLMessage.INFORM);
-	  					return inform;
-	  				}
-	  				
-	  				protected void handleRejectProposal(ACLMessage cfp, ACLMessage propose, ACLMessage reject) {
-	  					System.out.println("Agent "+getLocalName()+": Proposal rejected");
-	  				}
-	  			} );
-	  		    
-
-	  			
+		getParameters();
+		 			
 	  			
 	  		  	
 	  		  	MessageTemplate template_inform = MessageTemplate.and(
@@ -412,81 +282,126 @@ public abstract class Agent_ComputingAgent extends Agent{
 	  					}  // end prepareResponse
 	  					
 	  					protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException {
-	  						OPTIONS_ = request.getContent().split(" ", 2);
+	  						if (request.getContent().equals("Send options")){
+	  							
+	  							ACLMessage msgOut = new ACLMessage(ACLMessage.INFORM);
+	  							msgOut.addReceiver(request.getSender());
+	  							try {
+									msgOut.setContentObject(Options);
+								} catch (Exception e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+								
+								
+								return msgOut;
+	  						}
+	  						else{
 	  						
-	  						fileName = OPTIONS_[0];
-	  						getData();
-	  						
-	  						setOptions(OPTIONS_[1].split(" "));
-	  							  						
-	  						double result = 100;
-	  						boolean done = false; 
-	  						
-	  						boolean success = false;
-	  						
-	  						Date start = new Date();
-	  						long start_long = start.getTime();
-	  						long now;
-	  						while(!done){ 							
-	  						  now = start.getTime();
-	  						  // give up after 10 seconds
-	  						  if (now > start_long+10000){
-	  							  done = true;
-	  						  }
-		  					  MessageTemplate template_msg_from_reader = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
-		  						  ACLMessage reply = myAgent.receive(template_msg_from_reader);
-		  				      if (reply != null) {		  				        
-		  				    	  // Reply received
-			  						try{
-			  				    		data = (Instances) reply.getContentObject();
-			  				    		System.out.println("Data: "+data);  
-			  						    
-			  							/* 
-			  							 The class index indicate the target attribute used for
-			  							 classification. By default, in an ARFF File, it's the 
-			  							 last attribute, that's why it's set to numAttributes-1.
-			  							 You must set it if your instances are used as a parameter
-			  							 of a weka function (ex: weka.classifiers.Classifier.buildClassifier(data))
-			  							*/		  						    
-			  				    		data.setClassIndex(data.numAttributes() - 1);
-			  				    		
-				  						test = data;
-				  						train = data;
-			  				    		
-			  				    		if (state != states.TRAINED) { train(); }
-			  				    		// saveAgent();
-			  				    		// loadAgent(getLocalName());
-			  				  	  	
-			  				    		result = test();
-			  				    		success = true;
-			  				    	}
-			  				    	catch (Exception e){
-			  							// TODO Auto-generated catch block
-			  							e.printStackTrace();
-			  							success = false;
-			  				    	}
-				  					done = true; 
-			  						  
+		  						OPTIONS_ = request.getContent().split(" ", 2);
+		  						
+		  						setOptions(OPTIONS_[1].split(" "));
+			  						
+		  						Evaluation result = null;
+		  						MyWekaEvaluation my_result = null;
+		  						
+		  						
+		  						boolean success = true;
+		  						
+		  						if (OPTIONS_[0].equals(fileName)){
+		  							// TODO - better control of the data
+		  							hasGotRightData = true;
+		  						}
+		  						else{
+		  							fileName = OPTIONS_[0];
+		  							getData();
+		  							hasGotRightData = false;
 
-		  				      }  // end if (reply != null)
-		  				      else{
-		  				    	  block();
-		  				      }
-	  						}  // end while (!done)
-	  					
-	  						if (success) {
-	  							System.out.println("Agent "+getLocalName()+": Action successfully performed, result is: "+result);
-	  							ACLMessage inform = request.createReply();
-	  							inform.setPerformative(ACLMessage.INFORM);
-	  							inform.setContent(String.valueOf(result));
-	  							return inform;
-	  						}
-	  						else {
-	  							System.out.println("Agent "+getLocalName()+": Action failed");
-	  							throw new FailureException("unexpected-error");
-	  						}
-	  					
-	  					
+			  						boolean done = false; 
+
+			  						Date start = new Date();
+			  						long start_long = start.getTime();
+			  						long now;
+			  						while(!done){ 							
+			  						  now = start.getTime();
+			  						  // give up after 10 seconds
+			  						  if (now > start_long+10000){
+			  							  done = true;
+			  						  }
+			  						  MessageTemplate template_msg_from_reader = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+			  						  ACLMessage reply = myAgent.receive(template_msg_from_reader);
+				  					  
+			  						  
+			  						  if (reply != null) {		  				        
+			  				    	  // Reply received
+				  							try {
+				  								data = (Instances) reply.getContentObject();
+											} catch (UnreadableException e) {
+												// TODO Auto-generated catch block
+												e.printStackTrace();
+												success = false;
+											}
+				  				    		System.out.println("Data: "+data);  
+				  						    hasGotRightData = true;    
+				  			    		
+				  							/* 
+				  							 The class index indicate the target attribute used for
+				  							 classification. By default, in an ARFF File, it's the 
+				  							 last attribute, that's why it's set to numAttributes-1.
+				  							 You must set it if your instances are used as a parameter
+				  							 of a weka function (ex: weka.classifiers.Classifier.buildClassifier(data))
+				  							*/		  						    
+				  				    		data.setClassIndex(data.numAttributes() - 1);
+				  				    		
+				  				    		test = data;
+				  				    		train = data;
+				  				    		
+				  				    		done = true;
+				  				    		
+				  					  }  // end if (reply != null)
+			  						  else{
+			  							  block();
+			  						  }
+			  						}  // end while (!done)
+		  					
+		  						}  // end else (= hasGotRightData = false)
+		  						
+		  		
+				  					  							
+	  				    		try{
+			  						if (state != states.TRAINED) { train(); }
+		  				    		// saveAgent();
+		  				    		// loadAgent(getLocalName());
+		  				  	  	
+		  				    		result = test();
+		  				    		// TODO
+		  				    		my_result = new MyWekaEvaluation(result);
+	  				    		}
+	  				    		catch (Exception e){
+	  				    			success = false;
+	  				    		}
+					  					   	
+			  				
+		  						if (success) {
+		  							System.out.println("Agent "+getLocalName()+": Action successfully performed.");
+		  							ACLMessage inform = request.createReply();
+		  							inform.setPerformative(ACLMessage.INFORM);
+		  							
+		  							try {
+										inform.setContentObject(my_result);
+									} catch (IOException e) {
+										// TODO Auto-generated catch block
+										e.printStackTrace();
+									}
+									
+		  							return inform;
+		  						}
+		  						else {
+		  							System.out.println("Agent "+getLocalName()+": Action failed");
+		  							throw new FailureException("unexpected-error");
+		  						}
+		  					
+	  						} 	  					
 	  					}  //  end prepareResultNotification
 	  					
 	  				} );
@@ -497,8 +412,8 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 
 	 public boolean setOptions(String[] CONFIGURATION){
 		  /* INPUT: weka parameters
-		  * Fills the OPTIONS array.
-		  */
+		   * Fills the OPTIONS array.
+		   */
 		 OPTIONS = CONFIGURATION;
 		 
 		 return true;
@@ -553,5 +468,21 @@ public abstract class Agent_ComputingAgent extends Agent{
 		 
 		 return true;
 	 } // end getData
+	 
 	 	 
+	 public static byte[] toBytes(Object object) throws Exception{
+		 java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+		 java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(baos);
+		 oos.writeObject(object);
+
+		 return baos.toByteArray();
+	 }
+	  
+	  
+	  public static Object toObject(byte [] data) throws Exception{
+
+	      Object object = new java.io.ObjectInputStream(new
+	    		  java.io.ByteArrayInputStream(data)).readObject();
+	      return object;
+	  }
 }; 

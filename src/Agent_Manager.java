@@ -1,3 +1,5 @@
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Vector;
@@ -13,7 +15,10 @@ import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.lang.acl.UnreadableException;
+import jade.proto.AchieveREInitiator;
 import jade.proto.ContractNetInitiator;
+import jade.proto.IteratedAchieveREInitiator;
 
 import ontology.*;
 import jade.content.lang.Codec;
@@ -21,7 +26,7 @@ import jade.content.*;
 import jade.content.abs.*;
 import jade.content.onto.*;
 import jade.content.onto.basic.*;
-import jade.content.lang.sl.*;
+import jade.content.lang.sl.*;;
 
 public class Agent_Manager extends Agent{
 	
@@ -43,122 +48,99 @@ public class Agent_Manager extends Agent{
 			    System.err.println(getLocalName()+" registration with DF unsucceeded. Reason: "+e.getMessage());
 			    doDelete();
 			}  
-		  	System.out.println("Manager "+getLocalName()+" is alive and waiting for CFP...");
+		  	System.out.println("Manager "+getLocalName()+" is alive and waiting...");
 		  			  	
-		  	// find responders
-			AID[] Responders = null;
 
-		  	DFAgentDescription template = new DFAgentDescription();
-            ServiceDescription sd_responder = new ServiceDescription();
-            sd_responder.setType("ComputingAgent");
-	        template.addServices(sd_responder);
-	        
-	        DFAgentDescription[] result = null;
-	        try {
-	         	result = DFService.search(this, template); 
-	         	System.out.println("Found the following computing agents:");
-	            nResponders = result.length;
-
-	         	Responders = new AID[nResponders];
-	            
-	           for (int i = 0; i < nResponders; ++i) {
-	        	   Responders[i] = result[i].getName();
-		           System.out.println(Responders[i].getName());
-	           }
-
-	         }
-	         catch (FIPAException fe) {  // TODO osetrit, kdyz result zustane prazdny
-	           fe.printStackTrace();
-	         }
 		  	
 		  	
-		  	Object[] args = getArguments();
-		  	if (Responders != null && nResponders > 0) {
-		  		System.out.println("Number of responders: "+nResponders);
-		  		
-		  		// Fill the CFP message
-		  		ACLMessage msg = new ACLMessage(ACLMessage.CFP);
-		  		for (int i = 0; i < nResponders; ++i) {
-		  			//msg.addReceiver(new AID((String) args[i], AID.ISLOCALNAME));
-		  		    msg.addReceiver(result[i].getName());
-		  		}
-					msg.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
-					// We want to receive a reply in 30 secs
-					msg.setReplyByDate(new Date(System.currentTimeMillis() + 30000));
-					
-					// Set responders' parameters
-					msg.setContent("weather.arff");
+		  	ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+  			msg.addReceiver(new AID("mp1", AID.ISLOCALNAME));
+			msg.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+			// We want to receive a reply in 30 secs
+			msg.setReplyByDate(new Date(System.currentTimeMillis() + 30000));			
+			msg.setContent("Send options");
+			
+			
+			
+		  	AchieveREInitiator behav = new AchieveREInitiator(this, msg) {
 				
-					addBehaviour( new ContractNetInitiator(this, msg) {
-						
-						protected void handlePropose(ACLMessage propose, Vector v) {
-							System.out.println("Agent "+propose.getSender().getName()+" proposed "+propose.getContent());
-						}
-						
-						protected void handleRefuse(ACLMessage refuse) {
-							System.out.println("Agent "+refuse.getSender().getName()+" refused");
-						}
-						
-						protected void handleFailure(ACLMessage failure) {
-							if (failure.getSender().equals(myAgent.getAMS())) {
-								// FAILURE notification from the JADE runtime: the receiver
-								// does not exist
-								System.out.println("Manager: Responder does not exist");
-								System.out.println("  "+failure.getSender());
-							}
-							else {
-								System.out.println("Agent "+failure.getSender().getName()+" failed");
-							}
-							// Immediate failure --> we will not receive a response from this agent
-							nResponders--;
-						}
-						
-						protected void handleAllResponses(Vector responses, Vector acceptances) {
-							if (responses.size() < nResponders) {
-								// Some responder didn't reply within the specified timeout
-								System.out.println("Timeout expired: missing "+(nResponders - responses.size())+" responses");
-							}
-							// Evaluate proposals.
-							double bestProposal = 100;
-							AID bestProposer = null;
-							ACLMessage accept = null;
-							Enumeration e = responses.elements();
-							while (e.hasMoreElements()) {
-								ACLMessage msg = (ACLMessage) e.nextElement();
-								if (msg.getPerformative() == ACLMessage.PROPOSE) {
-									ACLMessage reply = msg.createReply();
-									reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
-									acceptances.addElement(reply);
-									
-									double proposal = Double.parseDouble(msg.getContent());
-									
-									// choose the best agent
-									
-									if (proposal < bestProposal) {
-										bestProposal = proposal;
-										bestProposer = msg.getSender();
-										accept = reply;
-									}
-								}
-							}
-							// Accept the proposal of the best proposer
-							if (accept != null) {
-								System.out.println("Accepting proposal "+bestProposal+" from responder "+bestProposer.getName());
-								accept.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
-							}			
-										
-						}
-						
-						protected void handleInform(ACLMessage inform) {
-							System.out.println("Agent "+inform.getSender().getName()+" was THE BEST!");
-						}
-					} );
-					
-		  	}
-		  	else {
-		  		System.out.println("No responder specified.");
-		  	}
-		  	
+				protected void handleInform(ACLMessage inform) {
+					System.out.println(getLocalName()+": Agent "+inform.getSender().getName()+" replied.");					
+				  	Compute(inform);		
+				}
+				
+				protected void handleRefuse(ACLMessage refuse) {
+					System.out.println(getLocalName()+": Agent "+refuse.getSender().getName()+" refused to perform the requested action");
+				}
+				
+				protected void handleFailure(ACLMessage failure) {
+					if (failure.getSender().equals(myAgent.getAMS())) {
+						// FAILURE notification from the JADE runtime: the receiver
+						// does not exist
+						System.out.println("Responder does not exist");
+					}
+					else {
+						System.out.println("Agent "+failure.getSender().getName()+" failed to perform the requested action");
+					}
+				}
+
+			};
+			
+			addBehaviour(behav);	
+			
+
+			
 	}  // end setup
 	
+	
+	
+	void Compute(ACLMessage reply){
+		
+	  	// ACLMessage msg = reply;
+		ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+	  	// msg.clearAllReceiver();
+	  	
+	  	try {
+			// System.out.println("!!!!!!!!!!!!! "+reply.getContentObject());
+	  		msg.setContentObject(reply.getContentObject());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnreadableException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	  	
+	  	msg.addReceiver(new AID("r", AID.ISLOCALNAME));
+	  	msg.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+
+	  	
+	  	AchieveREInitiator compute = new AchieveREInitiator(this, msg) {
+	  		
+			protected void handleInform(ACLMessage inform) {
+				System.out.println(getLocalName()+": Agent "+inform.getSender().getName()+" replied.");
+			  			
+			}
+			
+			protected void handleRefuse(ACLMessage refuse) {
+				System.out.println(getLocalName()+": Agent "+refuse.getSender().getName()+" refused to perform the requested action");
+			}
+			
+			protected void handleFailure(ACLMessage failure) {
+				if (failure.getSender().equals(myAgent.getAMS())) {
+					// FAILURE notification from the JADE runtime: the receiver
+					// does not exist
+					System.out.println("Responder does not exist");
+				}
+				else {
+					System.out.println("Agent "+failure.getSender().getName()+" failed to perform the requested action");
+				}
+			}
+
+		};
+		
+		addBehaviour(compute);
+
+	} // end Compute()
+
 }

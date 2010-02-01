@@ -1,0 +1,25 @@
+# name, type, parameters range
+# r ... range
+# s ... set
+# 
+
+
+# learning rate, default 0.3; 1 arguments
+$ L float 1 1 r 0 1
+
+# Learning rate decay will occur; 0 arguments
+$ D boolean
+
+# Normalizing the attributes will NOT be done.
+$ I boolean
+
+# Momentum Rate for the backpropagation algorithm., Default = 0.2
+$ M float 1 1 r 0 1
+
+
+# The hidden layers to be created for the network.
+# (Value should be a list of comma seperated Natural numbers or the letters 'a' = (attribs + classes) / 2,
+# 'i' = attribs, 'o' = classes, 't' = attribs .+ classes) For wildcard values,Default = a).
+# type list - length (2 numbers), range (2 numbers)  ... max
+
+$ H int 0 5 s 1, 2, 3, 4, 5, 6, 7, 8

@@ -20,9 +20,7 @@ import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 
 
-/**
 
- */
 public class Agent_RBFNetwork extends Agent_ComputingAgent{
 	 private RBFNetwork cls; 
 	
@@ -80,19 +78,18 @@ public class Agent_RBFNetwork extends Agent_ComputingAgent{
      }  // end train
      
      
-	 protected double test(){
+	 protected Evaluation test(){
 		 working = true;   
 		 
-		 double result = 100;
 		 System.out.println("Agent "+getLocalName()+": Testing...");
                 
 			// evaluate classifier and print some statistics
-			Evaluation eval;
+			Evaluation eval = null;
 			try {
 				eval = new Evaluation(train);
 				eval.evaluateModel(cls, test);
 				System.out.println(eval.toSummaryString(getLocalName()+" agent: "+"\nResults\n=======\n", false));
-				result = eval.errorRate();
+				
 				// VisualizePanel();
 				
 			} catch (Exception e) {
@@ -100,7 +97,7 @@ public class Agent_RBFNetwork extends Agent_ComputingAgent{
 				e.printStackTrace();
 			}
 		    
-		 return result;
+		 return eval;
 	 }  // end test
 	 
 		    

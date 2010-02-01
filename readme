@@ -1,3 +1,15 @@
+1.2.1010:
+
+Agent_Manager asks a Computing_Agent "mp1" (works only for Agent_MultilayerPerceptron) for his weka Options,
+then sends them to an Agent_OptionsManager (Agent_Random),
+who chooses random values of these options (works for float values only), sends them to a Computing_Agent,
+receives the reply, and keeps iterating until the errorRate is smaller than 0.3.
+
+weather.arff data file is used.
+
+-------------------------------------------
+
+
 1) start Jade with -gui argument
    (arguments "-detect-main false -host localhost" solved some of my problems)
 
