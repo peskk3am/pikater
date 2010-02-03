@@ -173,7 +173,7 @@ public class Agent_MultilayerPerceptron extends Agent_ComputingAgent {
 			if (OPTIONS.length > 0){
 				cls.setOptions(OPTIONS);
 			}
-			
+			cls.setAutoBuild(true);
 			cls.buildClassifier(train);
 			
 			state = states.TRAINED;  // change agent state

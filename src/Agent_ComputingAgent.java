@@ -297,7 +297,8 @@ public abstract class Agent_ComputingAgent extends Agent{
 								return msgOut;
 	  						}
 	  						else{
-	  						
+	  							state = states.NEW;
+	  							
 		  						OPTIONS_ = request.getContent().split(" ", 2);
 		  						
 		  						setOptions(OPTIONS_[1].split(" "));

@@ -50,18 +50,58 @@ public class Agent_Random extends Agent_OptionsManager {
 		 for (Enumeration e = Options.elements() ; e.hasMoreElements() ;) {
 	           MyWekaOption next = (MyWekaOption)e.nextElement();
 	    	   if (next.mutable){
-	    		   switch(next.type){
-	    		   		/* case INT:
-	    		   			int rInt = (int)next.lower + generator.nextInt((int)(next.upper-next.lower));
-	    		   			str += " -"+next.name+" "+Integer.toString(rInt);
-	    		   			break;
-	    		   		*/	
-	    		   		case FLOAT:
-	    		   			float rFloat = next.lower + (float)(generator.nextDouble())*(next.upper - next.lower);
-	    		   			str += " -"+next.name+" "+Float.toString(rFloat);
-	    		   			break;
-	    		   			
-	    		   }  // end switch
+	    		   
+	    		   String optionName = " -"+next.name+" ";
+	    		   
+	    		   int numArgs = next.numArgsMin+generator.nextInt(next.numArgsMax-next.numArgsMin+1);
+	    		   
+	    		   if (!next.isASet){	    		   
+		    		   switch(next.type){
+		    		   		case INT:
+		    		   			String si = "";
+		    		   			for (int i=1; i<numArgs; i++){
+		 	    					int rInt = (int)next.lower + generator.nextInt((int)(next.upper-next.lower));
+		 	    					si += Integer.toString(rInt)+",";
+		    		   			}
+		    		   			int rInt = (int)next.lower + generator.nextInt((int)(next.upper-next.lower));
+		    		   			si += Integer.toString(rInt);
+		    		   			 
+		    		   			str += (optionName+si);
+		    		   			break;
+		    		   			
+		    		   		case FLOAT:
+		    		   			String sf = "";
+		    		   			for (int i=1; i<numArgs; i++){
+		    		   				float rFloat = next.lower + (float)(generator.nextDouble())*(next.upper - next.lower);
+		 	    					sf += Float.toString(rFloat)+",";
+		    		   			}
+		    		   			float rFloat = next.lower + (float)(generator.nextDouble())*(next.upper - next.lower);
+		    		   			sf += Float.toString(rFloat);
+		    		   			 
+		    		   			str += (optionName+sf);
+		    		   			break;
+		    		   			
+		    		   		case BOOLEAN:
+		    		   			int rInt2 = generator.nextInt(2);
+		    		   			if (rInt2 == 1){
+		    		   				str += optionName;
+		    		   			}
+		    		   			break;
+		    		   			
+		    		   }  // end switch
+	    		   }
+	    		   else{
+	    			   	    			   
+	    			   String s = "";
+	    			   for (int i=1; i<numArgs; i++){
+	    				   int index = generator.nextInt(next.set.length);
+	    				   s += next.set[index]+",";	    		   
+	    			   }
+	    			   int index = generator.nextInt(next.set.length);
+    				   s += next.set[index];
+    				   
+    				   str += (optionName+s);
+	    		   }
 	    	   }
 	           
 	       }

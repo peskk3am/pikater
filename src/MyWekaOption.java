@@ -22,6 +22,7 @@ public class MyWekaOption implements Serializable{
 	
 	
 	public String[] set;
+	public boolean isASet = false;
 	
 	public MyWekaOption(String arg0, String arg1, int arg2, String arg3, dataType _type, int _numArgsMin, int _numArgsMax, String range, String rest) {
 		// super(arg0, arg1, arg2, arg3);
@@ -45,6 +46,7 @@ public class MyWekaOption implements Serializable{
             upper = new Float(params[1]);
 		}
         if (range.equals("s")){
+        	isASet = true;
 			set = params;
         }
         
