@@ -5,6 +5,8 @@
 import java.io.*;
 
 import java.util.*;
+import jade.util.leap.List;
+import jade.util.leap.ArrayList;
 
 import weka.core.Instances;
 import weka.classifiers.Classifier;
@@ -30,17 +32,19 @@ import jade.lang.acl.UnreadableException;
 import jade.proto.ContractNetResponder;
 import jade.proto.AchieveREResponder;
 
-import ontology.*;
+import ontology.messages.*;
 
 import jade.content.lang.Codec;
 import jade.content.*;
 import jade.content.abs.*;
 import jade.content.onto.*;
 import jade.content.onto.basic.*;
+import jade.content.lang.Codec.CodecException;
 import jade.content.lang.sl.*;
 
 public abstract class Agent_ComputingAgent extends Agent{
-
+	 private Codec codec = new SLCodec();
+	 private Ontology ontology = MessagesOntology.getInstance();
 
 	 public enum states {
 		    NEW, TRAINED 
@@ -210,20 +214,194 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 }  // end loadAgent
 
 	 
+	 protected ACLMessage sendOptions(ACLMessage request){
+			ACLMessage msgOut = new ACLMessage(ACLMessage.INFORM);
+				msgOut.setLanguage(codec.getName());
+				msgOut.setOntology(ontology.getName());
+				
+				msgOut.addReceiver(request.getSender());
+				try {
+				// msgOut.setContentObject(Options);
+					
+					// Prepare the content
+					Options options = new Options();
+					List _options = new ArrayList();
+	  								
+					Option opt = null;
+					Interval interval = null;
+					List set = null;
+				    for (Enumeration e = Options.elements() ; e.hasMoreElements() ;) {
+				       MyWekaOption next = (MyWekaOption)e.nextElement();
+			    	   opt = new Option();
+			           opt.setMutable(next.mutable);
+			           
+			           interval = new Interval();
+			           interval.setMin(next.lower);
+			           interval.setMax(next.upper);		  					           					           
+			           opt.setRange(interval);
+			           
+			           // opt.setSet((List)Arrays.asList(next.set));
+			           // opt.setSet(null);
+			           opt.setIs_a_set(next.isASet);
+			           
+			           interval = new Interval();
+			           interval.setMin(next.numArgsMin);
+			           interval.setMax(next.numArgsMax);		  					           					           
+			           opt.setNumber_of_args(interval);
+			           
+			           opt.setData_type(next.type.toString());
+			           opt.setDescription(next.description);
+			           opt.setName(next.name);
+			           opt.setSynopsis(next.synopsis);
+			           _options.add(opt);
+			       }
+				   options.setOptions(_options);
+				   
+				   ContentElement content = getContentManager().extractContent(request); // TODO exception block?
+				   Result result = new Result((Action)content, options);
+				   // result.setValue(options);	
+					
+				   try {
+						// Let JADE convert from Java objects to string
+						getContentManager().fillContent(msgOut, result);
+						// send(msgOut);
+				   }
+				   catch (CodecException ce) {
+						ce.printStackTrace();
+				   }
+				   catch (OntologyException oe) {
+						oe.printStackTrace();
+				   }
+				
+				
+				
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			
+			return msgOut;
+			
+	 }  // end SendOptions
+	 
+	 protected ACLMessage Execute(ACLMessage request, Execute execute, AchieveREResponder behavior) throws FailureException{
+		state = states.NEW;
+					
+		OPTIONS_ = execute.getOptions().split(" ", 2);
+			
+		setOptions(OPTIONS_[1].split(" "));
+			
+		Evaluation result = null;
+		MyWekaEvaluation my_result = null;
+		
+		
+		boolean success = true;
+		
+		if (OPTIONS_[0].equals(fileName)){
+			// TODO - better control of the data
+			hasGotRightData = true;
+		}
+		else{
+			fileName = OPTIONS_[0];
+			getData();
+			hasGotRightData = false;
+
+			boolean done = false; 
+
+			Date start = new Date();
+			long start_long = start.getTime();
+			long now;
+			while(!done){ 							
+			  now = start.getTime();
+			  // give up after 10 seconds
+			  if (now > start_long+10000){
+				  done = true;
+				  success = false;
+			  }
+			  MessageTemplate template_msg_from_reader = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+			  // ACLMessage reply = myAgent.receive(template_msg_from_reader);
+			  ACLMessage reply = receive(template_msg_from_reader);
+			  
+			  if (reply != null) {		  				        
+	    	  // Reply received
+					try {
+						data = (Instances) reply.getContentObject();
+					} catch (UnreadableException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						success = false;
+					}
+		    		System.out.println("Data: "+data);  
+				    hasGotRightData = true;    
+	    		
+					/* 
+					 The class index indicate the target attribute used for
+					 classification. By default, in an ARFF File, it's the 
+					 last attribute, that's why it's set to numAttributes-1.
+					 You must set it if your instances are used as a parameter
+					 of a weka function (ex: weka.classifiers.Classifier.buildClassifier(data))
+					*/		  						    
+		    		data.setClassIndex(data.numAttributes() - 1);
+		    		
+		    		test = data;
+		    		train = data;
+		    		
+		    		done = true;
+		    		
+			  }  // end if (reply != null)
+			  else{
+				  behavior.block();
+			  }
+			}  // end while (!done)
+	
+		}  // end else (= hasGotRightData = false)
+		
+
+			  							
+		try{
+			if (state != states.TRAINED) { train(); }
+			// saveAgent();
+			// loadAgent(getLocalName());
+ 	  	
+			result = test();
+			
+			my_result = new MyWekaEvaluation(result);
+		}
+		catch (Exception e){
+			success = false;
+		}
+				   	
+	
+		if (success) {
+			System.out.println("Agent "+getLocalName()+": Action successfully performed.");
+			ACLMessage inform = request.createReply();
+			inform.setPerformative(ACLMessage.INFORM);
+			
+			try {
+				inform.setContentObject(my_result);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			return inform;
+		}
+		else {
+			System.out.println("Agent "+getLocalName()+": Action failed");
+			throw new FailureException("unexpected-error");
+		}
+	
+	 } 	// end Execute  					
+	 
 	 
 	 protected void setup() {		 
-
-            // ContentManager manager = getContentManager();
-            // Codec language = new SLCodec();
-             
-            // manager.registerLanguage(language);
-             
-            // Ontology ontology = O_Ontology.getInstance();
-            // manager.registerOntology(ontology);
-             
-             // seed  = System.currentTimeMillis();
-             // System.out.println(getLocalName()+ ": Has started, waiting for information queries");
-             
+   
+		 
+		getContentManager().registerLanguage(codec);
+		getContentManager().registerOntology(ontology);
+		
+			
 	  	System.out.println(getAgentType()+" "+getLocalName()+" is alive...");
 	  	
 	  		  	
@@ -255,11 +433,15 @@ public abstract class Agent_ComputingAgent extends Agent{
 
 		getParameters();
 		 			
-	  			
-	  		  	
+			                
 	  		  	MessageTemplate template_inform = MessageTemplate.and(
 	  		  		MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST),
-	  		  		MessageTemplate.MatchPerformative(ACLMessage.REQUEST) );
+	  		  		MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
+	  		  				MessageTemplate.and(MessageTemplate.MatchLanguage(codec.getName()), MessageTemplate.MatchOntology(ontology.getName()))
+	  		  				)
+	  		  	);
+
+
 	  		  		
 	  				addBehaviour(new AchieveREResponder(this, template_inform) {
 	  					protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException, RefuseException {
@@ -282,127 +464,35 @@ public abstract class Agent_ComputingAgent extends Agent{
 	  					}  // end prepareResponse
 	  					
 	  					protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException {
-	  						if (request.getContent().equals("Send options")){
+	  						
+	  						
+	  						try{
+	  							ContentElement content = getContentManager().extractContent(request);
+	  							// System.out.println(((Action)ce).getAction());
 	  							
-	  							ACLMessage msgOut = new ACLMessage(ACLMessage.INFORM);
-	  							msgOut.addReceiver(request.getSender());
-	  							try {
-									msgOut.setContentObject(Options);
-								} catch (Exception e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
-								}
-								
-								
-								return msgOut;
+	  							if (((Action)content).getAction() instanceof GetOptions){
+	  								return sendOptions(request);
+	  							}
+	  							
+	  							if (((Action)content).getAction() instanceof Execute){
+	  								Execute execute = (Execute) ((Action)content).getAction();
+	  								return Execute(request, execute, this);
+	  							}
 	  						}
-	  						else{
-	  							state = states.NEW;
-	  							
-		  						OPTIONS_ = request.getContent().split(" ", 2);
-		  						
-		  						setOptions(OPTIONS_[1].split(" "));
-			  						
-		  						Evaluation result = null;
-		  						MyWekaEvaluation my_result = null;
-		  						
-		  						
-		  						boolean success = true;
-		  						
-		  						if (OPTIONS_[0].equals(fileName)){
-		  							// TODO - better control of the data
-		  							hasGotRightData = true;
-		  						}
-		  						else{
-		  							fileName = OPTIONS_[0];
-		  							getData();
-		  							hasGotRightData = false;
-
-			  						boolean done = false; 
-
-			  						Date start = new Date();
-			  						long start_long = start.getTime();
-			  						long now;
-			  						while(!done){ 							
-			  						  now = start.getTime();
-			  						  // give up after 10 seconds
-			  						  if (now > start_long+10000){
-			  							  done = true;
-			  						  }
-			  						  MessageTemplate template_msg_from_reader = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
-			  						  ACLMessage reply = myAgent.receive(template_msg_from_reader);
-				  					  
-			  						  
-			  						  if (reply != null) {		  				        
-			  				    	  // Reply received
-				  							try {
-				  								data = (Instances) reply.getContentObject();
-											} catch (UnreadableException e) {
-												// TODO Auto-generated catch block
-												e.printStackTrace();
-												success = false;
-											}
-				  				    		System.out.println("Data: "+data);  
-				  						    hasGotRightData = true;    
-				  			    		
-				  							/* 
-				  							 The class index indicate the target attribute used for
-				  							 classification. By default, in an ARFF File, it's the 
-				  							 last attribute, that's why it's set to numAttributes-1.
-				  							 You must set it if your instances are used as a parameter
-				  							 of a weka function (ex: weka.classifiers.Classifier.buildClassifier(data))
-				  							*/		  						    
-				  				    		data.setClassIndex(data.numAttributes() - 1);
-				  				    		
-				  				    		test = data;
-				  				    		train = data;
-				  				    		
-				  				    		done = true;
-				  				    		
-				  					  }  // end if (reply != null)
-			  						  else{
-			  							  block();
-			  						  }
-			  						}  // end while (!done)
-		  					
-		  						}  // end else (= hasGotRightData = false)
-		  						
-		  		
-				  					  							
-	  				    		try{
-			  						if (state != states.TRAINED) { train(); }
-		  				    		// saveAgent();
-		  				    		// loadAgent(getLocalName());
-		  				  	  	
-		  				    		result = test();
-		  				    		// TODO
-		  				    		my_result = new MyWekaEvaluation(result);
-	  				    		}
-	  				    		catch (Exception e){
-	  				    			success = false;
-	  				    		}
-					  					   	
-			  				
-		  						if (success) {
-		  							System.out.println("Agent "+getLocalName()+": Action successfully performed.");
-		  							ACLMessage inform = request.createReply();
-		  							inform.setPerformative(ACLMessage.INFORM);
-		  							
-		  							try {
-										inform.setContentObject(my_result);
-									} catch (IOException e) {
-										// TODO Auto-generated catch block
-										e.printStackTrace();
-									}
-									
-		  							return inform;
-		  						}
-		  						else {
-		  							System.out.println("Agent "+getLocalName()+": Action failed");
-		  							throw new FailureException("unexpected-error");
-		  						}
-		  					
-	  						} 	  					
+  							catch (CodecException ce) {
+  								ce.printStackTrace();
+  								}
+							catch (OntologyException oe) {
+  								oe.printStackTrace();
+  							}
+							
+							ACLMessage notUnderstood = request.createReply();
+							notUnderstood.setPerformative(ACLMessage.NOT_UNDERSTOOD);
+  							return notUnderstood;
+  							
+							
+							// return 
+	  						
 	  					}  //  end prepareResultNotification
 	  					
 	  				} );

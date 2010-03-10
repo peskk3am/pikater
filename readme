@@ -1,38 +1,5 @@
-1.2.1010:
-
+10.3.2010
 Agent_Manager asks a Computing_Agent "mp1" (works only for Agent_MultilayerPerceptron) for his weka Options,
 then sends them to an Agent_OptionsManager (Agent_Random),
-who chooses random values of these options (works for float values only), sends them to a Computing_Agent,
-receives the reply, and keeps iterating until the errorRate is smaller than 0.3.
-
-weather.arff data file is used.
-
--------------------------------------------
-
-
-1) start Jade with -gui argument
-   (arguments "-detect-main false -host localhost" solved some of my problems)
-
-2) create Agent_Initator in the Main-Container. That's all ;)
-
-3) the Agent_Initiator will create agents specified in init file:
-     - you'll need at least one ARFFReader agent, to read data from ARFF files
-     - the Manager agent
-     - and you can create ComputingAgents - in the following example,
-         there are created 3 agents (one of them - rbf3 - is previously
-         trained on the data, saved and loaded)
-   
-   example of the init file (only lines starting with $a or $l take effect):
-		$a Agent_ARFFReader Reader
-		# $a Agent_RBFNetwork rbf1
-		$a Agent_RBFNetwork rbf2 -B 1
-		
-		# load rbf3 from file (rbf3.model) 
-		$l Agent_RBFNetwork rbf3
-		$a Agent_MultilayerPerceptron mp1
-		$a Agent_Manager manager
-
-3) the Manager asks all computing agents, and chooses the one with the minimum
-   error (so far - the same testing and training data for all agents).
-   In the above example, the rbf3 agent wins - it's error is 0%. (The mp1 error
-   is 0% as well, but the rbf3 proposes first, because it's already been trained)
+who chooses random values of these options, sends them to a Computing_Agent,
+receives the reply (result of the computation with given options), and keeps iterating until the errorRate is smaller than 0.3.

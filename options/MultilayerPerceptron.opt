@@ -22,5 +22,5 @@ $ M float 1 1 r 0 1
 # 'i' = attribs, 'o' = classes, 't' = attribs .+ classes) For wildcard values,Default = a).
 # type list - length (2 numbers), range (2 numbers)  ... max
 
-$ H int 1 3 s 3, 4, 5
+# $ H int 1 3 s 3, 4, 5
 # = 1-3 hidden layers of 3, 4 or 5 perceptrons

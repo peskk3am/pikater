@@ -3,10 +3,25 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.Vector;
 
+import ontology.messages.Compute;
+import ontology.messages.Execute;
+import ontology.messages.GetOptions;
+import ontology.messages.MessagesOntology;
+import ontology.messages.Options;
+
 // import Agent_ComputingAgent.states;
 
 import weka.classifiers.Evaluation;
 import weka.core.Instances;
+import jade.content.ContentElement;
+import jade.content.lang.Codec;
+import jade.content.lang.Codec.CodecException;
+import jade.content.lang.sl.SLCodec;
+import jade.content.onto.Ontology;
+import jade.content.onto.OntologyException;
+import jade.content.onto.UngroundedException;
+import jade.content.onto.basic.Action;
+import jade.content.onto.basic.Result;
 	import jade.core.Agent;
 	import jade.domain.DFService;
 	import jade.domain.FIPAException;
@@ -25,18 +40,20 @@ import jade.proto.IteratedAchieveREInitiator;
 	import jade.core.AID;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.proto.AchieveREInitiator;
+import jade.util.leap.List;
 
 
 public abstract class Agent_OptionsManager extends Agent {
-
+	 	 private Codec codec = new SLCodec();
+	 	 private Ontology ontology = MessagesOntology.getInstance();
 	
-		 String fileName = "weather.arff";
-		 String receiver = "mp1";
+		 String fileName;
+		 String receiver;
 		 
 	 	 boolean working = false;
 	 	 
 		 MyWekaEvaluation result;
-	 	 protected Vector<MyWekaOption> Options;
+	 	 protected List Options;
 	 	 
 		 protected abstract String getAgentType();
 		 protected abstract boolean finished();
@@ -73,7 +90,7 @@ public abstract class Agent_OptionsManager extends Agent {
 	         description.addServices(servicedesc);
 
 
-	         // add "computing agent service"
+	         // add "OptionsManager agent service"
 	         ServiceDescription servicedesc_g = new ServiceDescription();
 
 	         servicedesc_g.setName(getLocalName());
@@ -119,11 +136,33 @@ public abstract class Agent_OptionsManager extends Agent {
 				 System.out.println(getLocalName()+": new options for agent "+receiver+" are "+opt); 
 				 
 				msg = new ACLMessage(ACLMessage.REQUEST);
-	  			msg.addReceiver(new AID(receiver, AID.ISLOCALNAME));
+				msg.setLanguage(codec.getName());
+				msg.setOntology(ontology.getName());
+				msg.addReceiver(new AID(receiver, AID.ISLOCALNAME));
 				msg.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
 				// We want to receive a reply in 30 secs
 				msg.setReplyByDate(new Date(System.currentTimeMillis() + 30000));			
-				msg.setContent(fileName+" "+opt);
+				
+				Execute execute = new Execute();
+				execute.setOptions(fileName+" "+opt);
+				
+				
+  				Action a = new Action();
+   				a.setAction(execute);
+   				a.setActor(this.getAID());
+   		  		
+   		  		try {
+					getContentManager().fillContent(msg, a);
+				} catch (CodecException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (OntologyException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+				// msg.setContent(fileName+" "+opt);
+				
 			 }
 			 else{
 				msg = new ACLMessage(ACLMessage.CANCEL);
@@ -139,8 +178,7 @@ public abstract class Agent_OptionsManager extends Agent {
 			 IteratedAchieveREInitiator behav = new IteratedAchieveREInitiator(this, NewMessage(null)) {
 					
 					protected void handleInform(ACLMessage inform, java.util.Vector nextRequests) {
-						System.out.println(getLocalName()+": Agent "+inform.getSender().getName()+" sent a reply.");
-					  			
+						System.out.println(getLocalName()+": Agent "+inform.getSender().getName()+" sent a reply.");		
 						nextRequests.add(NewMessage(inform));
 					}
 					
@@ -173,10 +211,11 @@ public abstract class Agent_OptionsManager extends Agent {
 			
 		  	System.out.println(getLocalName()+" is alive...");
 		  	
-		 
+		  	getContentManager().registerLanguage(codec);
+			getContentManager().registerOntology(ontology);
+
 			registerWithDF();
-
-
+			
 			
 			final Agent_OptionsManager _this = this; 	
 	
@@ -201,10 +240,24 @@ public abstract class Agent_OptionsManager extends Agent {
 				}  // end prepareResponse
 				
 				protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException {					
-						System.out.println("Agent "+getLocalName()+": Preparing response");
+						System.out.println("Agent "+getLocalName()+": Received action: "+request.getContent()+". Preparing response.");
 						try {
-							Options = (Vector<MyWekaOption>) request.getContentObject();
-						} catch (UnreadableException e) {
+							// Options = (Vector<MyWekaOption>) request.getContentObject();
+					  		ContentElement content = getContentManager().extractContent(request);
+					  		if (((Action)content).getAction() instanceof Compute){
+			                    Compute compute = (Compute) ((Action)content).getAction();
+			                    Options = compute.getTask().getOptions();
+							  	fileName = compute.getTask().getData_file_name();
+							  	receiver = compute.getTask().getAgent_name();
+					  		}
+							
+						} catch (UngroundedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (CodecException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (OntologyException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}

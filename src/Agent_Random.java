@@ -3,9 +3,10 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.Random;
 
+import ontology.messages.Option;
+
 import weka.classifiers.Evaluation;
 import weka.core.Instances;
-import weka.core.Option;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.domain.DFService;
@@ -19,6 +20,7 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.ContractNetResponder;
+import jade.util.leap.Iterator;
 
 
 public class Agent_Random extends Agent_OptionsManager {
@@ -46,59 +48,59 @@ public class Agent_Random extends Agent_OptionsManager {
 		 String str = "";
 		 
 		 Random generator = new Random();
+		    
+		 Iterator itr = Options.iterator();	 
 		 
-		 for (Enumeration e = Options.elements() ; e.hasMoreElements() ;) {
-	           MyWekaOption next = (MyWekaOption)e.nextElement();
-	    	   if (next.mutable){
+		 while (itr.hasNext()) {
+	           Option next = (Option) itr.next();
+	           
+	    	   if (next.getMutable()){
 	    		   
-	    		   String optionName = " -"+next.name+" ";
+	    		   String optionName = " -"+next.getName()+" ";
 	    		   
-	    		   int numArgs = next.numArgsMin+generator.nextInt(next.numArgsMax-next.numArgsMin+1);
 	    		   
-	    		   if (!next.isASet){	    		   
-		    		   switch(next.type){
-		    		   		case INT:
+	    		   int numArgs = (int)(next.getNumber_of_args().getMin()+generator.nextInt((int)(next.getNumber_of_args().getMax()-next.getNumber_of_args().getMin()+1)));
+	    		   
+	    		   if (!next.getIs_a_set()){	    		   
+		    		   if(next.getData_type().equals("INT")){
+		    		   		
 		    		   			String si = "";
 		    		   			for (int i=1; i<numArgs; i++){
-		 	    					int rInt = (int)next.lower + generator.nextInt((int)(next.upper-next.lower));
+		 	    					int rInt = (int) (next.getRange().getMin() + generator.nextInt((int)(next.getRange().getMax()-next.getRange().getMin())));
 		 	    					si += Integer.toString(rInt)+",";
 		    		   			}
-		    		   			int rInt = (int)next.lower + generator.nextInt((int)(next.upper-next.lower));
+		    		   			int rInt = (int) (next.getRange().getMin() + generator.nextInt((int)(next.getRange().getMax()-next.getRange().getMin())));
 		    		   			si += Integer.toString(rInt);
 		    		   			 
 		    		   			str += (optionName+si);
-		    		   			break;
-		    		   			
-		    		   		case FLOAT:
+		    		   }	
+		    		   if(next.getData_type().equals("FLOAT")){
 		    		   			String sf = "";
 		    		   			for (int i=1; i<numArgs; i++){
-		    		   				float rFloat = next.lower + (float)(generator.nextDouble())*(next.upper - next.lower);
+		    		   				float rFloat = next.getRange().getMin() + (float)(generator.nextDouble())*(next.getRange().getMax() - next.getRange().getMin());
 		 	    					sf += Float.toString(rFloat)+",";
 		    		   			}
-		    		   			float rFloat = next.lower + (float)(generator.nextDouble())*(next.upper - next.lower);
+		    		   			float rFloat = next.getRange().getMin() + (float)(generator.nextDouble())*(next.getRange().getMax() - next.getRange().getMin());
 		    		   			sf += Float.toString(rFloat);
 		    		   			 
-		    		   			str += (optionName+sf);
-		    		   			break;
-		    		   			
-		    		   		case BOOLEAN:
+		    		   			str += (optionName+sf); 
+		    		  }
+		    		  if(next.getData_type().equals("BOOLEAN")){
 		    		   			int rInt2 = generator.nextInt(2);
 		    		   			if (rInt2 == 1){
 		    		   				str += optionName;
 		    		   			}
-		    		   			break;
-		    		   			
-		    		   }  // end switch
+		    		  }  
 	    		   }
 	    		   else{
 	    			   	    			   
 	    			   String s = "";
 	    			   for (int i=1; i<numArgs; i++){
-	    				   int index = generator.nextInt(next.set.length);
-	    				   s += next.set[index]+",";	    		   
+	    				   int index = generator.nextInt(next.getSet().size());
+	    				   s += next.getSet().get(index)+",";	    		   
 	    			   }
-	    			   int index = generator.nextInt(next.set.length);
-    				   s += next.set[index];
+	    			   int index = generator.nextInt(next.getSet().size());
+    				   s += next.getSet().get(index);
     				   
     				   str += (optionName+s);
 	    		   }

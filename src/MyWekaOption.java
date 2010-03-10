@@ -11,11 +11,11 @@ public class MyWekaOption implements Serializable{
 	public boolean mutable = true;
 	public float lower;
 	public float upper;
-	public int numArgsMin;
-	public int numArgsMax;
+	public float numArgsMin;
+	public float numArgsMax;
 	public dataType type;
 	
-	public String descrription;
+	public String description;
 	public String name;
 	public int numArguments;
 	public String synopsis;
@@ -28,7 +28,7 @@ public class MyWekaOption implements Serializable{
 		// super(arg0, arg1, arg2, arg3);
 		// TODO Auto-generated constructor stub
 		
-		descrription = arg0;
+		description = arg0;
 		name = arg1;
 		numArguments = arg2;
 		synopsis = arg3;
