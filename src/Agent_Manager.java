@@ -32,7 +32,7 @@ import jade.content.lang.sl.*;
 
 public class Agent_Manager extends Agent{
 	
-	// private int nResponders;	
+	private String receiver;	
 	
 	private Codec codec = new SLCodec();
 	private Ontology ontology = MessagesOntology.getInstance();
@@ -66,9 +66,39 @@ public class Agent_Manager extends Agent{
 		  	System.out.println("Manager "+getLocalName()+" is alive and waiting...");
 		  			  	
 		  	// find a concrete agent according to a selected agent type
-		  	// TODO
-		    String receiver = "mp1"; 
+			String type = "RBFNetwork"; 
+		  	
+			// The list of known computing agents of the given type
+			AID[] ComputingAgents;
+			AID CA = new AID();
+			 
+			// Make the list
+			DFAgentDescription template = new DFAgentDescription();
+	        ServiceDescription CAsd = new ServiceDescription();
+	        CAsd.setType(type);
+	        template.addServices(CAsd);
+	        try {
+	         	DFAgentDescription[] result = DFService.search(this, template); 
+	         	System.out.println("Found the following agents:");
+	         	ComputingAgents = new AID[result.length];
+	           
+	            for (int i = 0; i < result.length; ++i) {
+	            	ComputingAgents[i] = result[i].getName();
+		          	System.out.println(ComputingAgents[i].getName());
+	           }
+	           // choose one
+	           // TODO - if it fails, ask another agent! 
+	           CA = ComputingAgents[0];
+	        }
+	        catch (FIPAException fe) {
+	           fe.printStackTrace();
+	        }
+	        catch (ArrayIndexOutOfBoundsException ae){
+	        	System.out.println("No "+type+" agent found.");
+	        	return;
+	        }
 		    
+	        receiver = CA.getLocalName();
 		  	// get available Options from selected agent:
 		  	
 		  	// create a request message with GetOptions content
@@ -150,7 +180,7 @@ public class Agent_Manager extends Agent{
                    // Prepare the content.			
        				Task task = new Task();
        				task.setData_file_name("weather.arff");
-       				task.setAgent_name("mp1");
+       				task.setAgent_name(receiver);
        				task.setOptions(options.getOptions());
        				Compute compute = new Compute();
        				compute.setTask(task);

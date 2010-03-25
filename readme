@@ -1,5 +1,6 @@
-10.3.2010
-Agent_Manager asks a Computing_Agent "mp1" (works only for Agent_MultilayerPerceptron) for his weka Options,
-then sends them to an Agent_OptionsManager (Agent_Random),
+25.3.2010
+Agent_Manager asks a Computing_Agent (specified by its name) for his weka Options,
+sends them to an Agent_OptionsManager (Agent_Random),
 who chooses random values of these options, sends them to a Computing_Agent,
-receives the reply (result of the computation with given options), and keeps iterating until the errorRate is smaller than 0.3.
+receives the reply (result of the computation with given options),
+and keeps iterating until the errorRate is smaller than 0.3.

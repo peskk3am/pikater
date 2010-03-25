@@ -1,0 +1,13 @@
+# name, type, number od values, parameters range / set
+# r ... range
+# s ... set  (example: s 1, 2, 3, 4, 5, 6, 7, 8)
+
+
+# number of clusters, default 2
+$ B int 1 1 r 2 10
+
+# minStdDev, default 0.1
+$ W float 1 1 r 0.01 1
+
+# Ridge (Set the Ridge value for the logistic or linear regression), default 1.0E-8
+# $ R float 1 1 r 1.0E-12 1.0E-4

@@ -47,8 +47,8 @@ public abstract class Agent_OptionsManager extends Agent {
 	 	 private Codec codec = new SLCodec();
 	 	 private Ontology ontology = MessagesOntology.getInstance();
 	
-		 String fileName;
-		 String receiver;
+		 private String fileName;
+		 private String receiver;
 		 
 	 	 boolean working = false;
 	 	 

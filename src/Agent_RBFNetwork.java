@@ -4,6 +4,7 @@ import weka.core.Instances;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 //import weka.classifiers.trees.J48;
+import weka.classifiers.functions.MultilayerPerceptron;
 import weka.classifiers.functions.RBFNetwork;
 import weka.gui.visualize.PrintablePanel;
 
@@ -22,14 +23,18 @@ import jade.lang.acl.UnreadableException;
 
 
 public class Agent_RBFNetwork extends Agent_ComputingAgent{
-	 private RBFNetwork cls; 
-	
+	 private RBFNetwork cls = new RBFNetwork(); 
+	 
 	 protected RBFNetwork getModelObject(){
 		 return cls;
 	 }
 
+	 protected String getOptFileName(){
+		 return "/options/RBFNetwork.opt";
+	 }
+	 
 	 protected boolean setModelObject(Classifier _cls){
-		 try {		 
+		 try {
 			 cls = (RBFNetwork) _cls;
 			 return true;
 		 }

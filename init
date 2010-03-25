@@ -1,5 +1,5 @@
 $a Agent_ARFFReader Reader
-# $a Agent_RBFNetwork rbf1
+$a Agent_RBFNetwork rbf1
 # $a Agent_RBFNetwork rbf2 -B 1
 
 # load rbf3 from file (rbf3.model) 

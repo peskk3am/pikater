@@ -5,10 +5,12 @@
 import java.io.*;
 
 import java.util.*;
+
 import jade.util.leap.List;
 import jade.util.leap.ArrayList;
 
 import weka.core.Instances;
+import weka.core.Option;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.functions.MultilayerPerceptron;
@@ -76,10 +78,10 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 
 	 protected abstract String getAgentType();
 	 
-	 protected abstract Object getModelObject();
+	 protected abstract Classifier getModelObject();
 	 protected abstract boolean setModelObject(Classifier _cls);
 
-	 protected abstract void getParameters();
+	 protected abstract String getOptFileName();
 	 
 	 
 	 protected boolean registerWithDF(){
@@ -227,12 +229,12 @@ public abstract class Agent_ComputingAgent extends Agent{
 					Options options = new Options();
 					List _options = new ArrayList();
 	  								
-					Option opt = null;
+					ontology.messages.Option opt = null;
 					Interval interval = null;
 					List set = null;
 				    for (Enumeration e = Options.elements() ; e.hasMoreElements() ;) {
 				       MyWekaOption next = (MyWekaOption)e.nextElement();
-			    	   opt = new Option();
+			    	   opt = new ontology.messages.Option();
 			           opt.setMutable(next.mutable);
 			           
 			           interval = new Interval();
@@ -256,6 +258,8 @@ public abstract class Agent_ComputingAgent extends Agent{
 			           _options.add(opt);
 			       }
 				   options.setOptions(_options);
+				   
+				   System.out.println(_options);
 				   
 				   ContentElement content = getContentManager().extractContent(request); // TODO exception block?
 				   Result result = new Result((Action)content, options);
@@ -284,6 +288,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 			return msgOut;
 			
 	 }  // end SendOptions
+	 
 	 
 	 protected ACLMessage Execute(ACLMessage request, Execute execute, AchieveREResponder behavior) throws FailureException{
 		state = states.NEW;
@@ -560,7 +565,136 @@ public abstract class Agent_ComputingAgent extends Agent{
 		 return true;
 	 } // end getData
 	 
-	 	 
+	 
+	 private void getParameters(){
+			// fills the global Options vector
+			 
+			System.out.println(getLocalName()+": The options are: ");
+			 
+			String optPath = System.getProperty("user.dir")+getOptFileName();   
+			
+			 // read options from file
+			try {
+				/*  Sets up a file reader to read the options file */
+				FileReader input = new FileReader(optPath);
+	            /* Filter FileReader through a Buffered read to read a line at a
+	               time */
+	            BufferedReader bufRead = new BufferedReader(input);
+	           
+	            String line;    // String that holds current file line
+	            int count = 0;  // Line number of count 
+	            // Read first line
+	            line = bufRead.readLine();
+	            count++;
+	            
+	            Options = new Vector<MyWekaOption>();
+	            
+	            // Read through file one line at time. Print line # and line
+	            while (line != null){
+	                System.out.println("    "+count+": "+line);
+	                
+	                // parse the line
+	                String delims = "[ ]+";
+	                String[] params = line.split(delims, 7);
+
+	                
+	                
+	                if (params[0].equals("$")){
+	          		  	                 	   
+	                	   MyWekaOption.dataType dt = MyWekaOption.dataType.BOOLEAN; 
+	                	   
+	                	   if (params[2].equals("boolean")){
+	                		   dt = MyWekaOption.dataType.BOOLEAN; 
+	                	   }
+	                	   if (params[2].equals("float")){
+	                		   dt = MyWekaOption.dataType.FLOAT;
+	                	   }
+	                	   if (params[2].equals("int")){
+	                		   dt = MyWekaOption.dataType.INT; 
+	                	   }
+               	   
+	                	   
+	                	   Enumeration en = getModelObject().listOptions();
+
+			       	       while(en.hasMoreElements()){
+			       	    	   
+			       	    	   Option next = (weka.core.Option)en.nextElement();
+			       	    	   
+			       	    	   if ((next.name()).equals(params[1])){
+			       	    		   MyWekaOption o;
+			                	   if (params.length > 3){
+			                		   o = new MyWekaOption(
+				       	    				   next.description(), next.name(), next.numArguments(), next.synopsis(), 
+				       	    				   dt, new Integer(params[3]).intValue(), new Integer(params[4]).intValue(), params[5], params[6]
+				       	    		   ); 
+			                	   }
+			                	   else{
+			                		   o = new MyWekaOption(
+				       	    				   next.description(), next.name(), next.numArguments(), next.synopsis(), 
+				       	    				   dt, 0, 0, "", ""
+				       	    		   );   
+			                	   }
+			       	    		   
+			       	    		   
+			       	    		   // save o to options vector
+			       	    		   Options.add(o);
+			       	    	   }
+			       	       }
+
+	                }
+	                
+	                line = bufRead.readLine();
+	                
+	                count++;
+	            }
+	            
+	            bufRead.close();
+	            
+	        }catch (ArrayIndexOutOfBoundsException e){
+	            /* If no file was passed on the command line, this exception is
+	            generated. A message indicating how to the class should be
+	            called is displayed */
+	            System.out.println("Usage: java ReadFile filename\n");          
+
+	        }catch (IOException e){
+	            // If another exception is generated, print a stack trace
+	            e.printStackTrace();
+	        }
+	        catch (Exception e){
+	        	e.printStackTrace();
+	        	System.err.println(getLocalName()+": Reading options from .opt file failed.");
+	        }
+			  
+			  
+			/*  Enumeration en = cls.listOptions();
+
+		       while(en.hasMoreElements()){
+		    	  	Option next = (weka.core.Option)en.nextElement();
+		    	   System.out.println("  "+next.description()+ ", "
+		    	  						   +next.name()+ ", "
+		    	  						   +next.numArguments()+ ", "
+		    	  						   +next.synopsis()
+		    	  	);
+		    	  	System.out.println();
+		       }
+			  */
+			  
+		     /*  System.out.println("MyWekaOptions: ");
+		       for (Enumeration e = Options.elements() ; e.hasMoreElements() ;) {
+		           MyWekaOption next = (MyWekaOption)e.nextElement();
+		    	   System.out.print(next.name+" ");
+		    	   System.out.print(next.lower+" ");
+		    	   System.out.print(next.upper+" ");
+		    	   System.out.print(next.type+" ");
+		    	   System.out.print(next.numArgsMin+" ");
+		    	   System.out.print(next.numArgsMax+" ");
+		    	   System.out.println(next.set);
+		    	   System.out.println("------------");
+		       }
+			*/
+	 }  // end getParameters
+
+	 
 	 public static byte[] toBytes(Object object) throws Exception{
 		 java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
 		 java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(baos);
