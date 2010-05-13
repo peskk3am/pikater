@@ -10,7 +10,7 @@ import java.io.*;
 
 public class Agent_Initiator extends Agent{
 	// private String path = "D:/diplomka/eclipse/diplomka/";
-	private String path = System.getProperty("user.dir")+"\\";
+	private String path = System.getProperty("user.dir")+System.getProperty("file.separator");
 	
 	protected void setup(){
  
