@@ -1,12 +1,14 @@
-import jade.core.AID;
 import jade.core.Agent;
-import jade.domain.DFService;
-
-import jade.wrapper.PlatformController;
+import jade.util.leap.ArrayList;
+import jade.util.leap.List;
 import jade.wrapper.AgentController;
-import jade.wrapper.StaleProxyException;
+import jade.wrapper.PlatformController;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+
+import ontology.messages.Problem;
 
 public class Agent_Initiator extends Agent{
 	// private String path = "D:/diplomka/eclipse/diplomka/";
@@ -71,7 +73,6 @@ public class Agent_Initiator extends Agent{
             e.printStackTrace();
         }
 	
-		
 
 	}
 
@@ -92,4 +93,5 @@ public class Agent_Initiator extends Agent{
 		return 1;
 	}
 	
+		
 }

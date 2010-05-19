@@ -9,3 +9,6 @@ $a Agent_MultilayerPerceptron mp1
 $a Agent_Random r
 
 $a Agent_Manager manager
+
+# get a Problem from "config" file
+$a Agent_GUI_config_file very_simple_GUI config
