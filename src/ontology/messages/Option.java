@@ -14,6 +14,7 @@ public class Option implements Concept{
 	private String _description;
 	private String _name;
 	private String _synopsis;
+	private String _value;  // when immutable, contains the default value
 	
 	// Methods required to use this class to represent the TASK role
 	public void setMutable(boolean mutable) {
@@ -69,6 +70,12 @@ public class Option implements Concept{
 	}
 	public String getSynopsis() {
 		return _synopsis;
+	}
+	public void setValue(String value) {
+		_value=value;
+	}
+	public String getValue() {
+		return _value;
 	}
 
 }

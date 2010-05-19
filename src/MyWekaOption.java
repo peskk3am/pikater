@@ -8,7 +8,7 @@ public class MyWekaOption implements Serializable{
 	}
 	// list - pocet polozek, range
 	
-	public boolean mutable = true;
+	public boolean mutable = false;
 	public float lower;
 	public float upper;
 	public float numArgsMin;

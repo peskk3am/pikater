@@ -226,7 +226,8 @@ public abstract class Agent_ComputingAgent extends Agent{
 				// msgOut.setContentObject(Options);
 					
 					// Prepare the content
-					Options options = new Options();
+					ontology.messages.Agent agent = new ontology.messages.Agent();
+					agent.setName(getLocalName());
 					List _options = new ArrayList();
 	  								
 					ontology.messages.Option opt = null;
@@ -257,12 +258,12 @@ public abstract class Agent_ComputingAgent extends Agent{
 			           opt.setSynopsis(next.synopsis);
 			           _options.add(opt);
 			       }
-				   options.setOptions(_options);
+				   agent.setOptions(_options);
 				   
 				   System.out.println(_options);
 				   
 				   ContentElement content = getContentManager().extractContent(request); // TODO exception block?
-				   Result result = new Result((Action)content, options);
+				   Result result = new Result((Action)content, agent);
 				   // result.setValue(options);	
 					
 				   try {
@@ -473,7 +474,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 	  						
 	  						try{
 	  							ContentElement content = getContentManager().extractContent(request);
-	  							// System.out.println(((Action)ce).getAction());
+	  							// System.out.println(((Action)content).getAction());
 	  							
 	  							if (((Action)content).getAction() instanceof GetOptions){
 	  								return sendOptions(request);

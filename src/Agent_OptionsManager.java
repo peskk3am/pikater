@@ -3,11 +3,7 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.Vector;
 
-import ontology.messages.Compute;
-import ontology.messages.Execute;
-import ontology.messages.GetOptions;
-import ontology.messages.MessagesOntology;
-import ontology.messages.Options;
+import ontology.messages.*;
 
 // import Agent_ComputingAgent.states;
 
@@ -246,9 +242,9 @@ public abstract class Agent_OptionsManager extends Agent {
 					  		ContentElement content = getContentManager().extractContent(request);
 					  		if (((Action)content).getAction() instanceof Compute){
 			                    Compute compute = (Compute) ((Action)content).getAction();
-			                    Options = compute.getTask().getOptions();
+			                    Options = compute.getTask().getAgent().getOptions();
 							  	fileName = compute.getTask().getData_file_name();
-							  	receiver = compute.getTask().getAgent_name();
+							  	receiver = compute.getTask().getAgent().getName();
 					  		}
 							
 						} catch (UngroundedException e) {
