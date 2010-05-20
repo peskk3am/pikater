@@ -2,9 +2,9 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="/home/martin/school/bang/pikater/lib/jade.jar"/>
-	<classpathentry kind="lib" path="/home/martin/school/bang/pikater/lib/weka-src.jar"/>
-	<classpathentry kind="lib" path="/home/martin/school/bang/pikater/lib/remoteExperimentServer.jar"/>
-	<classpathentry kind="lib" path="/home/martin/school/bang/pikater/lib/weka.jar"/>
+	<classpathentry exported="true" kind="lib" path="/home/martin/school/bang/pikater/lib/jade.jar"/>
+	<classpathentry exported="true" kind="lib" path="/home/martin/school/bang/pikater/lib/weka-src.jar"/>
+	<classpathentry exported="true" kind="lib" path="/home/martin/school/bang/pikater/lib/remoteExperimentServer.jar"/>
+	<classpathentry exported="true" kind="lib" path="/home/martin/school/bang/pikater/lib/weka.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
