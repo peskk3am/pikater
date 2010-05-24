@@ -14,6 +14,5 @@ public class SetProblem implements jade.content.Concept {
 
 	public Problem getTheProblem() {
 		return prob;
-	}
-	
+	}	
 }

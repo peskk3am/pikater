@@ -11,4 +11,4 @@ $a Agent_Random r
 $a Agent_Manager manager
 
 # get a Problem from "config" file
-$a Agent_GUI_config_file very_simple_GUI config
+$a Agent_GUI_WS very_simple_GUI config

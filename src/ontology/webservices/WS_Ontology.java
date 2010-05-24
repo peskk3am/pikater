@@ -4,6 +4,7 @@ import jade.content.onto.BasicOntology;
 import jade.content.onto.Ontology;
 import jade.content.schema.AgentActionSchema;
 import jade.content.schema.ConceptSchema;
+import ontology.messages.*;
 
 
 public class WS_Ontology extends Ontology {
@@ -25,10 +26,10 @@ public class WS_Ontology extends Ontology {
 		super(ONTOLOGY_NAME, BasicOntology.getInstance());
 		try {
 			add(new AgentActionSchema(SET_PROBLEM), SetProblem.class);
-			add(new ConceptSchema(ontology.messages.MessagesOntology.PROBLEM), ontology.messages.Problem.class);
+			add(new ConceptSchema(MessagesOntology.PROBLEM), Problem.class);
 			
 			AgentActionSchema as = (AgentActionSchema)getSchema(SET_PROBLEM);
-			as.add(THE_PROBLEM, (ConceptSchema)getSchema(ontology.messages.MessagesOntology.PROBLEM));
+			as.add(THE_PROBLEM, (ConceptSchema)getSchema(MessagesOntology.PROBLEM));
 			
 		}
 		catch (Exception e) {}
