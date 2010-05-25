@@ -25,8 +25,9 @@ public class MessagesOntology extends Ontology {
 	  public static final String PROBLEM_FILE_NAMES = "file_names";
 	  
 
-	  // public static final String EVALUATION = "EVALUATION";
-	  // public static final String EVALUATION_ERROR_RATE = "error-rate";
+	  public static final String EVALUATION = "EVALUATION";
+	  public static final String EVALUATION_ERROR_RATE = "error_rate";
+	  public static final String EVALUATION_PCT_INCORRECT = "pct_incorrect";
 	  
 	  public static final String OPTION = "OPTION";
 	  public static final String OPTION_MUTABLE = "mutable";
@@ -93,6 +94,7 @@ public class MessagesOntology extends Ontology {
 			add(new ConceptSchema(INTERVAL), Interval.class);
 			add(new ConceptSchema(AGENT), Agent.class);
 			add(new ConceptSchema(PROBLEM), Problem.class);
+			add(new ConceptSchema(EVALUATION), Evaluation.class);
 			
 			add(new AgentActionSchema(COMPUTE), Compute.class);
 			add(new AgentActionSchema(GET_OPTIONS), GetOptions.class);
@@ -128,6 +130,9 @@ public class MessagesOntology extends Ontology {
 	    	cs.add(OPTION_WEKA_SYNOPSIS, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 	    	cs.add(OPTION_VALUE, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 	    	
+	    	cs = (ConceptSchema)getSchema(EVALUATION);
+	    	cs.add(EVALUATION_ERROR_RATE, (PrimitiveSchema)getSchema(BasicOntology.FLOAT));
+	    	cs.add(EVALUATION_PCT_INCORRECT, (PrimitiveSchema)getSchema(BasicOntology.FLOAT));
     	
 	    	cs = (ConceptSchema)getSchema(AGENT);
 	    	cs.add(AGENT_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));

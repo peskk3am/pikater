@@ -128,8 +128,8 @@ public abstract class Agent_OptionsManager extends Agent {
 			 
 			 
 			 if (!finished()){
-				 String opt = generateNewOptions(result);
-				 System.out.println(getLocalName()+": new options for agent "+receiver+" are "+opt); 
+				String opt = generateNewOptions(result);
+				System.out.println(getLocalName()+": new options for agent "+receiver+" are "+opt); 
 				 
 				msg = new ACLMessage(ACLMessage.REQUEST);
 				msg.setLanguage(codec.getName());
@@ -221,7 +221,7 @@ public abstract class Agent_OptionsManager extends Agent {
 	  		MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST),
 	  		MessageTemplate.MatchPerformative(ACLMessage.REQUEST) );
 	  		  		
-  		    AchieveREResponder receive_goal = new AchieveREResponder(this, template_inform) {
+  		    AchieveREResponder receive_task = new AchieveREResponder(this, template_inform) {
 				protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException, RefuseException {
 					System.out.println("Agent "+getLocalName()+": REQUEST received from "+request.getSender().getName()+".");
 
@@ -237,6 +237,7 @@ public abstract class Agent_OptionsManager extends Agent {
 				
 				protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException {					
 						System.out.println("Agent "+getLocalName()+": Received action: "+request.getContent()+". Preparing response.");
+						
 						try {
 							// Options = (Vector<MyWekaOption>) request.getContentObject();
 					  		ContentElement content = getContentManager().extractContent(request);
@@ -260,21 +261,46 @@ public abstract class Agent_OptionsManager extends Agent {
 						
 						Start(request);
 											
-					
 						ACLMessage msgOut = new ACLMessage(ACLMessage.INFORM);
-						msgOut.addReceiver(request.getSender());
-						msgOut.setContent("OK");
+						msgOut.addReceiver(request.getSender());			
+							
+						msgOut.setContent("Failed");   // deafult content
+						
+						msgOut.setLanguage(codec.getName());
+						msgOut.setOntology(ontology.getName());
+						msgOut.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+						// We want to receive a reply in 30 secs
+						msgOut.setReplyByDate(new Date(System.currentTimeMillis() + 30000));			
+						
+						ontology.messages.Evaluation evaluation = new ontology.messages.Evaluation();
+						evaluation.setError_rate((float)result.errorRate);
+						evaluation.setPct_incorrect((float)result.pctIncorrect);
+						
+						
+		  				Action a = new Action();
+		   				a.setAction(evaluation);
+		   				a.setActor(myAgent.getAID());
+		   		  		
+		   		  		try {
+							getContentManager().fillContent(msgOut, a);
+						} catch (CodecException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (OntologyException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						
 						
 						return msgOut;
 				}  //  end prepareResultNotification
 				
 			};
 			
-			addBehaviour(receive_goal);
+			addBehaviour(receive_task);
 			
 
 		 
 		 } // end setup
 
-	
 }
