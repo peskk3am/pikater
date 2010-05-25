@@ -233,9 +233,8 @@ public class Agent_Manager extends Agent{
 			
 			protected void handleFailure(ACLMessage failure) {
 				if (failure.getSender().equals(myAgent.getAMS())) {
-					// FAILURE notification from the JADE runtime: the receiver
-					// does not exist
-					System.out.println("Responder does not exist");
+					// FAILURE notification from the JADE runtime: the receiver does not exist
+					System.out.println(getLocalName()+": Responder does not exist");
 				}
 				else {
 					System.out.println("Agent "+failure.getSender().getName()+" failed to perform the requested action");

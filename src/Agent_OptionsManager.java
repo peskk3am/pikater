@@ -34,6 +34,7 @@ import jade.proto.AchieveREResponder;
 	import jade.proto.ContractNetResponder;
 import jade.proto.IteratedAchieveREInitiator;
 	import jade.core.AID;
+import jade.core.behaviours.DataStore;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.proto.AchieveREInitiator;
 import jade.util.leap.List;
@@ -55,7 +56,39 @@ public abstract class Agent_OptionsManager extends Agent {
 		 protected abstract boolean finished();
 		 protected abstract String generateNewOptions(MyWekaEvaluation result);
 		 
+
+		 class ComputeTask extends IteratedAchieveREInitiator{
+
+			public ComputeTask(Agent a, ACLMessage request) {
+				super(a, request);
+				System.out.println(a.getLocalName()+": ComputeTask behavior created");
+				
+			}
+			
+			protected void handleInform(ACLMessage inform, java.util.Vector nextRequests) {
+				System.out.println(getLocalName()+": Agent "+inform.getSender().getName()+" sent a reply.");		
+				nextRequests.add(NewMessage(inform));
+			}
+			
+			protected void handleRefuse(ACLMessage refuse) {
+				System.out.println(getLocalName()+": Agent "+refuse.getSender().getName()+" refused to perform the requested action");
+			}
+			
+			protected void handleFailure(ACLMessage failure) {
+				if (failure.getSender().equals(myAgent.getAMS())) {
+					// FAILURE notification from the JADE runtime: the receiver
+					// does not exist
+					System.out.println("Responder does not exist");
+				}
+				else {
+					System.out.println("Agent "+failure.getSender().getName()+" failed to perform the requested action");
+				}
+			}
+
+			 
+		 }  // end class ComputeTask
 		 
+		
 		 
 		 protected boolean registerWithDF(){
 	         //register with the DF
@@ -169,7 +202,7 @@ public abstract class Agent_OptionsManager extends Agent {
 		 } // NewMessage
 
 		 
-		 void Start(ACLMessage request){
+		/* void Start(ACLMessage request){
 			 
 			 IteratedAchieveREInitiator behav = new IteratedAchieveREInitiator(this, NewMessage(null)) {
 					
@@ -198,6 +231,7 @@ public abstract class Agent_OptionsManager extends Agent {
 			 addBehaviour(behav);
 
 		 }
+		 */
 		 
 		 
 		 protected void setup() {
@@ -235,6 +269,7 @@ public abstract class Agent_OptionsManager extends Agent {
 						return agree;
 				}  // end prepareResponse
 				
+				
 				protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException {					
 						System.out.println("Agent "+getLocalName()+": Received action: "+request.getContent()+". Preparing response.");
 						
@@ -259,14 +294,16 @@ public abstract class Agent_OptionsManager extends Agent {
 							e.printStackTrace();
 						}
 						
-						Start(request);
-											
+						// Start(request);
+						
+						registerPrepareResultNotification(new ComputeTask(myAgent, (ACLMessage)getDataStore().get(REQUEST_KEY)));
+						
 						ACLMessage msgOut = new ACLMessage(ACLMessage.INFORM);
 						msgOut.addReceiver(request.getSender());			
 							
 						msgOut.setContent("Failed");   // deafult content
 						
-						msgOut.setLanguage(codec.getName());
+						/* msgOut.setLanguage(codec.getName());
 						msgOut.setOntology(ontology.getName());
 						msgOut.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
 						// We want to receive a reply in 30 secs
@@ -291,14 +328,19 @@ public abstract class Agent_OptionsManager extends Agent {
 							e.printStackTrace();
 						}
 						
-						
+						*/
 						return msgOut;
 				}  //  end prepareResultNotification
 				
 			};
 			
+			// receive_task.registerPrepareResponse(behav_compute);
+			// System.out.println("------------------------------------"+receive_task);
+			// receive_task.registerPrepareResultNotification(new ComputeTask(this, (ACLMessage)receive_task.getDataStore().get(receive_task.REQUEST_KEY)));
 			addBehaviour(receive_task);
 			
+			
+	 
 
 		 
 		 } // end setup
