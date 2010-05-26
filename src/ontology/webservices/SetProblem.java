@@ -1,18 +1,27 @@
 package ontology.webservices;
 
-import ontology.messages.Problem;
+import jade.util.leap.*;;
 
 public class SetProblem implements jade.content.Concept {
 
-	private Problem prob;
+	private List agentDescriptions;
+	private List fileNames;
 	
 	private static final long serialVersionUID = 1L;
 	
-	public void setTheProblem(Problem prob) {
-		this.prob = prob;
+	public void setAgentDescriptions(List agentDescriptions) {
+		this.agentDescriptions = agentDescriptions;
 	}
 
-	public Problem getTheProblem() {
-		return prob;
+	public List getAgentDescriptions() {
+		return agentDescriptions;
 	}	
+	
+	public List getFileNames() {
+		return fileNames;
+	}
+	
+	public void setFileNames(List fileNames) {
+		this.fileNames = fileNames;
+	}
 }
