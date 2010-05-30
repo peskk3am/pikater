@@ -1,11 +1,16 @@
-	import java.io.IOException;
-import java.io.Serializable;
+import java.io.*;
 import java.util.Date;
 import java.util.Vector;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 import ontology.messages.*;
 
-// import Agent_ComputingAgent.states;
+import org.jdom.Document;
+import org.jdom.Element;
+import org.jdom.output.Format;
+import org.jdom.output.XMLOutputter;
 
 import weka.classifiers.Evaluation;
 import weka.core.Instances;
@@ -37,6 +42,7 @@ import jade.proto.IteratedAchieveREInitiator;
 import jade.core.behaviours.DataStore;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.proto.AchieveREInitiator;
+import jade.util.leap.Iterator;
 import jade.util.leap.List;
 
 
@@ -46,9 +52,13 @@ public abstract class Agent_OptionsManager extends Agent {
 	
 		 private String fileName;
 		 private String receiver;
-		 
-	 	 boolean working = false;
+	 	 private String computation_id;
+	 	 private String problem_id;
 	 	 
+	 	 private int task_i = 0; // task number
+
+	 	 boolean working = false;
+	 	 	 	 
 		 MyWekaEvaluation result;
 	 	 protected List Options;
 	 	 
@@ -57,11 +67,11 @@ public abstract class Agent_OptionsManager extends Agent {
 		 protected abstract String generateNewOptions(MyWekaEvaluation result);
 		 
 
-		 class ComputeTask extends IteratedAchieveREInitiator{
+		 class ComputeComputation extends IteratedAchieveREInitiator{
 
-			public ComputeTask(Agent a, ACLMessage request) {
+			public ComputeComputation(Agent a, ACLMessage request) {
 				super(a, request);
-				System.out.println(a.getLocalName()+": ComputeTask behavior created");
+				System.out.println(a.getLocalName()+": ComputeComputation behavior created");
 				
 			}
 			
@@ -86,7 +96,7 @@ public abstract class Agent_OptionsManager extends Agent {
 			}
 
 			 
-		 }  // end class ComputeTask
+		 }  // end class ComputeComputation
 		 
 		
 		 
@@ -173,7 +183,15 @@ public abstract class Agent_OptionsManager extends Agent {
 				msg.setReplyByDate(new Date(System.currentTimeMillis() + 30000));			
 				
 				Execute execute = new Execute();
-				execute.setOptions(fileName+" "+opt);
+				
+				Task task = new Task();
+				String id = computation_id+"_"+task_i;
+				task_i++;
+				task.setId(id);
+				task.setComputation_id(computation_id);
+				task.setProblem_id(problem_id);
+				task.setOptions(fileName+" "+opt);
+				execute.setTask(task);
 				
 				
   				Action a = new Action();
@@ -195,6 +213,20 @@ public abstract class Agent_OptionsManager extends Agent {
 			 }
 			 else{
 				msg = new ACLMessage(ACLMessage.CANCEL);
+				// write the results to a file
+				boolean exists = (new File("xml")).exists();
+				if (!exists) {	
+					boolean success = (new File("xml")).mkdir();
+				    if (!success) {
+				      System.out.println("Directory: " + "xml" + " could not be created");  // TODO exception
+				    } 
+				}
+				
+				writeResult("xml"+System.getProperty("file.separator")+computation_id+".xml", receiver);
+				
+				System.out.println("Agent "+getLocalName()+" says good bye!");
+				doDelete();
+				
 			 }
 			 			
 			 return msg;				
@@ -202,7 +234,73 @@ public abstract class Agent_OptionsManager extends Agent {
 		 } // NewMessage
 
 		 
-		/* void Start(ACLMessage request){
+		 protected boolean writeResult(String file_name, String agent){
+			 
+			 
+			 	/* Generate the ExpML document  */
+			 	Document doc = new Document(new Element("experiment"));
+			 	Element root = doc.getRootElement();
+			
+					   
+		       Element newSetting = new Element ("setting");
+		       Element newAlgorithm = new Element ("algorithm");
+		       newAlgorithm.setAttribute("name", agent);
+		       newAlgorithm.setAttribute("libname", "weka");
+		       
+			    
+			   Iterator itr = Options.iterator();	  
+			   while (itr.hasNext()) {
+				   	Option next = (Option) itr.next();
+				    
+				   	Element newParameter = new Element ("parameter");
+				    newParameter.setAttribute("name", next.getName());
+				    
+				    String value = "";
+				    if (next.getValue() != null){ value = next.getValue(); }
+				    newParameter.setAttribute("value", value);
+				    
+				    newAlgorithm.addContent(newParameter);
+			   }
+			   
+			   Element newDataSet = new Element ("dataset");
+			   newDataSet.setAttribute("name", fileName);
+
+			   Element newEvaluation = new Element ("evaluation");
+			   Element newMetric1 = new Element ("metric");
+			   newMetric1.setAttribute ("mean_absolute_error", Double.toString(result.errorRate));
+			   Element newMetric2 = new Element ("metric");
+			   newMetric2.setAttribute ("root_mean_squared_error", Double.toString(result.pctIncorrect));
+			   			   
+			   newEvaluation.addContent(newMetric1);
+			   newEvaluation.addContent(newMetric2);
+			   
+		       root.addContent(newSetting);
+		       root.addContent(newEvaluation);
+		       newSetting.addContent(newAlgorithm);
+		       newSetting.addContent(newDataSet);
+		      
+		       
+		       XMLOutputter out = new XMLOutputter(Format.getPrettyFormat());
+		       try {
+		    	FileWriter fw = new FileWriter(file_name);
+		    	BufferedWriter fout = new BufferedWriter(fw);
+		    	
+				out.output( root, fout );
+				
+				fout.close();
+				
+			} catch (IOException e) {
+				e.printStackTrace();
+				return false;
+			}
+			
+			
+			 
+			 return true;
+		 }
+		 
+		 
+		void Start(ACLMessage request){
 			 
 			 IteratedAchieveREInitiator behav = new IteratedAchieveREInitiator(this, NewMessage(null)) {
 					
@@ -231,7 +329,7 @@ public abstract class Agent_OptionsManager extends Agent {
 			 addBehaviour(behav);
 
 		 }
-		 */
+		//  */
 		 
 		 
 		 protected void setup() {
@@ -255,7 +353,7 @@ public abstract class Agent_OptionsManager extends Agent {
 	  		MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST),
 	  		MessageTemplate.MatchPerformative(ACLMessage.REQUEST) );
 	  		  		
-  		    AchieveREResponder receive_task = new AchieveREResponder(this, template_inform) {
+  		    AchieveREResponder receive_computation = new AchieveREResponder(this, template_inform) {
 				protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException, RefuseException {
 					System.out.println("Agent "+getLocalName()+": REQUEST received from "+request.getSender().getName()+".");
 
@@ -278,9 +376,11 @@ public abstract class Agent_OptionsManager extends Agent {
 					  		ContentElement content = getContentManager().extractContent(request);
 					  		if (((Action)content).getAction() instanceof Compute){
 			                    Compute compute = (Compute) ((Action)content).getAction();
-			                    Options = compute.getTask().getAgent().getOptions();
-							  	fileName = compute.getTask().getData_file_name();
-							  	receiver = compute.getTask().getAgent().getName();
+			                    Options = compute.getComputation().getAgent().getOptions();
+							  	fileName = compute.getComputation().getData_file_name();
+							  	receiver = compute.getComputation().getAgent().getName();
+							  	computation_id = compute.getComputation().getId();
+							  	problem_id = compute.getComputation().getProblem_id();
 					  		}
 							
 						} catch (UngroundedException e) {
@@ -294,9 +394,9 @@ public abstract class Agent_OptionsManager extends Agent {
 							e.printStackTrace();
 						}
 						
-						// Start(request);
+						Start(request);
 						
-						registerPrepareResultNotification(new ComputeTask(myAgent, (ACLMessage)getDataStore().get(REQUEST_KEY)));
+						// registerPrepareResultNotification(new ComputeTask(myAgent, (ACLMessage)getDataStore().get(REQUEST_KEY)));
 						
 						ACLMessage msgOut = new ACLMessage(ACLMessage.INFORM);
 						msgOut.addReceiver(request.getSender());			
@@ -337,7 +437,7 @@ public abstract class Agent_OptionsManager extends Agent {
 			// receive_task.registerPrepareResponse(behav_compute);
 			// System.out.println("------------------------------------"+receive_task);
 			// receive_task.registerPrepareResultNotification(new ComputeTask(this, (ACLMessage)receive_task.getDataStore().get(receive_task.REQUEST_KEY)));
-			addBehaviour(receive_task);
+			addBehaviour(receive_computation);
 			
 			
 	 

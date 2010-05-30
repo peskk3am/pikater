@@ -26,6 +26,8 @@ import jade.proto.IteratedAchieveREInitiator;
 import jade.util.leap.ArrayList;
 import jade.util.leap.Iterator;
 import jade.util.leap.List;
+import jade.wrapper.AgentController;
+import jade.wrapper.PlatformController;
 
 import ontology.messages.*;
 
@@ -40,7 +42,8 @@ import jade.content.lang.sl.*;
 
 public class Agent_Manager extends Agent{
 	
-	private String receiver;	
+	private String receiver;
+	private int problem_i = 0;
 	
 	private Codec codec = new SLCodec();
 	private Ontology ontology = MessagesOntology.getInstance();
@@ -106,7 +109,7 @@ public class Agent_Manager extends Agent{
 	  							
 	  							if (((Action)content).getAction() instanceof Solve){
 	  								System.out.println("Agent "+getLocalName()+": received SOLVE instance.");
-	  								return prepareTasks(request);
+	  								return prepareComputations(request);
 	  							}
 	  							
 	  						}
@@ -131,7 +134,7 @@ public class Agent_Manager extends Agent{
 			
 	}  // end setup
 	
-	protected ACLMessage prepareTasks(ACLMessage request){
+	protected ACLMessage prepareComputations(ACLMessage request){
 		   
 		ContentElement content;
 		try {
@@ -147,6 +150,7 @@ public class Agent_Manager extends Agent{
 	            	String problemID = generateProblemID();
 	            	problem.setId(problemID);
 	            	
+	            	int computation_i = 0;
 	       		 	Iterator a_itr = problem.getAgents().iterator();	 
 	            	while (a_itr.hasNext()) {
 	    	           ontology.messages.Agent a_next = (ontology.messages.Agent) a_itr.next();
@@ -155,14 +159,14 @@ public class Agent_Manager extends Agent{
 	    	           while (f_itr.hasNext()) {
 	    	        	   String f_next = (String) f_itr.next();
 	    	        	   
-	    	        	   Task task = new Task();
-	    	        	   task.setAgent(a_next);
-	    	        	   task.setData_file_name(f_next);
-	    	        	   task.setProblem_id(problemID);
+	    	        	   Computation computation = new Computation();
+	    	        	   computation.setAgent(a_next);
+	    	        	   computation.setData_file_name(f_next);
+	    	        	   computation.setProblem_id(problemID);
+	    	        	   computation.setId(problemID+"_"+computation_i);
+	    	        	   computation_i++;
 	    	        	   
-	    	        	   System.out.println("Agent "+getLocalName()+": TASK: "+task);
-	    	        	   
-	    	        	   Compute(task);
+	    	        	   Compute(computation);
 	    	           } // end while (iteration over files)
 	       	           
 	               	} // end while (iteration over agents List)
@@ -188,9 +192,9 @@ public class Agent_Manager extends Agent{
 			
 			return msgOut;
 			
-	} // end prepareTasks
+	} // end prepareComputation
 	
-	protected void Compute(Task task){
+	protected void Compute(Computation computation){
 		
 		ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
 		msg.setLanguage(codec.getName());
@@ -199,7 +203,7 @@ public class Agent_Manager extends Agent{
 
   		try {
   			Compute compute = new Compute();
-  			compute.setTask(task);
+  			compute.setComputation(computation);
   			
   			Action a = new Action();
   			a.setAction(compute);
@@ -214,10 +218,24 @@ public class Agent_Manager extends Agent{
 			e.printStackTrace();
 		}
                 
+
+		// create an Option Manager agent
+		String option_manager_name = computation.getId();
+		PlatformController container = getContainerController(); // get a container controller for creating new agents
 		
-	  	
-	  	msg.addReceiver(new AID("r", AID.ISLOCALNAME));   // TODO find or create OptionManager agent instead
-	  	msg.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+		try{	
+			AgentController agent = container.createNewAgent(option_manager_name, "Agent_Random", new String[0] );
+			agent.start();
+		}
+		catch (Exception e) {
+	        System.err.println( "Exception while adding agent"+computation.getId()+": " + e );
+	        e.printStackTrace();
+	    }
+		
+		
+	  	// msg.addReceiver(new AID("r", AID.ISLOCALNAME));   // TODO find or create OptionManager agent instead
+	  	msg.addReceiver(new AID(option_manager_name, AID.ISLOCALNAME));		
+		msg.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
 
 	  	
 	  	AchieveREInitiator computeAchieveREInitiator = new AchieveREInitiator(this, msg) {
@@ -250,6 +268,8 @@ public class Agent_Manager extends Agent{
 	
 	protected String generateProblemID(){
 		Date date = new Date();
-	    return Long.toString(date.getTime());
+		String problem_id = Long.toString(date.getTime())+"_"+problem_i;
+		problem_i++;
+	    return problem_id;
 	}
 }

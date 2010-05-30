@@ -2,12 +2,13 @@ package ontology.messages;
 import jade.content.Concept;
 
 public class Execute implements Concept{
-	private String _options;
+	private Task _task;
 	
-	public void setOptions(String options) {
-		_options=options;
+	public void setTask(Task task) {
+		_task=task;
 	}
-	public String getOptions() {
-		return _options;
+	public Task getTask() {
+		return _task;
 	}
+
 }

@@ -3,15 +3,15 @@ package ontology.messages;
 import jade.content.Concept;
 
 public class Compute implements Concept {
-	private Task _task;
+	private Computation _computation;
 
 	
 	// Methods required to use this class to represent the TASK role
-	public void setTask(Task task) {
-		_task=task;
+	public void setComputation(Computation computation) {
+		_computation=computation;
 	}
-	public Task getTask() {
-		return _task;
+	public Computation getComputation() {
+		return _computation;
 	}
 	
 }

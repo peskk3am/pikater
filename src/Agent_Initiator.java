@@ -10,9 +10,10 @@ import java.io.IOException;
 
 import ontology.messages.Problem;
 
+
 public class Agent_Initiator extends Agent{
 	// private String path = "D:/diplomka/eclipse/diplomka/";
-	private String path = System.getProperty("user.dir")+"\\";
+	private String path = System.getProperty("user.dir")+System.getProperty("file.separator");
 	
 	protected void setup(){
  
@@ -77,7 +78,7 @@ public class Agent_Initiator extends Agent{
 	}
 
 	
-	private int CreateAgent(String type, String name, Object[] args){
+	public int CreateAgent(String type, String name, Object[] args){
 		PlatformController container = getContainerController(); // get a container controller for creating new agents
 		
 		try{	

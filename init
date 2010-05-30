@@ -6,7 +6,7 @@ $a Agent_RBFNetwork rbf1
 # $l Agent_RBFNetwork rbf3
 $a Agent_MultilayerPerceptron mp1
 
-$a Agent_Random r
+# $a Agent_Random r
 
 $a Agent_Manager manager
 

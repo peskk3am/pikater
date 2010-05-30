@@ -15,7 +15,7 @@ public class Agent_MultilayerPerceptron extends Agent_ComputingAgent {
 	private MultilayerPerceptron cls = new MultilayerPerceptron();
 	
 	
-	 protected String getAgentType(){
+	 public String getAgentType(){
 		 return "MultilayerPerceptron";
 	 }
 

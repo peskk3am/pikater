@@ -16,7 +16,7 @@ import ontology.messages.*;
 
 public class Agent_GUI_config_file extends Agent_GUI{
 
-	private String path = System.getProperty("user.dir")+"\\";
+	private String path = System.getProperty("user.dir")+System.getProperty("file.separator");
  
 	
 	

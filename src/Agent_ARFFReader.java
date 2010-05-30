@@ -22,7 +22,7 @@ public class Agent_ARFFReader extends Agent {
 	protected Instances data;
 	// path to the file
 	// private String path = "D:/diplomka/eclipse/diplomka/";
-	private String path = System.getProperty("user.dir")+"\\";
+	private String path = System.getProperty("user.dir")+System.getProperty("file.separator");
 	private boolean working = false;
 
 	
