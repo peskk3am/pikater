@@ -1,6 +1,6 @@
 package ontology.webservices;
 
-import jade.util.leap.*;;
+import jade.util.leap.*;
 
 public class SetProblem implements jade.content.Concept {
 

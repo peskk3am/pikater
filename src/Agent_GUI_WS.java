@@ -1,6 +1,3 @@
-import java.util.List;
-import java.util.Vector;
-
 import jade.content.lang.Codec;
 import jade.content.lang.Codec.CodecException;
 import jade.content.lang.sl.SLCodec;
@@ -8,6 +5,7 @@ import jade.content.onto.Ontology;
 import jade.content.onto.OntologyException;
 import jade.content.onto.UngroundedException;
 import jade.content.onto.basic.Action;
+import jade.content.onto.basic.Result;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPANames;
@@ -21,7 +19,10 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.MessageTemplate.MatchExpression;
 import jade.proto.AchieveREResponder;
+import jade.util.leap.ArrayList;
+import jade.util.leap.Iterator;
 import ontology.messages.Agent;
+import ontology.webservices.GetAgents;
 import ontology.webservices.SetProblem;
 import ontology.webservices.WS_Ontology;
 
@@ -119,6 +120,31 @@ public class Agent_GUI_WS extends Agent_GUI {
 							addAgentToProblem(params);
 							getAgentOptions(params[0]);
 						}
+						
+						ACLMessage response = request.createReply();
+						response.setPerformative(ACLMessage.INFORM);
+						response.setContent("OK");
+						
+						return response;
+						
+					}
+					else if (a.getAction() instanceof GetAgents) {
+						
+						String[] agents = getComputingAgents();
+						
+						jade.util.leap.ArrayList agentsList = new ArrayList();
+						
+						for (String s: agents) {
+							agentsList.add(s);
+						}
+						
+						ACLMessage response = request.createReply();
+						response.setPerformative(ACLMessage.INFORM);
+						Result r = new Result(a.getAction(), agentsList);
+						
+						getContentManager().fillContent(response, r);
+						
+						return response;
 					}
 				
 					
@@ -130,10 +156,7 @@ public class Agent_GUI_WS extends Agent_GUI {
 					e.printStackTrace();
 				}
 				
-				ACLMessage response = request.createReply();
-				response.setPerformative(ACLMessage.AGREE);
-				
-				return response;
+				return null;
 			}
 			
 		

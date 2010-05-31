@@ -16,6 +16,7 @@ public class WS_Ontology extends Ontology {
 	public static final String SET_PROBLEM = "set-problem";
 	public static final String AGENT_DESCRIPTIONS = "agentDescriptions";
 	public static final String FILE_NAMES = "fileNames";
+	public static final String GET_AGENTS = "get-agents";
 	
 	private static Ontology theInstance = new WS_Ontology();
 	
@@ -29,10 +30,14 @@ public class WS_Ontology extends Ontology {
 		
 		try {
 			add(new AgentActionSchema(SET_PROBLEM), SetProblem.class);
+			add(new AgentActionSchema(GET_AGENTS), GetAgents.class);
 			
 			AgentActionSchema as = (AgentActionSchema)getSchema(SET_PROBLEM);
 			as.add(AGENT_DESCRIPTIONS, (PrimitiveSchema)getSchema(BasicOntology.STRING), 1, ObjectSchema.UNLIMITED);
 			as.add(FILE_NAMES, (PrimitiveSchema)getSchema(BasicOntology.STRING), 1, ObjectSchema.UNLIMITED);
+			
+			as = (AgentActionSchema)getSchema(GET_AGENTS);
+			as.setResult((PrimitiveSchema)getSchema(BasicOntology.STRING), 0, ObjectSchema.UNLIMITED);
 			
 		}
 		catch (Exception e) {}
