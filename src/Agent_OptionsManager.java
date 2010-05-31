@@ -67,24 +67,85 @@ public abstract class Agent_OptionsManager extends Agent {
 		 protected abstract String generateNewOptions(MyWekaEvaluation result);
 		 
 
-		 class ComputeComputation extends IteratedAchieveREInitiator{
+		 private class ComputeComputation extends IteratedAchieveREInitiator{
 
 			public ComputeComputation(Agent a, ACLMessage request) {
 				super(a, request);
-				System.out.println(a.getLocalName()+": ComputeComputation behavior created");
+				System.out.println(a.getLocalName()+": ComputeComputation behavior created; "+request);				
+			}
+			
+			// Since we don't know what message to send to the responder
+			// when we construct this AchieveREInitiator, we redefine this 
+			// method to build the request on the fly
+			protected Vector prepareRequests(ACLMessage request) {
+				
+				// Retrieve the incoming request from the DataStore
+				String incomingRequestKey = (String) ((AchieveREResponder) parent).REQUEST_KEY;
+				ACLMessage incomingRequest = (ACLMessage) getDataStore().get(incomingRequestKey);
+				
+				
+				System.out.println("Agent "+getLocalName()+": Received action: "+incomingRequest.getContent()+". Preparing response.");
+				
+				
+				try {
+			  		ContentElement content = getContentManager().extractContent(incomingRequest);
+			  		if (((Action)content).getAction() instanceof Compute){
+	                    Compute compute = (Compute) ((Action)content).getAction();
+	                    Options = compute.getComputation().getAgent().getOptions();
+					  	fileName = compute.getComputation().getData_file_name();
+					  	receiver = compute.getComputation().getAgent().getName();
+					  	computation_id = compute.getComputation().getId();
+					  	problem_id = compute.getComputation().getProblem_id();
+			  		}
+					
+				} catch (UngroundedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (CodecException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (OntologyException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				
+				AID responder = new AID(receiver, AID.ISLOCALNAME);
+				
+				// Prepare the request to forward to the responder
+				System.out.println("Agent "+getLocalName()+": Forward the request to "+responder.getName());
+				
+				ACLMessage outgoingRequest = newMessage(request);
+				
+				/* 
+				ACLMessage outgoingRequest = new ACLMessage(ACLMessage.REQUEST);
+				
+				outgoingRequest.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+				outgoingRequest.addReceiver(responder);
+				outgoingRequest.setContent(incomingRequest.getContent());
+				outgoingRequest.setReplyByDate(incomingRequest.getReplyByDate());
+				*/
+				System.out.println("Agent "+getLocalName()+": "+outgoingRequest);
+				
+				Vector v = new Vector(1);
+				v.addElement(outgoingRequest);
+				return v;
 				
 			}
 			
 			protected void handleInform(ACLMessage inform, java.util.Vector nextRequests) {
+				storeNotification(ACLMessage.INFORM);
 				System.out.println(getLocalName()+": Agent "+inform.getSender().getName()+" sent a reply.");		
-				nextRequests.add(NewMessage(inform));
+				nextRequests.add(newMessage(inform));
 			}
 			
 			protected void handleRefuse(ACLMessage refuse) {
+				storeNotification(ACLMessage.FAILURE);
 				System.out.println(getLocalName()+": Agent "+refuse.getSender().getName()+" refused to perform the requested action");
 			}
 			
 			protected void handleFailure(ACLMessage failure) {
+				storeNotification(ACLMessage.FAILURE);
 				if (failure.getSender().equals(myAgent.getAMS())) {
 					// FAILURE notification from the JADE runtime: the receiver
 					// does not exist
@@ -94,8 +155,27 @@ public abstract class Agent_OptionsManager extends Agent {
 					System.out.println("Agent "+failure.getSender().getName()+" failed to perform the requested action");
 				}
 			}
-
-			 
+			
+			private void storeNotification(int performative) {
+				System.out.println("Agent "+getLocalName()+": "+performative);
+				if (performative == ACLMessage.INFORM) {
+					System.out.println("Agent "+getLocalName()+": task executed successfully");
+				}
+				else {
+					System.out.println("Agent "+getLocalName()+": task failed");
+				}
+					
+				// Retrieve the incoming request from the DataStore
+				String incomingRequestkey = (String) ((AchieveREResponder) parent).REQUEST_KEY;
+				ACLMessage incomingRequest = (ACLMessage) getDataStore().get(incomingRequestkey);
+				// Prepare the notification to the request originator and store it in the DataStore
+				ACLMessage notification = incomingRequest.createReply();
+				notification.setPerformative(performative);
+				String notificationkey = (String) ((AchieveREResponder) parent).RESULT_NOTIFICATION_KEY;
+				getDataStore().put(notificationkey, notification);
+			}
+		
+			
 		 }  // end class ComputeComputation
 		 
 		
@@ -154,7 +234,7 @@ public abstract class Agent_OptionsManager extends Agent {
 		 
 		 
 		
-		 ACLMessage NewMessage(ACLMessage _result){
+		 ACLMessage newMessage(ACLMessage _result){
 			 
 			 ACLMessage msg;
 			 if (_result != null){
@@ -231,7 +311,7 @@ public abstract class Agent_OptionsManager extends Agent {
 			 			
 			 return msg;				
 
-		 } // NewMessage
+		 } // newMessage
 
 		 
 		 protected boolean writeResult(String file_name, String agent){
@@ -302,11 +382,11 @@ public abstract class Agent_OptionsManager extends Agent {
 		 
 		void Start(ACLMessage request){
 			 
-			 IteratedAchieveREInitiator behav = new IteratedAchieveREInitiator(this, NewMessage(null)) {
+			 IteratedAchieveREInitiator behav = new IteratedAchieveREInitiator(this, newMessage(null)) {
 					
 					protected void handleInform(ACLMessage inform, java.util.Vector nextRequests) {
 						System.out.println(getLocalName()+": Agent "+inform.getSender().getName()+" sent a reply.");		
-						nextRequests.add(NewMessage(inform));
+						nextRequests.add(newMessage(inform));
 					}
 					
 					protected void handleRefuse(ACLMessage refuse) {
@@ -368,7 +448,7 @@ public abstract class Agent_OptionsManager extends Agent {
 				}  // end prepareResponse
 				
 				
-				protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException {					
+			/*	protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException {					
 						System.out.println("Agent "+getLocalName()+": Received action: "+request.getContent()+". Preparing response.");
 						
 						try {
@@ -394,7 +474,7 @@ public abstract class Agent_OptionsManager extends Agent {
 							e.printStackTrace();
 						}
 						
-						Start(request);
+						// Start(request);
 						
 						// registerPrepareResultNotification(new ComputeTask(myAgent, (ACLMessage)getDataStore().get(REQUEST_KEY)));
 						
@@ -429,14 +509,19 @@ public abstract class Agent_OptionsManager extends Agent {
 						}
 						
 						*/
-						return msgOut;
+			/*			return msgOut;
 				}  //  end prepareResultNotification
-				
+				*/
 			};
 			
 			// receive_task.registerPrepareResponse(behav_compute);
 			// System.out.println("------------------------------------"+receive_task);
 			// receive_task.registerPrepareResultNotification(new ComputeTask(this, (ACLMessage)receive_task.getDataStore().get(receive_task.REQUEST_KEY)));
+			
+			receive_computation.registerPrepareResultNotification(
+					new ComputeComputation(this, null)
+			);
+			
 			addBehaviour(receive_computation);
 			
 			
