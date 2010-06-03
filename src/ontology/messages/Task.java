@@ -8,6 +8,7 @@ public class Task implements Concept {
 	private String _id;
 	private String _computation_id;
 	private String _problem_id;
+	private Evaluation _result;
 	
 	public void setOptions(String options) {
 		_options=options;
@@ -33,5 +34,10 @@ public class Task implements Concept {
 	public String getProblem_id() {
 		return _problem_id;
 	}
-
+	public void setResult(Evaluation result) {
+		_result = result;
+	}
+	public Evaluation getResult() {
+		return _result;
+	}
 }

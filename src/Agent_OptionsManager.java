@@ -69,6 +69,8 @@ public abstract class Agent_OptionsManager extends Agent {
 
 		 private class ComputeComputation extends IteratedAchieveREInitiator{
 
+			private ACLMessage msgPrev = new ACLMessage(ACLMessage.FAILURE);;
+			
 			public ComputeComputation(Agent a, ACLMessage request) {
 				super(a, request);
 				System.out.println(a.getLocalName()+": ComputeComputation behavior created; "+request);				
@@ -78,7 +80,7 @@ public abstract class Agent_OptionsManager extends Agent {
 			// when we construct this AchieveREInitiator, we redefine this 
 			// method to build the request on the fly
 			protected Vector prepareRequests(ACLMessage request) {
-				
+				// Klara's note: this method is called just once at the beginning of the behaviour
 				// Retrieve the incoming request from the DataStore
 				String incomingRequestKey = (String) ((AchieveREResponder) parent).REQUEST_KEY;
 				ACLMessage incomingRequest = (ACLMessage) getDataStore().get(incomingRequestKey);
@@ -116,6 +118,7 @@ public abstract class Agent_OptionsManager extends Agent {
 				System.out.println("Agent "+getLocalName()+": Forward the request to "+responder.getName());
 				
 				ACLMessage outgoingRequest = newMessage(request);
+				msgPrev = outgoingRequest;
 				
 				/* 
 				ACLMessage outgoingRequest = new ACLMessage(ACLMessage.REQUEST);
@@ -125,7 +128,8 @@ public abstract class Agent_OptionsManager extends Agent {
 				outgoingRequest.setContent(incomingRequest.getContent());
 				outgoingRequest.setReplyByDate(incomingRequest.getReplyByDate());
 				*/
-				System.out.println("Agent "+getLocalName()+": "+outgoingRequest);
+				System.out.println("Agent "+getLocalName()+": outgoingRequest: "+outgoingRequest);
+								
 				
 				Vector v = new Vector(1);
 				v.addElement(outgoingRequest);
@@ -134,9 +138,19 @@ public abstract class Agent_OptionsManager extends Agent {
 			}
 			
 			protected void handleInform(ACLMessage inform, java.util.Vector nextRequests) {
-				storeNotification(ACLMessage.INFORM);
+				
 				System.out.println(getLocalName()+": Agent "+inform.getSender().getName()+" sent a reply.");		
-				nextRequests.add(newMessage(inform));
+				
+				ACLMessage msgNew = newMessage(inform); 
+				nextRequests.add(msgNew);
+								
+				
+				if (finished()){
+					storeNotification(ACLMessage.INFORM);
+				}
+				
+				msgPrev = msgNew;
+				
 			}
 			
 			protected void handleRefuse(ACLMessage refuse) {
@@ -157,24 +171,199 @@ public abstract class Agent_OptionsManager extends Agent {
 			}
 			
 			private void storeNotification(int performative) {
-				System.out.println("Agent "+getLocalName()+": "+performative);
+				
 				if (performative == ACLMessage.INFORM) {
 					System.out.println("Agent "+getLocalName()+": task executed successfully");
 				}
 				else {
 					System.out.println("Agent "+getLocalName()+": task failed");
+					// TODO !!!
 				}
 					
 				// Retrieve the incoming request from the DataStore
+				// TODO - this needs to be done just once & get reply from this (e.g. the receiver):
 				String incomingRequestkey = (String) ((AchieveREResponder) parent).REQUEST_KEY;
 				ACLMessage incomingRequest = (ACLMessage) getDataStore().get(incomingRequestkey);
+				// System.out.println("Agent "+getLocalName()+"incomingRequestkey: "+incomingRequestkey);
+				
+				/*
 				// Prepare the notification to the request originator and store it in the DataStore
 				ACLMessage notification = incomingRequest.createReply();
 				notification.setPerformative(performative);
 				String notificationkey = (String) ((AchieveREResponder) parent).RESULT_NOTIFICATION_KEY;
 				getDataStore().put(notificationkey, notification);
-			}
+				*/
+				
+				
+				if (finished()){
+					String incomingReplykey = (String) this.REPLY_KEY;
+					ACLMessage incomingReply = (ACLMessage) getDataStore().get(incomingReplykey);   // TODO incomingReply ~ MyWekaEvaluation -> change to ontology Evaluation
+
+					
+					System.out.println("Agent "+getLocalName()+" finished the goal succesfully, sending the results to the manager.");
+				
+					ACLMessage msgOut = new ACLMessage(ACLMessage.INFORM);
+					msgOut.addReceiver(new AID("manager", AID.ISLOCALNAME)); // TODO find the manager in yellow pages			
+						
+					msgOut.setContent("Reply");   // deafult content
+				/*	
+					msgOut.setLanguage(codec.getName());
+					msgOut.setOntology(ontology.getName());
+					msgOut.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+					// We want to receive a reply in 30 secs
+					msgOut.setReplyByDate(new Date(System.currentTimeMillis() + 30000));			
+					
+					
+					// set the Evaluation					
+					ontology.messages.Evaluation evaluation = new ontology.messages.Evaluation();
+					evaluation.setError_rate((float)result.errorRate);
+					evaluation.setPct_incorrect((float)result.pctIncorrect);
+					
+					// get the Task from the last message						
+					try {
+				  		ContentElement content = getContentManager().extractContent(msg);
+				  		if (((Action)content).getAction() instanceof Task){
+		                    System.out.println("!!!!!! task");
+				  			/* Compute compute = (Compute) ((Action)content).getAction();
+		                    Options = compute.getComputation().getAgent().getOptions();
+						  	fileName = compute.getComputation().getData_file_name();
+						  	receiver = compute.getComputation().getAgent().getName();
+						  	computation_id = compute.getComputation().getId();
+						  	problem_id = compute.getComputation().getProblem_id();
+						  	*/
+				  	/*	}
+						
+					} catch (UngroundedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (CodecException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (OntologyException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+					
+					/*
+					
+					// poslat zpatky tu samou computaiotn, jenom ji obohatit o evaluation
+					
+					List _result = new ArrayList();
+					_result.add(evaluation);
+					computation.setResult(_result);
+					
+					ContentElement content = getContentManager().extractContent(request);
+					Result result = new Result((Action)content, computation );
+					
+	  				Action a = new Action();
+	   				a.setAction(evaluation);
+	   				a.setActor(myAgent.getAID());
+	   		  		
+	   		  		try {
+	   		  			ContentElement content = getContentManager().extractContent(request); // TODO exception block?
+					    request je puvodni zprava od managera
+	   		  			
+	   		  			getContentManager().fillContent(msgOut, a);
+					} catch (CodecException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (OntologyException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					*/
+					String notificationkey = (String) ((AchieveREResponder) parent).RESULT_NOTIFICATION_KEY;
+					
+					msgOut.setPerformative(performative);
+					getDataStore().put(notificationkey, msgOut);
+										
+				
+					// System.out.println("Agent "+getLocalName()+" says good bye!");
+					// doDelete();
+				}
 		
+			}   // end storeNotification
+		
+			 ACLMessage newMessage(ACLMessage _result){
+				 
+				 ACLMessage msg;
+				 if (_result != null){
+					 try {
+						result = (MyWekaEvaluation) _result.getContentObject();
+					 } catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					 }
+					 System.out.println(getLocalName()+": Agent "+_result.getSender().getLocalName()+"'s errorRate was "+result.errorRate);
+				 }
+				 
+				 
+				 
+				 
+				 if (!finished()){
+					String opt = generateNewOptions(result);
+					System.out.println(getLocalName()+": new options for agent "+receiver+" are "+opt); 
+					 
+					msg = new ACLMessage(ACLMessage.REQUEST);
+					msg.setLanguage(codec.getName());
+					msg.setOntology(ontology.getName());
+					msg.addReceiver(new AID(receiver, AID.ISLOCALNAME));
+					msg.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+					// We want to receive a reply in 30 secs
+					msg.setReplyByDate(new Date(System.currentTimeMillis() + 30000));			
+					
+					Execute execute = new Execute();
+					
+					Task task = new Task();
+					String id = computation_id+"_"+task_i;
+					task_i++;
+					task.setId(id);
+					task.setComputation_id(computation_id);
+					task.setProblem_id(problem_id);
+					task.setOptions(fileName+" "+opt);
+					execute.setTask(task);
+					
+					
+	  				Action a = new Action();
+	   				a.setAction(execute);
+	   				a.setActor(myAgent.getAID());
+	   		  		
+	   		  		try {
+						getContentManager().fillContent(msg, a);
+					} catch (CodecException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (OntologyException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+
+					// msg.setContent(fileName+" "+opt);
+					
+				 }
+				 else{
+					msg = new ACLMessage(ACLMessage.CANCEL);
+					// write the results to a file
+					boolean exists = (new File("xml")).exists();
+					if (!exists) {	
+						boolean success = (new File("xml")).mkdir();
+					    if (!success) {
+					      System.out.println("Directory: " + "xml" + " could not be created");  // TODO exception
+					    } 
+					}
+					
+					writeResult("xml"+System.getProperty("file.separator")+computation_id+".xml", receiver);
+					
+					
+				 }
+				 				 
+				 return msg;				
+
+			 } // newMessage
+
+			
+			
 			
 		 }  // end class ComputeComputation
 		 
@@ -233,86 +422,6 @@ public abstract class Agent_OptionsManager extends Agent {
 		
 		 
 		 
-		
-		 ACLMessage newMessage(ACLMessage _result){
-			 
-			 ACLMessage msg;
-			 if (_result != null){
-				 try {
-					result = (MyWekaEvaluation) _result.getContentObject();
-				 } catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				 }
-				 System.out.println(getLocalName()+": Agent "+_result.getSender().getLocalName()+"'s errorRate was "+result.errorRate);
-			 }
-			 
-			 
-			 
-			 
-			 if (!finished()){
-				String opt = generateNewOptions(result);
-				System.out.println(getLocalName()+": new options for agent "+receiver+" are "+opt); 
-				 
-				msg = new ACLMessage(ACLMessage.REQUEST);
-				msg.setLanguage(codec.getName());
-				msg.setOntology(ontology.getName());
-				msg.addReceiver(new AID(receiver, AID.ISLOCALNAME));
-				msg.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
-				// We want to receive a reply in 30 secs
-				msg.setReplyByDate(new Date(System.currentTimeMillis() + 30000));			
-				
-				Execute execute = new Execute();
-				
-				Task task = new Task();
-				String id = computation_id+"_"+task_i;
-				task_i++;
-				task.setId(id);
-				task.setComputation_id(computation_id);
-				task.setProblem_id(problem_id);
-				task.setOptions(fileName+" "+opt);
-				execute.setTask(task);
-				
-				
-  				Action a = new Action();
-   				a.setAction(execute);
-   				a.setActor(this.getAID());
-   		  		
-   		  		try {
-					getContentManager().fillContent(msg, a);
-				} catch (CodecException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (OntologyException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-
-				// msg.setContent(fileName+" "+opt);
-				
-			 }
-			 else{
-				msg = new ACLMessage(ACLMessage.CANCEL);
-				// write the results to a file
-				boolean exists = (new File("xml")).exists();
-				if (!exists) {	
-					boolean success = (new File("xml")).mkdir();
-				    if (!success) {
-				      System.out.println("Directory: " + "xml" + " could not be created");  // TODO exception
-				    } 
-				}
-				
-				writeResult("xml"+System.getProperty("file.separator")+computation_id+".xml", receiver);
-				
-				System.out.println("Agent "+getLocalName()+" says good bye!");
-				doDelete();
-				
-			 }
-			 			
-			 return msg;				
-
-		 } // newMessage
-
 		 
 		 protected boolean writeResult(String file_name, String agent){
 			 
@@ -380,7 +489,7 @@ public abstract class Agent_OptionsManager extends Agent {
 		 }
 		 
 		 
-		void Start(ACLMessage request){
+	/*	void Start(ACLMessage request){
 			 
 			 IteratedAchieveREInitiator behav = new IteratedAchieveREInitiator(this, newMessage(null)) {
 					

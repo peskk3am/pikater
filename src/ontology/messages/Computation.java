@@ -1,4 +1,5 @@
 package ontology.messages;
+import jade.util.leap.List;
 
 public class Computation {
 	
@@ -6,7 +7,6 @@ public class Computation {
 	private String _id;
 	private Agent _agent;
 	private String 	_data_file_name;
-
 	
 	// Methods required to use this class to represent the TASK role
 	public void setAgent(Agent agent) {
