@@ -250,15 +250,17 @@ public abstract class Agent_OptionsManager extends Agent {
 					// We want to receive a reply in 30 secs
 					msgOut.setReplyByDate(new Date(System.currentTimeMillis() + 30000));			
 					
+					/*
 					Results _results = new Results();
 					_results.setResults(results);
 					_results.setComputation_id(computation_id);
 					_results.setProblem_id(problem_id);									
-					   
+					*/
+					
 				   ContentElement content;
 					try {
 						content = getContentManager().extractContent(incomingRequest);
-						Result result = new Result((Action)content, _results);
+						Result result = new Result((Action)content, results);
 						getContentManager().fillContent(msgOut, result);
 	
 					
