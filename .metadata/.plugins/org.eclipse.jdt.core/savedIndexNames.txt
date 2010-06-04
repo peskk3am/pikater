@@ -1,1 +1,0 @@
-INDEX VERSION 1.125+D:\diplomka\eclipse\diplomka\.metadata\.plugins\org.eclipse.jdt.core
