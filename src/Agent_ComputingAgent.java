@@ -41,6 +41,7 @@ import jade.content.*;
 import jade.content.abs.*;
 import jade.content.onto.*;
 import jade.content.onto.basic.*;
+import jade.content.onto.basic.Result;
 import jade.content.lang.Codec.CodecException;
 import jade.content.lang.sl.*;
 

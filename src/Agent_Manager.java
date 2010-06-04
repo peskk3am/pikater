@@ -241,7 +241,7 @@ public class Agent_Manager extends Agent{
 	  	AchieveREInitiator computeAchieveREInitiator = new AchieveREInitiator(this, msg) {
 	  		
 			protected void handleInform(ACLMessage inform) {
-				System.out.println(getLocalName()+": Agent "+inform.getSender().getName()+" replied.");
+				System.out.println(getLocalName()+": Agent "+inform.getSender().getName()+" replied: "+inform.getContent() );
 			  			
 			}
 			

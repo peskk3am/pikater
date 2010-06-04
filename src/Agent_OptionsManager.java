@@ -42,6 +42,7 @@ import jade.proto.IteratedAchieveREInitiator;
 import jade.core.behaviours.DataStore;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.proto.AchieveREInitiator;
+import jade.util.leap.ArrayList;
 import jade.util.leap.Iterator;
 import jade.util.leap.List;
 
@@ -70,6 +71,7 @@ public abstract class Agent_OptionsManager extends Agent {
 		 private class ComputeComputation extends IteratedAchieveREInitiator{
 
 			private ACLMessage msgPrev = new ACLMessage(ACLMessage.FAILURE);;
+			private List results = new ArrayList();
 			
 			public ComputeComputation(Agent a, ACLMessage request) {
 				super(a, request);
@@ -140,10 +142,41 @@ public abstract class Agent_OptionsManager extends Agent {
 			protected void handleInform(ACLMessage inform, java.util.Vector nextRequests) {
 				
 				System.out.println(getLocalName()+": Agent "+inform.getSender().getName()+" sent a reply.");		
-				
+								
 				ACLMessage msgNew = newMessage(inform); 
 				nextRequests.add(msgNew);
 								
+				
+				
+				// prepare the result to be added to results List:
+				
+				// set the Evaluation					
+				ontology.messages.Evaluation evaluation = new ontology.messages.Evaluation();
+				evaluation.setError_rate((float)result.errorRate);
+				evaluation.setPct_incorrect((float)result.pctIncorrect);
+				
+				// get the Task from the last message						
+				try {
+			  		ContentElement content = getContentManager().extractContent(msgPrev);
+			  		if (((Action)content).getAction() instanceof Execute){
+ 
+				  			Task task = ( (Execute) ((Action)content).getAction() ).getTask();
+				  			task.setResult(evaluation);
+					  		results.add(task);
+				  		
+			  		}		
+			  		
+				} catch (UngroundedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (CodecException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (OntologyException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
 				
 				if (finished()){
 					storeNotification(ACLMessage.INFORM);
@@ -181,7 +214,7 @@ public abstract class Agent_OptionsManager extends Agent {
 				}
 					
 				// Retrieve the incoming request from the DataStore
-				// TODO - this needs to be done just once & get reply from this (e.g. the receiver):
+
 				String incomingRequestkey = (String) ((AchieveREResponder) parent).REQUEST_KEY;
 				ACLMessage incomingRequest = (ACLMessage) getDataStore().get(incomingRequestkey);
 				// System.out.println("Agent "+getLocalName()+"incomingRequestkey: "+incomingRequestkey);
@@ -202,37 +235,33 @@ public abstract class Agent_OptionsManager extends Agent {
 					
 					System.out.println("Agent "+getLocalName()+" finished the goal succesfully, sending the results to the manager.");
 				
+					
+					// prepare the outgoing message:
+					
 					ACLMessage msgOut = new ACLMessage(ACLMessage.INFORM);
 					msgOut.addReceiver(new AID("manager", AID.ISLOCALNAME)); // TODO find the manager in yellow pages			
 						
 					msgOut.setContent("Reply");   // deafult content
-				/*	
+					
+						
 					msgOut.setLanguage(codec.getName());
 					msgOut.setOntology(ontology.getName());
 					msgOut.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
 					// We want to receive a reply in 30 secs
 					msgOut.setReplyByDate(new Date(System.currentTimeMillis() + 30000));			
 					
-					
-					// set the Evaluation					
-					ontology.messages.Evaluation evaluation = new ontology.messages.Evaluation();
-					evaluation.setError_rate((float)result.errorRate);
-					evaluation.setPct_incorrect((float)result.pctIncorrect);
-					
-					// get the Task from the last message						
+					Results _results = new Results();
+					_results.setResults(results);
+					_results.setComputation_id(computation_id);
+					_results.setProblem_id(problem_id);									
+					   
+				   ContentElement content;
 					try {
-				  		ContentElement content = getContentManager().extractContent(msg);
-				  		if (((Action)content).getAction() instanceof Task){
-		                    System.out.println("!!!!!! task");
-				  			/* Compute compute = (Compute) ((Action)content).getAction();
-		                    Options = compute.getComputation().getAgent().getOptions();
-						  	fileName = compute.getComputation().getData_file_name();
-						  	receiver = compute.getComputation().getAgent().getName();
-						  	computation_id = compute.getComputation().getId();
-						  	problem_id = compute.getComputation().getProblem_id();
-						  	*/
-				  	/*	}
-						
+						content = getContentManager().extractContent(incomingRequest);
+						Result result = new Result((Action)content, _results);
+						getContentManager().fillContent(msgOut, result);
+	
+					
 					} catch (UngroundedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -242,37 +271,11 @@ public abstract class Agent_OptionsManager extends Agent {
 					} catch (OntologyException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
-					}
+					} 
 					
 					
-					/*
-					
-					// poslat zpatky tu samou computaiotn, jenom ji obohatit o evaluation
-					
-					List _result = new ArrayList();
-					_result.add(evaluation);
-					computation.setResult(_result);
-					
-					ContentElement content = getContentManager().extractContent(request);
-					Result result = new Result((Action)content, computation );
-					
-	  				Action a = new Action();
-	   				a.setAction(evaluation);
-	   				a.setActor(myAgent.getAID());
-	   		  		
-	   		  		try {
-	   		  			ContentElement content = getContentManager().extractContent(request); // TODO exception block?
-					    request je puvodni zprava od managera
-	   		  			
-	   		  			getContentManager().fillContent(msgOut, a);
-					} catch (CodecException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (OntologyException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					*/
+
+					// save the outgoing message to the dataStore
 					String notificationkey = (String) ((AchieveREResponder) parent).RESULT_NOTIFICATION_KEY;
 					
 					msgOut.setPerformative(performative);

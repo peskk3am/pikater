@@ -1,7 +1,7 @@
 package ontology.messages;
-import jade.util.leap.List;
+import jade.content.Concept;
 
-public class Computation {
+public class Computation implements Concept{
 	
 	private String _problem_id;
 	private String _id;

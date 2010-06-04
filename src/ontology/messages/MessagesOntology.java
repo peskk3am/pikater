@@ -37,6 +37,11 @@ public class MessagesOntology extends Ontology {
 	  public static final String EVALUATION_ERROR_RATE = "error_rate";
 	  public static final String EVALUATION_PCT_INCORRECT = "pct_incorrect";
 	  
+	  public static final String RESULTS = "RESULTS";
+	  public static final String RESULTS_COMPUTATION_ID = "computation_id";
+	  public static final String RESULTS_PROBLEM_ID = "problem_id";
+	  public static final String RESULTS_RESULTS = "results";
+	  
 	  public static final String OPTION = "OPTION";
 	  public static final String OPTION_MUTABLE = "mutable";
 	  public static final String OPTION_RANGE = "range";
@@ -106,6 +111,7 @@ public class MessagesOntology extends Ontology {
 			add(new ConceptSchema(AGENT), Agent.class);
 			add(new ConceptSchema(PROBLEM), Problem.class);
 			add(new ConceptSchema(EVALUATION), Evaluation.class);
+			add(new ConceptSchema(RESULTS), Results.class);
 			
 			add(new AgentActionSchema(COMPUTE), Compute.class);
 			add(new AgentActionSchema(GET_OPTIONS), GetOptions.class);
@@ -153,6 +159,11 @@ public class MessagesOntology extends Ontology {
 	    	cs.add(EVALUATION_ERROR_RATE, (PrimitiveSchema)getSchema(BasicOntology.FLOAT));
 	    	cs.add(EVALUATION_PCT_INCORRECT, (PrimitiveSchema)getSchema(BasicOntology.FLOAT));
     	
+	    	cs = (ConceptSchema)getSchema(RESULTS);
+	    	cs.add(RESULTS_COMPUTATION_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	cs.add(RESULTS_PROBLEM_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	cs.add(RESULTS_RESULTS, (ConceptSchema)getSchema(TASK), 0, ObjectSchema.UNLIMITED);
+
 	    	cs = (ConceptSchema)getSchema(AGENT);
 	    	cs.add(AGENT_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 	    	cs.add(AGENT_OPTIONS, (ConceptSchema)getSchema(OPTION), 1, ObjectSchema.UNLIMITED);
