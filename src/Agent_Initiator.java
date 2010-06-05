@@ -8,7 +8,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 
-import ontology.messages.Problem;
+import  jade.tools.sniffer.Sniffer;
 
 
 public class Agent_Initiator extends Agent{

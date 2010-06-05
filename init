@@ -12,3 +12,5 @@ $a Agent_Manager manager
 
 # get a Problem from "config" file
 $a Agent_GUI_config_file very_simple_GUI config
+
+$a  jade.tools.sniffer.Sniffer sniffer01 manager

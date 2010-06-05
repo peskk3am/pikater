@@ -205,12 +205,12 @@ public abstract class Agent_OptionsManager extends Agent {
 			
 			private void storeNotification(int performative) {
 				
-				if (performative == ACLMessage.INFORM) {
-					System.out.println("Agent "+getLocalName()+": task executed successfully");
+				if (performative == ACLMessage.INFORM) {			
+					System.out.println("Agent "+getLocalName()+": computation executed successfully");
 				}
-				else {
-					System.out.println("Agent "+getLocalName()+": task failed");
-					// TODO !!!
+				else { 
+				
+					System.out.println("Agent "+getLocalName()+": computation failed");
 				}
 					
 				// Retrieve the incoming request from the DataStore
@@ -226,6 +226,10 @@ public abstract class Agent_OptionsManager extends Agent {
 				String notificationkey = (String) ((AchieveREResponder) parent).RESULT_NOTIFICATION_KEY;
 				getDataStore().put(notificationkey, notification);
 				*/
+
+		
+				ACLMessage msgOut = incomingRequest.createReply();
+				msgOut.setPerformative(performative);
 				
 				
 				if (finished()){
@@ -235,28 +239,16 @@ public abstract class Agent_OptionsManager extends Agent {
 					
 					System.out.println("Agent "+getLocalName()+" finished the goal succesfully, sending the results to the manager.");
 				
-					
-					// prepare the outgoing message:
-					
-					ACLMessage msgOut = new ACLMessage(ACLMessage.INFORM);
-					msgOut.addReceiver(new AID("manager", AID.ISLOCALNAME)); // TODO find the manager in yellow pages			
-						
-					msgOut.setContent("Reply");   // deafult content
-					
-						
-					msgOut.setLanguage(codec.getName());
-					msgOut.setOntology(ontology.getName());
-					msgOut.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
-					// We want to receive a reply in 30 secs
-					msgOut.setReplyByDate(new Date(System.currentTimeMillis() + 30000));			
-					
+
 					/*
 					Results _results = new Results();
 					_results.setResults(results);
 					_results.setComputation_id(computation_id);
 					_results.setProblem_id(problem_id);									
 					*/
-					
+
+					// prepare the outgoing message content:
+
 				   ContentElement content;
 					try {
 						content = getContentManager().extractContent(incomingRequest);
@@ -275,18 +267,17 @@ public abstract class Agent_OptionsManager extends Agent {
 						e.printStackTrace();
 					} 
 					
-					
+				} // end if (finished())	
 
 					// save the outgoing message to the dataStore
-					String notificationkey = (String) ((AchieveREResponder) parent).RESULT_NOTIFICATION_KEY;
-					
-					msgOut.setPerformative(performative);
-					getDataStore().put(notificationkey, msgOut);
+				String notificationkey = (String) ((AchieveREResponder) parent).RESULT_NOTIFICATION_KEY;
+						
+				getDataStore().put(notificationkey, msgOut);
 										
 				
-					// System.out.println("Agent "+getLocalName()+" says good bye!");
-					// doDelete();
-				}
+				// System.out.println("Agent "+getLocalName()+" says good bye!");
+				// doDelete();
+				
 		
 			}   // end storeNotification
 		
@@ -493,42 +484,9 @@ public abstract class Agent_OptionsManager extends Agent {
 			 return true;
 		 }
 		 
-		 
-	/*	void Start(ACLMessage request){
-			 
-			 IteratedAchieveREInitiator behav = new IteratedAchieveREInitiator(this, newMessage(null)) {
-					
-					protected void handleInform(ACLMessage inform, java.util.Vector nextRequests) {
-						System.out.println(getLocalName()+": Agent "+inform.getSender().getName()+" sent a reply.");		
-						nextRequests.add(newMessage(inform));
-					}
-					
-					protected void handleRefuse(ACLMessage refuse) {
-						System.out.println(getLocalName()+": Agent "+refuse.getSender().getName()+" refused to perform the requested action");
-					}
-					
-					protected void handleFailure(ACLMessage failure) {
-						if (failure.getSender().equals(myAgent.getAMS())) {
-							// FAILURE notification from the JADE runtime: the receiver
-							// does not exist
-							System.out.println("Responder does not exist");
-						}
-						else {
-							System.out.println("Agent "+failure.getSender().getName()+" failed to perform the requested action");
-						}
-					}
-
-				};
-				
-			 addBehaviour(behav);
-
-		 }
-		//  */
-		 
+		 		 
 		 
 		 protected void setup() {
-			// behaviour = new ChooseBestOptions(this);
-	        // addBehaviour(behaviour);
 			
 			
 		  	System.out.println(getLocalName()+" is alive...");
@@ -538,10 +496,6 @@ public abstract class Agent_OptionsManager extends Agent {
 
 			registerWithDF();
 			
-			
-			final Agent_OptionsManager _this = this; 	
-	
-					
 			
   		  	MessageTemplate template_inform = MessageTemplate.and(
 	  		MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST),
@@ -562,79 +516,9 @@ public abstract class Agent_OptionsManager extends Agent {
 				}  // end prepareResponse
 				
 				
-			/*	protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException {					
-						System.out.println("Agent "+getLocalName()+": Received action: "+request.getContent()+". Preparing response.");
-						
-						try {
-							// Options = (Vector<MyWekaOption>) request.getContentObject();
-					  		ContentElement content = getContentManager().extractContent(request);
-					  		if (((Action)content).getAction() instanceof Compute){
-			                    Compute compute = (Compute) ((Action)content).getAction();
-			                    Options = compute.getComputation().getAgent().getOptions();
-							  	fileName = compute.getComputation().getData_file_name();
-							  	receiver = compute.getComputation().getAgent().getName();
-							  	computation_id = compute.getComputation().getId();
-							  	problem_id = compute.getComputation().getProblem_id();
-					  		}
-							
-						} catch (UngroundedException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (CodecException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (OntologyException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-						
-						// Start(request);
-						
-						// registerPrepareResultNotification(new ComputeTask(myAgent, (ACLMessage)getDataStore().get(REQUEST_KEY)));
-						
-						ACLMessage msgOut = new ACLMessage(ACLMessage.INFORM);
-						msgOut.addReceiver(request.getSender());			
-							
-						msgOut.setContent("Failed");   // deafult content
-						
-						/* msgOut.setLanguage(codec.getName());
-						msgOut.setOntology(ontology.getName());
-						msgOut.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
-						// We want to receive a reply in 30 secs
-						msgOut.setReplyByDate(new Date(System.currentTimeMillis() + 30000));			
-						
-						ontology.messages.Evaluation evaluation = new ontology.messages.Evaluation();
-						evaluation.setError_rate((float)result.errorRate);
-						evaluation.setPct_incorrect((float)result.pctIncorrect);
-						
-						
-		  				Action a = new Action();
-		   				a.setAction(evaluation);
-		   				a.setActor(myAgent.getAID());
-		   		  		
-		   		  		try {
-							getContentManager().fillContent(msgOut, a);
-						} catch (CodecException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (OntologyException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-						
-						*/
-			/*			return msgOut;
-				}  //  end prepareResultNotification
-				*/
 			};
-			
-			// receive_task.registerPrepareResponse(behav_compute);
-			// System.out.println("------------------------------------"+receive_task);
-			// receive_task.registerPrepareResultNotification(new ComputeTask(this, (ACLMessage)receive_task.getDataStore().get(receive_task.REQUEST_KEY)));
-			
-			receive_computation.registerPrepareResultNotification(
-					new ComputeComputation(this, null)
-			);
+						
+			receive_computation.registerPrepareResultNotification( new ComputeComputation(this, null) );
 			
 			addBehaviour(receive_computation);
 			
