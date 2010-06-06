@@ -1,4 +1,5 @@
 import jade.core.Agent;
+
 import jade.util.leap.ArrayList;
 import jade.util.leap.List;
 import jade.wrapper.AgentController;
@@ -8,7 +9,8 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 
-import ontology.messages.Problem;
+import  jade.tools.sniffer.Sniffer;
+
 
 public class Agent_Initiator extends Agent{
 	// private String path = "D:/diplomka/eclipse/diplomka/";
@@ -77,7 +79,7 @@ public class Agent_Initiator extends Agent{
 	}
 
 	
-	private int CreateAgent(String type, String name, Object[] args){
+	public int CreateAgent(String type, String name, Object[] args){
 		PlatformController container = getContainerController(); // get a container controller for creating new agents
 		
 		try{	

@@ -32,12 +32,12 @@ public abstract class Agent_GUI extends Agent {
 	private Ontology ontology = MessagesOntology.getInstance();
 	
 
-	private List _agents = new ArrayList();
-	protected Vector<String[]> Agents = new Vector<String[]>();  // vector containing the arrays [agentName, param1, valueOfParam1, nextParams...]
-	private List _fileNames = new ArrayList();
-	private Problem problem = new Problem();
+	private List _agents;
+	protected Vector<String[]> Agents;  // vector containing the arrays [agentName, param1, valueOfParam1, nextParams...]
+	private List _fileNames;
+	private Problem problem;
 	
-	protected int numberOfReplies = 0;
+	protected int numberOfReplies;
 	
 	
 	/*
@@ -74,6 +74,15 @@ public abstract class Agent_GUI extends Agent {
 		/* automatically called after all replies from computing agents are received */
 	
 	
+	
+	protected void reset(){
+		_agents = new ArrayList();
+		Agents = new Vector<String[]>();
+		_fileNames = new ArrayList();
+		problem = new Problem();
+		
+		numberOfReplies = 0;
+	}
 	
 	protected String[] getComputingAgents(){
 		// returns the array of all computing agents' local names
@@ -362,6 +371,8 @@ public abstract class Agent_GUI extends Agent {
 		    doDelete();
 		}  
 	  	System.out.println("GUI agent "+getLocalName()+" is alive and waiting...");
+	  	
+	  	reset();
 	  	
 	  	mySetup();
 

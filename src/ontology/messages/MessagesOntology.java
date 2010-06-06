@@ -14,19 +14,33 @@ public class MessagesOntology extends Ontology {
 
 	  // VOCABULARY
 	  // Concepts
+
 	  public static final String TASK = "TASK";
+	  public static final String TASK_ID = "id";
+	  public static final String TASK_COMPUTATION_ID = "computation_id";
 	  public static final String TASK_PROBLEM_ID = "problem_id";
-	  public static final String TASK_AGENT = "agent";
-	  public static final String TASK_DATA_FILE_NAME = "data_file_name";	  
+	  public static final String TASK_OPTIONS = "options";
+	  public static final String TASK_RESULT = "result";
+	  
+	  public static final String COMPUTATION = "COMPUTATION";
+	  public static final String COMPUTATION_ID = "id";
+	  public static final String COMPUTATION_PROBLEM_ID = "problem_id";
+	  public static final String COMPUTATION_AGENT = "agent";
+	  public static final String COMPUTATION_DATA_FILE_NAME = "data_file_name";
 	  
 	  public static final String PROBLEM = "PROBLEM";
 	  public static final String PROBLEM_ID = "id";
 	  public static final String PROBLEM_AGENTS = "agents";
 	  public static final String PROBLEM_FILE_NAMES = "file_names";
-	  
 
-	  // public static final String EVALUATION = "EVALUATION";
-	  // public static final String EVALUATION_ERROR_RATE = "error-rate";
+	  public static final String EVALUATION = "EVALUATION";
+	  public static final String EVALUATION_ERROR_RATE = "error_rate";
+	  public static final String EVALUATION_PCT_INCORRECT = "pct_incorrect";
+	  
+	  public static final String RESULTS = "RESULTS";
+	  public static final String RESULTS_COMPUTATION_ID = "computation_id";
+	  public static final String RESULTS_PROBLEM_ID = "problem_id";
+	  public static final String RESULTS_RESULTS = "results";
 	  
 	  public static final String OPTION = "OPTION";
 	  public static final String OPTION_MUTABLE = "mutable";
@@ -53,10 +67,12 @@ public class MessagesOntology extends Ontology {
 
 	  // Actions
 	  public static final String COMPUTE = "COMPUTE";
-	  public static final String COMPUTE_TASK = "task";
+	  public static final String COMPUTE_COMPUTATION = "computation";
 	  
 	  public static final String EXECUTE = "EXECUTE";
-	  public static final String EXECUTE_OPTIONS = "options";
+	  public static final String EXECUTE_TASK = "task";
+
+	  
 	  
 	  public static final String SOLVE = "SOLVE";
 	  public static final String SOLVE_PROBLEM = "problem";
@@ -89,10 +105,13 @@ public class MessagesOntology extends Ontology {
 
 	    try {
 			add(new ConceptSchema(TASK), Task.class);
+			add(new ConceptSchema(COMPUTATION), Computation.class);
 			add(new ConceptSchema(OPTION), Option.class);			
 			add(new ConceptSchema(INTERVAL), Interval.class);
 			add(new ConceptSchema(AGENT), Agent.class);
 			add(new ConceptSchema(PROBLEM), Problem.class);
+			add(new ConceptSchema(EVALUATION), Evaluation.class);
+			add(new ConceptSchema(RESULTS), Results.class);
 			
 			add(new AgentActionSchema(COMPUTE), Compute.class);
 			add(new AgentActionSchema(GET_OPTIONS), GetOptions.class);
@@ -102,16 +121,24 @@ public class MessagesOntology extends Ontology {
 			// add(new AgentActionSchema(SEND_OPTIONS), SendOptions.class);
 			
 			
-	    	ConceptSchema cs = (ConceptSchema)getSchema(TASK);
-	    	cs.add(TASK_PROBLEM_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
-			cs.add(TASK_AGENT, (ConceptSchema)getSchema(AGENT));
-			cs.add(TASK_DATA_FILE_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	ConceptSchema cs = (ConceptSchema)getSchema(COMPUTATION);
+	    	cs.add(COMPUTATION_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	cs.add(COMPUTATION_PROBLEM_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+			cs.add(COMPUTATION_AGENT, (ConceptSchema)getSchema(AGENT));
+			cs.add(COMPUTATION_DATA_FILE_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 
 			cs = (ConceptSchema)getSchema(PROBLEM);
 			cs.add(PROBLEM_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 	    	cs.add(PROBLEM_AGENTS, (ConceptSchema)getSchema(AGENT), 1, ObjectSchema.UNLIMITED);
 	    	cs.add(PROBLEM_FILE_NAMES, (PrimitiveSchema)getSchema(BasicOntology.STRING), 1, ObjectSchema.UNLIMITED);
-			
+
+			cs = (ConceptSchema)getSchema(TASK);
+			cs.add(TASK_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	cs.add(TASK_COMPUTATION_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	cs.add(TASK_PROBLEM_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	cs.add(TASK_OPTIONS, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	cs.add(TASK_RESULT, (ConceptSchema)getSchema(EVALUATION), ObjectSchema.OPTIONAL);
+	    	
 	    	cs = (ConceptSchema)getSchema(INTERVAL);
 	    	cs.add(INTERVAL_MIN, (PrimitiveSchema)getSchema(BasicOntology.FLOAT));
 	    	cs.add(INTERVAL_MAX, (PrimitiveSchema)getSchema(BasicOntology.FLOAT));	
@@ -128,14 +155,22 @@ public class MessagesOntology extends Ontology {
 	    	cs.add(OPTION_WEKA_SYNOPSIS, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 	    	cs.add(OPTION_VALUE, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 	    	
+	    	cs = (ConceptSchema)getSchema(EVALUATION);
+	    	cs.add(EVALUATION_ERROR_RATE, (PrimitiveSchema)getSchema(BasicOntology.FLOAT));
+	    	cs.add(EVALUATION_PCT_INCORRECT, (PrimitiveSchema)getSchema(BasicOntology.FLOAT));
     	
+	    	cs = (ConceptSchema)getSchema(RESULTS);
+	    	cs.add(RESULTS_COMPUTATION_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	cs.add(RESULTS_PROBLEM_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	cs.add(RESULTS_RESULTS, (ConceptSchema)getSchema(TASK), 0, ObjectSchema.UNLIMITED);
+
 	    	cs = (ConceptSchema)getSchema(AGENT);
 	    	cs.add(AGENT_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 	    	cs.add(AGENT_OPTIONS, (ConceptSchema)getSchema(OPTION), 1, ObjectSchema.UNLIMITED);
 	    	
 	    	
 			AgentActionSchema as = (AgentActionSchema)getSchema(COMPUTE);
-			as.add(COMPUTE_TASK, (ConceptSchema)getSchema(TASK));
+			as.add(COMPUTE_COMPUTATION, (ConceptSchema)getSchema(COMPUTATION));
 
 			as = (AgentActionSchema)getSchema(SOLVE);
 	    	as.add(SOLVE_PROBLEM, (ConceptSchema)getSchema(PROBLEM));
@@ -143,7 +178,7 @@ public class MessagesOntology extends Ontology {
 			as = (AgentActionSchema)getSchema(GET_OPTIONS);
 			
 			as = (AgentActionSchema)getSchema(EXECUTE);
-	    	as.add(EXECUTE_OPTIONS, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	as.add(EXECUTE_TASK, (ConceptSchema)getSchema(TASK));
 
 			//as = (AgentActionSchema)getSchema(SEND_OPTIONS);
 			//as.add(SEND_OPTIONS_OPTIONS, (ConceptSchema)getSchema(OPTION), 1, ObjectSchema.UNLIMITED);

@@ -41,6 +41,7 @@ import jade.content.*;
 import jade.content.abs.*;
 import jade.content.onto.*;
 import jade.content.onto.basic.*;
+import jade.content.onto.basic.Result;
 import jade.content.lang.Codec.CodecException;
 import jade.content.lang.sl.*;
 
@@ -76,7 +77,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 protected abstract void train();
 	 protected abstract Evaluation test();
 	 
-	 protected abstract String getAgentType();
+	 public abstract String getAgentType();
 	 
 	 protected abstract Classifier getModelObject();
 	 protected abstract boolean setModelObject(Classifier _cls);
@@ -260,7 +261,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 			       }
 				   agent.setOptions(_options);
 				   
-				   System.out.println(_options);
+				   // System.out.println(_options);
 				   
 				   ContentElement content = getContentManager().extractContent(request); // TODO exception block?
 				   Result result = new Result((Action)content, agent);
@@ -294,7 +295,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 protected ACLMessage Execute(ACLMessage request, Execute execute, AchieveREResponder behavior) throws FailureException{
 		state = states.NEW;
 					
-		OPTIONS_ = execute.getOptions().split(" ", 2);
+		OPTIONS_ = execute.getTask().getOptions().split(" ", 2);
 			
 		setOptions(OPTIONS_[1].split(" "));
 			

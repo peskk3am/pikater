@@ -40,6 +40,7 @@ public class Agent_GUI_config_file extends Agent_GUI{
 
 	@Override
 	protected void mySetup() {
+		doWait(1000);
 		getProblemFromFile("config");
 
 		

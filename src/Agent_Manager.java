@@ -1,9 +1,9 @@
 import java.io.IOException;
+
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Vector;
-
 
 import jade.core.AID;
 import jade.core.Agent;
@@ -26,8 +26,11 @@ import jade.proto.IteratedAchieveREInitiator;
 import jade.util.leap.ArrayList;
 import jade.util.leap.Iterator;
 import jade.util.leap.List;
+import jade.wrapper.AgentController;
+import jade.wrapper.PlatformController;
 
 import ontology.messages.*;
+import weka.core.Option;
 
 import jade.content.*;
 import jade.content.abs.*;
@@ -40,21 +43,79 @@ import jade.content.lang.sl.*;
 
 public class Agent_Manager extends Agent{
 	
-	private String receiver;	
+	private String receiver;
+	private int problem_i = 0;
 	
 	private Codec codec = new SLCodec();
 	private Ontology ontology = MessagesOntology.getInstance();
 	
-	// private Agent_Manager_GUI myGUI;
+	
+	private class SendComputation extends AchieveREInitiator{
+		
+			public SendComputation(Agent a, ACLMessage request) {
+				super(a, request);
+				System.out.println(a.getLocalName()+": SendComputation behavior created.");				
+			}
+			
+			// Since we don't know what message to send to the responder
+			// when we construct this AchieveREInitiator, we redefine this 
+			// method to build the request on the fly
+			protected Vector prepareRequests(ACLMessage request) {
+				// Klara's note: this method is called just once at the beginning of the behaviour
+				// Retrieve the incoming request from the DataStore
+				String incomingRequestKey = (String) ((AchieveREResponder) parent).REQUEST_KEY;
+				ACLMessage incomingRequest = (ACLMessage) getDataStore().get(incomingRequestKey);
+								
+				System.out.println("Agent "+getLocalName()+": Received action: "+incomingRequest.getContent()+". Preparing response.");
+				
+
+				return prepareComputations(incomingRequest); // Prepare the request to forward to the responder
+										
+			}
+			protected void handleAllResponses(java.util.Vector responses) {
+				Enumeration en = responses.elements();
+				while(en.hasMoreElements()){
+					ACLMessage msgNext = (ACLMessage)en.nextElement();	
+					System.out.println("Agent:"+getLocalName()+": Agent "+msgNext.getSender().getName()+" sent a reply.");
+				}		
+			}
+			
+			protected void handleAllResultNotifications(java.util.Vector resultNotifications) {
+			/*  JADE documentation: 
+			 * Known bugs: The handler handleAllResponses is not called if the 
+			 * agree message is skipped and the inform message is received instead.
+			 * One message for every receiver is sent instead of a single message for all the receivers.
+			 */
+				Enumeration en = resultNotifications.elements();
+				while(en.hasMoreElements()){
+					ACLMessage msgNext = (ACLMessage)en.nextElement();	
+					System.out.println("Agent:"+getLocalName()+": Agent "+msgNext.getSender().getName()+" sent a reply.");
+				}
+												
+			}
+			
+			
+			private void storeNotification() {
+					
+				// Retrieve the incoming request from the DataStore
+				String incomingRequestkey = (String) ((AchieveREResponder) parent).REQUEST_KEY;
+				ACLMessage incomingRequest = (ACLMessage) getDataStore().get(incomingRequestkey);
+
+				// Prepare the notification to the request originator and store it in the DataStore
+				ACLMessage notification = incomingRequest.createReply();
+				notification.setPerformative(ACLMessage.INFORM);
+				String notificationkey = (String) ((AchieveREResponder) parent).RESULT_NOTIFICATION_KEY;
+				getDataStore().put(notificationkey, notification);
+				
+		
+			}   // end storeNotification
+	 }
+	
 	
 	protected void setup(){
 		
 			// doWait(1500);  // 1.5 seconds
 		
-		    // myGUI = new Agent_Manager_GUI(this);
-		    // myGUI.show();
-		    
-			
 			getContentManager().registerLanguage(codec);
 			getContentManager().registerOntology(ontology);
 			
@@ -83,7 +144,7 @@ public class Agent_Manager extends Agent{
 
 
 	  		  		
-	  		addBehaviour(new AchieveREResponder(this, template_inform) {
+		  	AchieveREResponder receive_problem = new AchieveREResponder(this, template_inform) {
 	  					protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException, RefuseException {
 	  						System.out.println("Agent "+getLocalName()+": REQUEST received from "+request.getSender().getName()+". Action is "+request.getContent());
 	  						
@@ -97,7 +158,7 @@ public class Agent_Manager extends Agent{
 	  							return null;
 	  					}  // end prepareResponse
 	  					
-	  					protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException {
+	  		/*			protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException {
 	  						System.out.println("Agent "+getLocalName()+": preparing the response.");
 	  						
 	  						try{
@@ -106,7 +167,11 @@ public class Agent_Manager extends Agent{
 	  							
 	  							if (((Action)content).getAction() instanceof Solve){
 	  								System.out.println("Agent "+getLocalName()+": received SOLVE instance.");
+<<<<<<< HEAD
 	  								return prepareTasks(request);
+=======
+	  								return prepareComputations(request);
+>>>>>>> a51021a82a66d6b8b35a7b330f51abd0191e19f7
 	  							}
 	  							
 	  						}
@@ -126,13 +191,20 @@ public class Agent_Manager extends Agent{
 	  						
 	  					}  //  end prepareResultNotification
 	  					
-	  				} );
+	  					*/
+	  					
+		  	};
+	
+			receive_problem.registerPrepareResultNotification( new SendComputation(this, null) );
+
+		  	addBehaviour(receive_problem);
 		
 			
 	}  // end setup
 	
-	protected ACLMessage prepareTasks(ACLMessage request){
-		   
+	protected Vector<ACLMessage> prepareComputations(ACLMessage request){
+		Vector<ACLMessage> msgVector = new Vector<ACLMessage>();		
+		
 		ContentElement content;
 		try {
 			content = getContentManager().extractContent(request);
@@ -147,6 +219,7 @@ public class Agent_Manager extends Agent{
 	            	String problemID = generateProblemID();
 	            	problem.setId(problemID);
 	            	
+	            	int computation_i = 0;
 	       		 	Iterator a_itr = problem.getAgents().iterator();	 
 	            	while (a_itr.hasNext()) {
 	    	           ontology.messages.Agent a_next = (ontology.messages.Agent) a_itr.next();
@@ -155,14 +228,14 @@ public class Agent_Manager extends Agent{
 	    	           while (f_itr.hasNext()) {
 	    	        	   String f_next = (String) f_itr.next();
 	    	        	   
-	    	        	   Task task = new Task();
-	    	        	   task.setAgent(a_next);
-	    	        	   task.setData_file_name(f_next);
-	    	        	   task.setProblem_id(problemID);
+	    	        	   Computation computation = new Computation();
+	    	        	   computation.setAgent(a_next);
+	    	        	   computation.setData_file_name(f_next);
+	    	        	   computation.setProblem_id(problemID);
+	    	        	   computation.setId(problemID+"_"+computation_i);
+	    	        	   computation_i++;
 	    	        	   
-	    	        	   System.out.println("Agent "+getLocalName()+": TASK: "+task);
-	    	        	   
-	    	        	   Compute(task);
+	    	        	   msgVector.add( Compute(computation) );
 	    	           } // end while (iteration over files)
 	       	           
 	               	} // end while (iteration over agents List)
@@ -179,27 +252,35 @@ public class Agent_Manager extends Agent{
 				e.printStackTrace();
 			}	   
 			
-			//TODO zjistit, jestli uz jsou vsechny a vyhodnotit je
-			ACLMessage msgOut = new ACLMessage(ACLMessage.INFORM);
-			msgOut.setLanguage(codec.getName());
-			msgOut.setOntology(ontology.getName());
 			
-			msgOut.addReceiver(request.getSender());
+			return msgVector;
 			
-			return msgOut;
-			
-	} // end prepareTasks
+	} // end prepareComputation
 	
-	protected void Compute(Task task){
+	protected ACLMessage Compute(Computation computation){
+	// creates an Option Manager agent and returns a message for this agent
+
+		// create an Option Manager agent
+		String option_manager_name = computation.getId();
+		PlatformController container = getContainerController(); // get a container controller for creating new agents
 		
+		try{	
+			AgentController agent = container.createNewAgent(option_manager_name, "Agent_Random", new String[0] );
+			agent.start();
+		}
+		catch (Exception e) {
+	        System.err.println( "Exception while adding agent"+computation.getId()+": " + e );
+	        e.printStackTrace();
+	    }
+	
+		// sreate a message for the Option Manager agent
 		ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
 		msg.setLanguage(codec.getName());
 		msg.setOntology(ontology.getName());
-	  
 
   		try {
   			Compute compute = new Compute();
-  			compute.setTask(task);
+  			compute.setComputation(computation);
   			
   			Action a = new Action();
   			a.setAction(compute);
@@ -213,44 +294,22 @@ public class Agent_Manager extends Agent{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-                
+                		
 		
-	  	
-	  	msg.addReceiver(new AID("r", AID.ISLOCALNAME));   // TODO find or create OptionManager agent instead
-	  	msg.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
-
-	  	
-	  	AchieveREInitiator computeAchieveREInitiator = new AchieveREInitiator(this, msg) {
-	  		
-			protected void handleInform(ACLMessage inform) {
-				System.out.println(getLocalName()+": Agent "+inform.getSender().getName()+" replied.");
-			  			
-			}
-			
-			protected void handleRefuse(ACLMessage refuse) {
-				System.out.println(getLocalName()+": Agent "+refuse.getSender().getName()+" refused to perform the requested action");
-			}
-			
-			protected void handleFailure(ACLMessage failure) {
-				if (failure.getSender().equals(myAgent.getAMS())) {
-					// FAILURE notification from the JADE runtime: the receiver
-					// does not exist
-					System.out.println("Responder does not exist");
-				}
-				else {
-					System.out.println("Agent "+failure.getSender().getName()+" failed to perform the requested action");
-				}
-			}
-
-		};
+	  	msg.addReceiver(new AID(option_manager_name, AID.ISLOCALNAME));		
+		msg.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
 		
-		addBehaviour(computeAchieveREInitiator);
+		msg.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
+	  	
+		return msg;
 
 	} // end Compute()
 
 	
 	protected String generateProblemID(){
 		Date date = new Date();
-	    return Long.toString(date.getTime());
+		String problem_id = Long.toString(date.getTime())+"_"+problem_i;
+		problem_i++;
+	    return problem_id;
 	}
 }

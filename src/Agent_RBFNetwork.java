@@ -44,7 +44,7 @@ public class Agent_RBFNetwork extends Agent_ComputingAgent{
 		}
 	 }
 	 
-	 protected String getAgentType(){
+	 public String getAgentType(){
 		 return "RBFNetwork";
 	 }
 	

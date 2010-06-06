@@ -73,6 +73,7 @@ public class Agent_Random extends Agent_OptionsManager {
 		    		   			si += Integer.toString(rInt);
 		    		   			 
 		    		   			str += (optionName+si);
+		    		   			next.setValue(si);
 		    		   }	
 		    		   if(next.getData_type().equals("FLOAT")){
 		    		   			String sf = "";
@@ -83,12 +84,17 @@ public class Agent_Random extends Agent_OptionsManager {
 		    		   			float rFloat = next.getRange().getMin() + (float)(generator.nextDouble())*(next.getRange().getMax() - next.getRange().getMin());
 		    		   			sf += Float.toString(rFloat);
 		    		   			 
-		    		   			str += (optionName+sf); 
+		    		   			str += (optionName+sf);
+		    		   			next.setValue(sf);
 		    		  }
 		    		  if(next.getData_type().equals("BOOLEAN")){
 		    		   			int rInt2 = generator.nextInt(2);
 		    		   			if (rInt2 == 1){
 		    		   				str += optionName;
+		    		   				next.setValue("True");
+		    		   			}
+		    		   			else{
+		    		   				next.setValue("False");
 		    		   			}
 		    		  }  
 	    		   }
