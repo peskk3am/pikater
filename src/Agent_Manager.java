@@ -2,6 +2,8 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Vector;
 
 import jade.core.AID;
@@ -22,9 +24,13 @@ import jade.proto.AchieveREInitiator;
 import jade.proto.AchieveREResponder;
 import jade.proto.ContractNetInitiator;
 import jade.proto.IteratedAchieveREInitiator;
+import jade.proto.SubscriptionResponder;
+import jade.proto.SubscriptionResponder.Subscription;
+import jade.proto.SubscriptionResponder.SubscriptionManager;
 import jade.util.leap.ArrayList;
 import jade.util.leap.Iterator;
 import jade.util.leap.List;
+import jade.util.*;
 import jade.wrapper.AgentController;
 import jade.wrapper.PlatformController;
 
@@ -48,6 +54,8 @@ public class Agent_Manager extends Agent{
 	private Codec codec = new SLCodec();
 	private Ontology ontology = MessagesOntology.getInstance();
 	
+	// private Set subscriptions = new HashSet();
+	private Subscription subscription;
 	
 	private class SendComputation extends AchieveREInitiator{
 		
@@ -71,13 +79,19 @@ public class Agent_Manager extends Agent{
 				return prepareComputations(incomingRequest); // Prepare the request to forward to the responder
 										
 			}
-			protected void handleAllResponses(java.util.Vector responses) {
+			
+			protected void handleInform(ACLMessage inform) {
+				System.out.println("Agent:"+getLocalName()+": Agent "+inform.getSender().getName()+" sent a reply.");
+			}
+			
+			/* protected void handleAllResponses(java.util.Vector responses) {
 				Enumeration en = responses.elements();
 				while(en.hasMoreElements()){
 					ACLMessage msgNext = (ACLMessage)en.nextElement();	
 					System.out.println("Agent:"+getLocalName()+": Agent "+msgNext.getSender().getName()+" sent a reply.");
 				}		
 			}
+			*/
 			
 			protected void handleAllResultNotifications(java.util.Vector resultNotifications) {
 			/*  JADE documentation: 
@@ -89,23 +103,56 @@ public class Agent_Manager extends Agent{
 				while(en.hasMoreElements()){
 					ACLMessage msgNext = (ACLMessage)en.nextElement();	
 					System.out.println("Agent:"+getLocalName()+": Agent "+msgNext.getSender().getName()+" sent a reply.");
+					// storeNotification(msgNext);
+					ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+					msg.setContent(msgNext.getSender().getName());
+			        subscription.notify(msg);
 				}
-												
 			}
 			
 			
-			private void storeNotification() {
-					
+			private void storeNotification(ACLMessage result) {
+				// System.out.println("Agent: "+getLocalName()+": result: "+result);
+				
 				// Retrieve the incoming request from the DataStore
 				String incomingRequestkey = (String) ((AchieveREResponder) parent).REQUEST_KEY;
 				ACLMessage incomingRequest = (ACLMessage) getDataStore().get(incomingRequestkey);
-
-				// Prepare the notification to the request originator and store it in the DataStore
-				ACLMessage notification = incomingRequest.createReply();
-				notification.setPerformative(ACLMessage.INFORM);
-				String notificationkey = (String) ((AchieveREResponder) parent).RESULT_NOTIFICATION_KEY;
-				getDataStore().put(notificationkey, notification);
+				System.out.println("Agent: "+getLocalName()+": incomingRequest: "+incomingRequest);
+				// Prepare the msgOut to the request originator				
+				ACLMessage msgOut = new ACLMessage(result.getPerformative());
+				msgOut = incomingRequest.createReply();
 				
+				if (result.getPerformative() != ACLMessage.FAILURE){
+
+					// fill its content
+					Results results = prepareComputationResults(result);
+					if (results != null){
+						msgOut.setPerformative(ACLMessage.INFORM);
+						ContentElement content;
+						try {
+							content = getContentManager().extractContent(incomingRequest);
+							Result _result = new Result((Action)content, results);
+							getContentManager().fillContent(msgOut, _result);
+								
+						} catch (UngroundedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (CodecException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (OntologyException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} 
+					}
+					else{
+						msgOut.setPerformative(ACLMessage.FAILURE);
+					}
+				}  // end if				
+				
+				// and store it in the DataStore
+				String notificationkey = (String) ((AchieveREResponder) parent).RESULT_NOTIFICATION_KEY;
+				getDataStore().put(notificationkey, msgOut );
 		
 			}   // end storeNotification
 	 }
@@ -134,17 +181,64 @@ public class Agent_Manager extends Agent{
 		  	System.out.println("Manager "+getLocalName()+" is alive and waiting...");
 		  			  	
 		  	
-		  	MessageTemplate template_inform = MessageTemplate.and(
-	  		  		MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST),
-	  		  		MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
-	  		  				MessageTemplate.and(MessageTemplate.MatchLanguage(codec.getName()), MessageTemplate.MatchOntology(ontology.getName()))
-	  		  				)
-	  		  	);
+	  	
+		  	SubscriptionManager subscriptionManager = new SubscriptionManager() {
+		        public boolean register(Subscription s) {
+		        	subscription = s;
+		        	// subscriptions.add(s);
+		        	return true;
+		        }
+		        public boolean deregister(Subscription s) {
+		        	subscription = s;
+		        	// subscriptions.remove(s);
+		        	return true;
+		        }
+		      };
 
 
-	  		  		
-		  	AchieveREResponder receive_problem = new AchieveREResponder(this, template_inform) {
-	  					protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException, RefuseException {
+		    MessageTemplate mt = MessageTemplate.and(
+					MessageTemplate.MatchOntology(ontology.getName()),   // TODO MatchLanguage, MatchProtocol...
+					MessageTemplate.or(MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE), MessageTemplate.MatchPerformative(ACLMessage.CANCEL)));
+
+	  		/*
+	  		 * It is very important to pass the right message
+			 * template to its constructor as it is used to select the ACLMessage to be served.
+			 * 
+			 * Once the subscription request has been examined the responder must then reply by
+			 * sending a not-understood, a refuse or an agree message to communicate the subscriptions state.
+			 * Each time the subscriptions condition resolves to true, the responder sends a "notification"
+			 * messages to the Initiator.
+			 * 
+			 * The applications Subscription Manager is expected to implement the register() and
+			 * deregister() methods.
+			 * 
+			 * When you subscribe using IOTA it means that you request to be notified
+			 * each time there is a new object that makes a given condition become true
+			 * --> The responder should notify the subscriber each time there is such a
+			 * new object. If you want to send a notification every xxx seconds a
+			 * TickerBehaviour is a very good solution.
+	  		 */
+		  	SubscriptionResponder send_results = new SubscriptionResponder(this, mt, subscriptionManager) {
+		  		// If the CANCEL message has a meaningful content, use it. 
+				// Otherwise deregister the Subscription with the same convID (default)
+				protected ACLMessage handleCancel(ACLMessage cancel) {
+
+						/*
+						Action act = (Action) myAgent.getContentManager().extractContent(cancel);
+						ACLMessage subsMsg = (ACLMessage)act.getAction();
+						Subscription s = getSubscription(subsMsg);
+						if (s != null) {
+							mySubscriptionManager.deregister(s);
+							s.close();
+							*/
+					
+					ACLMessage msgOut = new ACLMessage(ACLMessage.INFORM);
+					System.out.println("Agent "+getLocalName()+": canceled.");
+					return msgOut;
+				}		
+		  		
+		  		
+		  		/* protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException, RefuseException {
 	  						System.out.println("Agent "+getLocalName()+": REQUEST received from "+request.getSender().getName()+". Action is "+request.getContent());
 	  						
 	  							// We agree to perform the action. Note that in the FIPA-Request
@@ -180,20 +274,77 @@ public class Agent_Manager extends Agent{
 							ACLMessage notUnderstood = request.createReply();
 							notUnderstood.setPerformative(ACLMessage.NOT_UNDERSTOOD);
   							return notUnderstood;
-  							
-							
+  														
 							// return 
 	  						
-	  					}  //  end prepareResultNotification
-	  					
-	  					*/
-	  					
+	  					}  //  end prepareResultNotification	  					
+	  					*/	  					
 		  	};
 	
-			receive_problem.registerPrepareResultNotification( new SendComputation(this, null) );
+		  	// This method allows to register a user defined Behaviour in the HANDLE_SUBSCRIPTION state.
+		  	// send_results.registerHandleSubscription(new SendComputation(this, null));
+	        
+		  	//receive_problem.registerPrepareResultNotification( new SendComputation(this, null) );
 
-		  	addBehaviour(receive_problem);
-		
+		  	addBehaviour(send_results);
+	
+		  	
+		  	
+		  	
+		  	MessageTemplate template_inform = MessageTemplate.and(
+	  		  		MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST),
+	  		  		MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
+	  		  				MessageTemplate.and(MessageTemplate.MatchLanguage(codec.getName()), MessageTemplate.MatchOntology(ontology.getName()))
+	  		  				)
+	  		  	);
+			  	
+		  	
+		  	 AchieveREResponder receive_problem = new AchieveREResponder(this, template_inform) {
+		  		protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException, RefuseException {
+		  		System.out.println("Agent "+getLocalName()+": REQUEST received from "+request.getSender().getName()+". Action is "+request.getContent());
+
+		  		// We agree to perform the action. Note that in the FIPA-Request
+		  		// protocol the AGREE message is optional. Return null if you
+		  		// don't want to send it.
+		  		// System.out.println("Agent "+getLocalName()+": Agree");
+		  		// ACLMessage agree = request.createReply();
+		  		// agree.setPerformative(ACLMessage.AGREE);
+		  		// return agree;
+		  		return null;
+		  		} // end prepareResponse
+
+		  		/* protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException {
+		  		System.out.println("Agent "+getLocalName()+": preparing the response.");
+		  		try{
+		  		ContentElement content = getContentManager().extractContent(request);
+		  		// System.out.println(((Action)ce).getAction());
+		  		if (((Action)content).getAction() instanceof Solve){
+		  		System.out.println("Agent "+getLocalName()+": received SOLVE instance.");
+		  		return prepareComputations(request);
+		  		}
+		  		}
+		  		catch (CodecException ce) {
+		  		ce.printStackTrace();
+		  		}
+		  		catch (OntologyException oe) {
+		  		oe.printStackTrace();
+		  		}
+		  		ACLMessage notUnderstood = request.createReply();
+		  		notUnderstood.setPerformative(ACLMessage.NOT_UNDERSTOOD);
+		  		return notUnderstood;
+		  		// return
+		  		} // end prepareResultNotification
+		  		*/
+
+		  		};
+
+		  		receive_problem.registerPrepareResultNotification( new SendComputation(this, null) );
+
+		  		addBehaviour(receive_problem);
+
+
+		  	
+		  	
 			
 	}  // end setup
 	
@@ -268,7 +419,7 @@ public class Agent_Manager extends Agent{
 	        e.printStackTrace();
 	    }
 	
-		// sreate a message for the Option Manager agent
+		// create a message for the Option Manager agent
 		ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
 		msg.setLanguage(codec.getName());
 		msg.setOntology(ontology.getName());
@@ -302,6 +453,48 @@ public class Agent_Manager extends Agent{
 	} // end Compute()
 
 	
+	protected Results prepareComputationResults(ACLMessage result){
+		Results results = null;
+		// System.out.println("Agent "+getLocalName()+": rrrresult:"+result.getContent());
+		ContentElement content;
+		try {
+			content = getContentManager().extractContent(result);
+			if (content instanceof Result) {
+                Result _result = (Result) content;              
+                if (_result.getValue() instanceof Results) {
+                	results = (Results) _result.getValue(); 
+                	List listOfResults = results.getResults();
+                	
+           		 	float sumError_rate = 0;
+           		 	float sumPct_incorrect = 0;
+                	Iterator itr = listOfResults.iterator();
+           		 	while (itr.hasNext()) {
+           	           Task next = (Task) itr.next();
+           	           Evaluation evaluation = next.getResult();
+           	           
+           	           sumError_rate += evaluation.getError_rate();		
+           	           sumPct_incorrect += evaluation.getPct_incorrect();
+    				}
+           		 	results.setAvg_error_rate( sumError_rate / listOfResults.size() ); 
+           		 	results.setAvg_pct_incorrect( sumPct_incorrect / listOfResults.size() );
+                }
+	  		}
+		} catch (UngroundedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (CodecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (OntologyException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+  		
+  		return results;
+
+	} // prepareComputationResult
+
+  		
 	protected String generateProblemID(){
 		Date date = new Date();
 		String problem_id = Long.toString(date.getTime())+"_"+problem_i;

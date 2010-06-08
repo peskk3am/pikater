@@ -239,20 +239,18 @@ public abstract class Agent_OptionsManager extends Agent {
 					
 					System.out.println("Agent "+getLocalName()+" finished the goal succesfully, sending the results to the manager.");
 				
-
-					/*
+					// prepare the outgoing message content:
+					
 					Results _results = new Results();
 					_results.setResults(results);
 					_results.setComputation_id(computation_id);
 					_results.setProblem_id(problem_id);									
-					*/
-
-					// prepare the outgoing message content:
+					
 
 				   ContentElement content;
 					try {
 						content = getContentManager().extractContent(incomingRequest);
-						Result result = new Result((Action)content, results);
+						Result result = new Result((Action)content, _results);
 						getContentManager().fillContent(msgOut, result);
 	
 					
