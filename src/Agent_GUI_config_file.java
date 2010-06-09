@@ -47,6 +47,11 @@ public class Agent_GUI_config_file extends Agent_GUI{
 
 		
 	}	// end mySetup
+
+	@Override
+  	protected void displayPartialResult(ACLMessage inform) {
+		System.out.println("Partial results");
+	} 
 	
 	void getProblemFromFile(String fileName){
 		

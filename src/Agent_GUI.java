@@ -14,6 +14,7 @@ import jade.content.onto.basic.Action;
 import jade.content.onto.basic.Result;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPANames;
@@ -21,6 +22,7 @@ import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.proto.AchieveREInitiator;
+import jade.lang.acl.MessageTemplate;
 import jade.proto.SubscriptionInitiator;
 import jade.util.leap.ArrayList;
 import jade.util.leap.Iterator;
@@ -74,7 +76,9 @@ public abstract class Agent_GUI extends Agent {
 	protected abstract void allOptionsReceived();
 		/* automatically called after all replies from computing agents are received */
 	
-	
+	protected abstract void displayPartialResult(ACLMessage inform);
+	/* Process the partial results received from computing agents 
+	 *  maybe only the content would be better as a parameter */ 
 	
 	protected void reset(){
 		_agents = new ArrayList();
@@ -407,6 +411,9 @@ public abstract class Agent_GUI extends Agent {
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
 		
+		//Partial results handler
+		addBehaviour(new CompAgentResultsServer(this)); 
+		
 	    // register with DF
 		DFAgentDescription dfd = new DFAgentDescription();
 		ServiceDescription sd = new ServiceDescription();   
@@ -414,6 +421,13 @@ public abstract class Agent_GUI extends Agent {
 		sd.setName(getName());
 		dfd.setName(getAID());
 		dfd.addServices(sd);
+		
+		//Name of general GUI service:
+		sd = new ServiceDescription();   
+	    sd.setType("GUIAgent"); 
+	    sd.setName(getName());
+	    dfd.addServices(sd);
+	    
 		try {
 		    DFService.register(this,dfd);
 		} catch (FIPAException e) {
@@ -428,4 +442,26 @@ public abstract class Agent_GUI extends Agent {
 
 	
 	}  // end setup
+	
+
+	/* This behavior captures partial results from computating agents */
+	protected class CompAgentResultsServer extends CyclicBehaviour{
+		private MessageTemplate resMsgTemplate = MessageTemplate.and(
+			MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+			MessageTemplate.MatchConversationId("partial-results"));
+		public CompAgentResultsServer(Agent agent) {
+			super(agent);
+		}
+
+		@Override
+		public void action() {
+			ACLMessage msg = receive(resMsgTemplate);
+			if (msg != null) {
+				displayPartialResult(msg);
+			}else{
+				block();
+			}
+		}
+	} 
+	
 }
