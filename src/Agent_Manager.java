@@ -81,8 +81,15 @@ public class Agent_Manager extends Agent{
 			}
 			
 			protected void handleInform(ACLMessage inform) {
-				System.out.println("Agent:"+getLocalName()+": Agent "+inform.getSender().getName()+" sent a reply.");
+				System.out.println("Agent:"+getLocalName()+": Agent "+inform.getSender().getName()+" sent an inform.");
+				sendSubscription(inform);
 			}
+
+			protected void handleFailure(ACLMessage failure) {
+				System.out.println("Agent:"+getLocalName()+": Agent "+failure.getSender().getName()+" sent a failure.");
+				sendSubscription(failure);
+			}
+
 			
 			/* protected void handleAllResponses(java.util.Vector responses) {
 				Enumeration en = responses.elements();
@@ -93,34 +100,39 @@ public class Agent_Manager extends Agent{
 			}
 			*/
 			
+			
 			protected void handleAllResultNotifications(java.util.Vector resultNotifications) {
 			/*  JADE documentation: 
 			 * Known bugs: The handler handleAllResponses is not called if the 
 			 * agree message is skipped and the inform message is received instead.
 			 * One message for every receiver is sent instead of a single message for all the receivers.
 			 */
+				/* 
 				Enumeration en = resultNotifications.elements();
 				while(en.hasMoreElements()){
 					ACLMessage msgNext = (ACLMessage)en.nextElement();	
-					System.out.println("Agent:"+getLocalName()+": Agent "+msgNext.getSender().getName()+" sent a reply.");
-					// storeNotification(msgNext);
-					ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-					msg.setContent(msgNext.getSender().getName());
-			        subscription.notify(msg);
+					System.out.println("Agent:"+getLocalName()+": Agent "+msgNext.getSender().getName()+" sent a reply.");			        
+				}
+				*/
+				if (resultNotifications.size() == 0){
+					storeNotification( ACLMessage.FAILURE );
+				}
+				else{
+					storeNotification( ACLMessage.INFORM );
 				}
 			}
 			
-			
-			private void storeNotification(ACLMessage result) {
-				// System.out.println("Agent: "+getLocalName()+": result: "+result);
+			private void sendSubscription(ACLMessage result) {
+				System.out.println("Agent: "+getLocalName()+": result: "+result+" "+result.getPerformative());
 				
 				// Retrieve the incoming request from the DataStore
 				String incomingRequestkey = (String) ((AchieveREResponder) parent).REQUEST_KEY;
 				ACLMessage incomingRequest = (ACLMessage) getDataStore().get(incomingRequestkey);
 				System.out.println("Agent: "+getLocalName()+": incomingRequest: "+incomingRequest);
+				
 				// Prepare the msgOut to the request originator				
-				ACLMessage msgOut = new ACLMessage(result.getPerformative());
-				msgOut = incomingRequest.createReply();
+				ACLMessage msgOut = incomingRequest.createReply();
+				msgOut.setPerformative(result.getPerformative());
 				
 				if (result.getPerformative() != ACLMessage.FAILURE){
 
@@ -149,11 +161,41 @@ public class Agent_Manager extends Agent{
 						msgOut.setPerformative(ACLMessage.FAILURE);
 					}
 				}  // end if				
+			
+		        subscription.notify(msgOut);				
+			}
+			
+			
+			private void storeNotification(int performative) {
+				// Retrieve the incoming request from the DataStore
+				String incomingRequestkey = (String) ((AchieveREResponder) parent).REQUEST_KEY;
+				ACLMessage incomingRequest = (ACLMessage) getDataStore().get(incomingRequestkey);
+				// System.out.println("Agent: "+getLocalName()+": incomingRequest: "+incomingRequest);
 				
+				// Create an outgoing message
+				ACLMessage msgOut = incomingRequest.createReply();
+				msgOut.setPerformative(performative);
+				
+				if (performative == ACLMessage.FAILURE){
+					System.out.println("Agent: "+getLocalName()+": no results from the option managers received.");
+					msgOut.setContent("No results from the option managers received");
+				}
+				else{
+					System.out.println("Agent: "+getLocalName()+": all results sent.");	
+					msgOut.setContent("Finished");
+				}		        
+					
 				// and store it in the DataStore
 				String notificationkey = (String) ((AchieveREResponder) parent).RESULT_NOTIFICATION_KEY;
 				getDataStore().put(notificationkey, msgOut );
 		
+		        
+				// cancel this subscription conversation - there will be no more results
+				msgOut = new ACLMessage(ACLMessage.REFUSE);
+				subscription.notify(msgOut);
+				
+				// TODO - kill option manager agent
+				
 			}   // end storeNotification
 	 }
 	

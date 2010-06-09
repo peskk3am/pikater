@@ -223,14 +223,15 @@ public abstract class Agent_GUI extends Agent {
 		addBehaviour(behav);
 		
 	} // end getAgentOptions
-				
+
+	
 	protected void sendProblem(){		 
 		problem.setAid(getAID());
 
 		
 	  	// create a request message with SendProblem content
-	  	ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
-			msg.addReceiver(new AID("manager", AID.ISLOCALNAME));
+		ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+		msg.addReceiver(new AID("manager", AID.ISLOCALNAME));
 		msg.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
 		
 		msg.setLanguage(codec.getName());
@@ -261,12 +262,12 @@ public abstract class Agent_GUI extends Agent {
 		}
 		
 		
-	  	AchieveREInitiator behav = new AchieveREInitiator(this, msg) {
+	  	AchieveREInitiator send_problem = new AchieveREInitiator(this, msg) {
 	  		// send a problem
 	  		
 			protected void handleInform(ACLMessage inform) {
 				System.out.println(getLocalName()+": Agent "+inform.getSender().getName()+" replied.");					
-				displayResult(inform);
+				
 			}
 			
 			protected void handleRefuse(ACLMessage refuse) {
@@ -286,7 +287,7 @@ public abstract class Agent_GUI extends Agent {
 
 		};
 		
-		addBehaviour(behav);
+		addBehaviour(send_problem);
 
 		
 		
@@ -297,12 +298,14 @@ public abstract class Agent_GUI extends Agent {
 		msg.setLanguage(codec.getName());
 		msg.setOntology(ontology.getName());
 		
-		SubscriptionInitiator send_problem = new SubscriptionInitiator(this, msg){
+		SubscriptionInitiator receive_results = new SubscriptionInitiator(this, msg){
 			// receive the sequence of replies
 			
 			protected void handleInform(ACLMessage inform) {
 				System.out.println(getLocalName()+": Agent "+inform.getSender().getName()+" replied.");					
-				displayResult(inform);
+				displayResult(inform);				
+				
+				// cancel(inform.getSender(), true);  // true - ignore response
 			}
 
 			protected void handleRefuse(ACLMessage refuse) {
@@ -330,8 +333,8 @@ public abstract class Agent_GUI extends Agent {
 				
 		};
 		
-		addBehaviour(send_problem);
-		
+		addBehaviour(receive_results);
+	
 	}
 	
 	protected void addAgentToProblem(String [] agentParams){
