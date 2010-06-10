@@ -1,3 +1,6 @@
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Date;
@@ -5,6 +8,11 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Vector;
+
+import org.jdom.Document;
+import org.jdom.Element;
+import org.jdom.output.Format;
+import org.jdom.output.XMLOutputter;
 
 import jade.core.AID;
 import jade.core.Agent;
@@ -48,6 +56,13 @@ import jade.content.lang.Codec;
 import jade.content.lang.Codec.CodecException;
 import jade.content.lang.sl.*;
 
+import org.jdom.Document;
+import org.jdom.Element;
+import org.jdom.output.Format;
+import org.jdom.output.XMLOutputter;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 
 public class Agent_Manager extends Agent{
 	
@@ -86,7 +101,7 @@ public class Agent_Manager extends Agent{
 			protected void handleInform(ACLMessage inform) {
 				System.out.println("Agent:"+getLocalName()+": Agent "+inform.getSender().getName()+" sent an inform.");
 				sendSubscription(inform);
-				killAgent(inform.getSender().getName());				
+				killAgent(inform.getSender().getName());
 			}
 			
 			protected void handleFailure(ACLMessage failure) {
@@ -136,6 +151,10 @@ public class Agent_Manager extends Agent{
 					// fill its content
 					Results results = prepareComputationResults(result);
 					if (results != null){
+						
+						writeXMLResults(results);
+						
+						
 						msgOut.setPerformative(ACLMessage.INFORM);
 						ContentElement content;
 						try {
@@ -159,7 +178,8 @@ public class Agent_Manager extends Agent{
 					}
 				}  // end if				
 			
-		        subscription.notify(msgOut);				
+		        subscription.notify(msgOut);
+		        
 			}
 			
 			
@@ -441,7 +461,108 @@ public class Agent_Manager extends Agent{
 
 	} // prepareComputationResult
 
-  		
+	
+	 protected boolean writeXMLResults(Results results){
+	 	String file_name = "xml"+System.getProperty("file.separator")+results.getComputation_id()+".xml"; 
+	    
+		// create the "xml" directory, if it doesn't exist
+		boolean exists = (new File("xml")).exists();
+		if (!exists) {	
+			boolean success = (new File("xml")).mkdir();
+		    if (!success) {
+		      System.out.println("Directory: " + "xml" + " could not be created");  // TODO exception
+		    } 
+		}
+	 
+		
+		/* Generate the ExpML document  */
+		Document doc = new Document(new Element("result"));
+		Element root = doc.getRootElement();
+	
+		
+	 	List _results = results.getResults();
+	    
+	 	Iterator itr = _results.iterator();	  
+	    while (itr.hasNext()) {
+		   Task next_task = (Task) itr.next();
+		   System.out.println("1111111111"+next_task);
+		   
+		   ontology.messages.Agent agent = next_task.getAgent();
+		   
+		   Element newExperiment = new Element("experiment");				   
+	       Element newSetting = new Element ("setting");
+	       Element newAlgorithm = new Element ("algorithm");
+	       newAlgorithm.setAttribute("name", agent.getName());
+	       newAlgorithm.setAttribute("libname", "weka");
+	       
+		   List Options = agent.getOptions(); 
+		   Iterator itr_o = Options.iterator();	  
+		   while (itr_o.hasNext()) {
+			   ontology.messages.Option next_o = (ontology.messages.Option) itr_o.next();
+			    
+			   	Element newParameter = new Element ("parameter");
+			    newParameter.setAttribute("name", next_o.getName());
+			    
+			    String value = "";
+			    if (next_o.getValue() != null){ value = next_o.getValue(); }
+			    newParameter.setAttribute("value", value);
+			    
+			    newAlgorithm.addContent(newParameter);
+		   }
+		   
+		   Element newDataSet = new Element ("dataset");
+		   newDataSet.setAttribute("name", next_task.getData_file_name());
+
+		   Element newEvaluation = new Element ("evaluation");
+		   Element newMetric1 = new Element ("metric");
+		   newMetric1.setAttribute ("mean_absolute_error", Double.toString(next_task.getResult().getError_rate()));
+		   Element newMetric2 = new Element ("metric");
+		   newMetric2.setAttribute ("root_mean_squared_error", Double.toString(next_task.getResult().getPct_incorrect()));
+		   			   
+		   newEvaluation.addContent(newMetric1);
+		   newEvaluation.addContent(newMetric2);
+		   
+	       newExperiment.addContent(newSetting);
+	       newExperiment.addContent(newEvaluation);
+	       newSetting.addContent(newAlgorithm);
+	       newSetting.addContent(newDataSet);
+
+	       root.addContent(newExperiment);
+	       
+	    }  
+
+	    Element newStatistics = new Element ("statistics");
+ 	    Element newMetric1 = new Element ("metric");
+	    newMetric1.setAttribute ("average_error_rate", Double.toString(results.getAvg_error_rate()));
+	    Element newMetric2 = new Element ("metric");
+	    newMetric2.setAttribute ("average_pct_incorrect", Double.toString(results.getAvg_pct_incorrect()));
+		
+	    newStatistics.addContent(newMetric1);
+	    newStatistics.addContent(newMetric2);
+	    
+	    root.addContent(newStatistics);
+	    
+	    
+	    XMLOutputter out = new XMLOutputter(Format.getPrettyFormat());
+       	try {
+    	   FileWriter fw = new FileWriter(file_name);
+    	   BufferedWriter fout = new BufferedWriter(fw);
+    	
+    	   out.output( root, fout );
+		
+    	   fout.close();
+		
+       	} catch (IOException e) {
+    	   e.printStackTrace();
+    	   return false;
+       	}
+	    		
+		
+		 
+       return true;
+	}  // end writeXMLResults
+	 
+	
 	protected String generateProblemID(){
 		Date date = new Date();
 		String problem_id = Long.toString(date.getTime())+"_"+problem_i;

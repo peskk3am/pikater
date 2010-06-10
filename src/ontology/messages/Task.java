@@ -9,6 +9,22 @@ public class Task implements Concept {
 	private String _computation_id;
 	private String _problem_id;
 	private Evaluation _result;
+	private Agent _agent;
+	private String 	_data_file_name;
+	
+	
+	public void setAgent(Agent agent) {
+		_agent=agent;
+	}
+	public Agent getAgent() {
+		return _agent;
+	}
+	public void setData_file_name(String data_file_name) {
+		_data_file_name=data_file_name;
+	}
+	public String getData_file_name() {
+		return _data_file_name;
+	}
 	
 	public void setOptions(String options) {
 		_options=options;
