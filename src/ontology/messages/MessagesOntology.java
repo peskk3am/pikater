@@ -29,6 +29,7 @@ public class MessagesOntology extends Ontology {
 	  public static final String COMPUTATION_PROBLEM_ID = "problem_id";
 	  public static final String COMPUTATION_AGENT = "agent";
 	  public static final String COMPUTATION_DATA_FILE_NAME = "data_file_name";
+	  public static final String COMPUTATION_TIMEOUT = "timeout";
 	  
 	  public static final String PROBLEM = "PROBLEM";
 	  public static final String PROBLEM_ID = "id";
@@ -128,7 +129,8 @@ public class MessagesOntology extends Ontology {
 	    	cs.add(COMPUTATION_PROBLEM_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 			cs.add(COMPUTATION_AGENT, (ConceptSchema)getSchema(AGENT));
 			cs.add(COMPUTATION_DATA_FILE_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
-
+			cs.add(COMPUTATION_TIMEOUT, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));
+			
 			cs = (ConceptSchema)getSchema(PROBLEM);
 			cs.add(PROBLEM_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 	    	cs.add(PROBLEM_AGENTS, (ConceptSchema)getSchema(AGENT), 1, ObjectSchema.UNLIMITED);

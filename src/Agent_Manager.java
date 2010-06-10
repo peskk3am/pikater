@@ -68,6 +68,7 @@ public class Agent_Manager extends Agent{
 	
 	private String receiver;
 	private int problem_i = 0;
+	private int timeout = 10000;
 	
 	private Codec codec = new SLCodec();
 	private Ontology ontology = MessagesOntology.getInstance();
@@ -346,6 +347,7 @@ public class Agent_Manager extends Agent{
 	    	        	   computation.setData_file_name(f_next);
 	    	        	   computation.setProblem_id(problemID);
 	    	        	   computation.setId(problemID+"_"+computation_i);
+	    	        	   computation.setTimeout(timeout);
 	    	        	   computation_i++;
 	    	        	   
 	    	        	   msgVector.add( Compute(computation) );
@@ -485,7 +487,6 @@ public class Agent_Manager extends Agent{
 	 	Iterator itr = _results.iterator();	  
 	    while (itr.hasNext()) {
 		   Task next_task = (Task) itr.next();
-		   System.out.println("1111111111"+next_task);
 		   
 		   ontology.messages.Agent agent = next_task.getAgent();
 		   

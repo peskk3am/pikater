@@ -7,6 +7,7 @@ public class Computation implements Concept{
 	private String _id;
 	private Agent _agent;
 	private String 	_data_file_name;
+	private int _timeout;  // miliseconds
 	
 	// Methods required to use this class to represent the TASK role
 	public void setAgent(Agent agent) {
@@ -32,6 +33,12 @@ public class Computation implements Concept{
 	}
 	public String getId() {
 		return _id;
+	}
+	public void setTimeout(int timeout) {
+		_timeout = timeout;
+	}
+	public int getTimeout() {
+		return _timeout;
 	}
 
 }

@@ -42,7 +42,7 @@ import jade.util.leap.List;
 public abstract class Agent_OptionsManager extends Agent {
 	 	 private Codec codec = new SLCodec();
 	 	 private Ontology ontology = MessagesOntology.getInstance();
-	
+	 	 
 		 private String fileName;
 		 private String receiver;
 	 	 private String computation_id;
@@ -50,11 +50,13 @@ public abstract class Agent_OptionsManager extends Agent {
 	 	 
 	 	 private int task_i = 0; // task number
 
+	 	 private long timeout = -1; 
+
 	 	 boolean working = false;
 	 	 	 	 
 		 MyWekaEvaluation result;
 	 	 protected List Options;
-	 	 
+	 	 	 	 
 		 protected abstract String getAgentType();
 		 protected abstract boolean finished();
 		 protected abstract String generateNewOptions(MyWekaEvaluation result);
@@ -92,6 +94,9 @@ public abstract class Agent_OptionsManager extends Agent {
 					  	receiver = compute.getComputation().getAgent().getName();
 					  	computation_id = compute.getComputation().getId();
 					  	problem_id = compute.getComputation().getProblem_id();
+					  	if (timeout < 0){
+					  		timeout = System.currentTimeMillis() + compute.getComputation().getTimeout();
+					  	}
 			  		}
 					
 				} catch (UngroundedException e) {
@@ -179,8 +184,16 @@ public abstract class Agent_OptionsManager extends Agent {
 			}
 			
 			protected void handleRefuse(ACLMessage refuse) {
-				storeNotification(ACLMessage.FAILURE);
+				
 				System.out.println(getLocalName()+": Agent "+refuse.getSender().getName()+" refused to perform the requested action");
+				if (System.currentTimeMillis() < timeout){
+					doWait(100);
+					this.reset();
+					addBehaviour(this);
+				}
+				else{
+					storeNotification(ACLMessage.FAILURE);	
+				}
 			}
 			
 			protected void handleFailure(ACLMessage failure) {
@@ -262,10 +275,7 @@ public abstract class Agent_OptionsManager extends Agent {
 				// save the outgoing message to the dataStore
 				String notificationkey = (String) ((AchieveREResponder) parent).RESULT_NOTIFICATION_KEY;
 				getDataStore().put(notificationkey, msgOut);
-								
-				// System.out.println("Agent "+getLocalName()+" says good bye!");
-				// doDelete();
-				
+											
 		
 			}   // end storeNotification
 		
@@ -431,13 +441,6 @@ public abstract class Agent_OptionsManager extends Agent {
 						return agree;
 						
 				}  // end prepareResponse
-				
-				public int onEnd(){
-					System.out.println("Agent "+getLocalName()+" says good-bye.");
-					myAgent.doDelete();
-					// return super.onEnd();
-					return 1;
-				}
 								
 			};
 						
