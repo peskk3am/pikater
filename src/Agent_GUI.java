@@ -309,7 +309,6 @@ public abstract class Agent_GUI extends Agent {
 				System.out.println(getLocalName()+": Agent "+inform.getSender().getName()+" replied.");					
 				displayResult(inform);				
 				
-				// cancel(inform.getSender(), true);  // true - ignore response
 			}
 
 			protected void handleRefuse(ACLMessage refuse) {
@@ -327,13 +326,6 @@ public abstract class Agent_GUI extends Agent {
 				}
 			}	
 			
-			/* cancel(AID receiver, boolean ignoreResponse)
-			Cancel the subscription to agent receiver. This method retrieves the subscription message
-			sent to receiver and sends a suitable CANCEL message with the conversationID and all other
-			protocol fields appropriately set. The content slot of this CANCEL message is filled in by means
-			of the fillCancelContent() method.
-			*/
-			//-- > zavolat, az budu mit vsechny odpovedi
 				
 		};
 		

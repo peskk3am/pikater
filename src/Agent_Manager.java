@@ -32,7 +32,10 @@ import jade.util.leap.Iterator;
 import jade.util.leap.List;
 import jade.util.*;
 import jade.wrapper.AgentController;
+import jade.wrapper.ControllerException;
 import jade.wrapper.PlatformController;
+import jade.wrapper.StaleProxyException;
+import jade.domain.JADEAgentManagement.*;
 
 import ontology.messages.*;
 import weka.core.Option;
@@ -83,22 +86,23 @@ public class Agent_Manager extends Agent{
 			protected void handleInform(ACLMessage inform) {
 				System.out.println("Agent:"+getLocalName()+": Agent "+inform.getSender().getName()+" sent an inform.");
 				sendSubscription(inform);
+				killAgent(inform.getSender().getName());				
 			}
-
+			
 			protected void handleFailure(ACLMessage failure) {
 				System.out.println("Agent:"+getLocalName()+": Agent "+failure.getSender().getName()+" sent a failure.");
 				sendSubscription(failure);
+				killAgent(failure.getSender().getName());				
 			}
 
 			
 			/* protected void handleAllResponses(java.util.Vector responses) {
 				Enumeration en = responses.elements();
 				while(en.hasMoreElements()){
-					ACLMessage msgNext = (ACLMessage)en.nextElement();	
-					System.out.println("Agent:"+getLocalName()+": Agent "+msgNext.getSender().getName()+" sent a reply.");
+					ACLMessage msgNext = (ACLMessage)en.nextElement();			
 				}		
-			}
-			*/
+			} */
+			
 			
 			
 			protected void handleAllResultNotifications(java.util.Vector resultNotifications) {
@@ -106,14 +110,7 @@ public class Agent_Manager extends Agent{
 			 * Known bugs: The handler handleAllResponses is not called if the 
 			 * agree message is skipped and the inform message is received instead.
 			 * One message for every receiver is sent instead of a single message for all the receivers.
-			 */
-				/* 
-				Enumeration en = resultNotifications.elements();
-				while(en.hasMoreElements()){
-					ACLMessage msgNext = (ACLMessage)en.nextElement();	
-					System.out.println("Agent:"+getLocalName()+": Agent "+msgNext.getSender().getName()+" sent a reply.");			        
-				}
-				*/
+			 */		 
 				if (resultNotifications.size() == 0){
 					storeNotification( ACLMessage.FAILURE );
 				}
@@ -194,10 +191,25 @@ public class Agent_Manager extends Agent{
 				msgOut = new ACLMessage(ACLMessage.REFUSE);
 				subscription.notify(msgOut);
 				
-				// TODO - kill option manager agent
-				
 			}   // end storeNotification
-	 }
+
+			private void killAgent(String name){
+				System.out.println("Agent:"+getLocalName()+": Agent "+name+" is being killed.");
+
+				PlatformController container = getContainerController();
+
+				try {
+					container.getAgent(name).kill();
+				} catch (StaleProxyException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (ControllerException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}	
+			}
+
+	} // end SendComputaion behavior
 	
 	
 	protected void setup(){
@@ -242,95 +254,12 @@ public class Agent_Manager extends Agent{
 					MessageTemplate.MatchOntology(ontology.getName()),   // TODO MatchLanguage, MatchProtocol...
 					MessageTemplate.or(MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE), MessageTemplate.MatchPerformative(ACLMessage.CANCEL)));
 
-	  		/*
-	  		 * It is very important to pass the right message
-			 * template to its constructor as it is used to select the ACLMessage to be served.
-			 * 
-			 * Once the subscription request has been examined the responder must then reply by
-			 * sending a not-understood, a refuse or an agree message to communicate the subscriptions state.
-			 * Each time the subscriptions condition resolves to true, the responder sends a "notification"
-			 * messages to the Initiator.
-			 * 
-			 * The applications Subscription Manager is expected to implement the register() and
-			 * deregister() methods.
-			 * 
-			 * When you subscribe using IOTA it means that you request to be notified
-			 * each time there is a new object that makes a given condition become true
-			 * --> The responder should notify the subscriber each time there is such a
-			 * new object. If you want to send a notification every xxx seconds a
-			 * TickerBehaviour is a very good solution.
-	  		 */
+
 		  	SubscriptionResponder send_results = new SubscriptionResponder(this, mt, subscriptionManager) {
-		  		// If the CANCEL message has a meaningful content, use it. 
-				// Otherwise deregister the Subscription with the same convID (default)
-				protected ACLMessage handleCancel(ACLMessage cancel) {
-
-						/*
-						Action act = (Action) myAgent.getContentManager().extractContent(cancel);
-						ACLMessage subsMsg = (ACLMessage)act.getAction();
-						Subscription s = getSubscription(subsMsg);
-						if (s != null) {
-							mySubscriptionManager.deregister(s);
-							s.close();
-							*/
-					
-					ACLMessage msgOut = new ACLMessage(ACLMessage.INFORM);
-					System.out.println("Agent "+getLocalName()+": canceled.");
-					return msgOut;
-				}		
-		  		
-		  		
-		  		/* protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException, RefuseException {
-	  						System.out.println("Agent "+getLocalName()+": REQUEST received from "+request.getSender().getName()+". Action is "+request.getContent());
-	  						
-	  							// We agree to perform the action. Note that in the FIPA-Request
-	  							// protocol the AGREE message is optional. Return null if you
-	  							// don't want to send it.						
-	  							// System.out.println("Agent "+getLocalName()+": Agree");
-	  							// ACLMessage agree = request.createReply();
-	  							// agree.setPerformative(ACLMessage.AGREE);
-	  							// return agree;
-	  							return null;
-	  					}  // end prepareResponse
-	  					
-	  		/*			protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException {
-	  						System.out.println("Agent "+getLocalName()+": preparing the response.");
-	  						
-	  						try{
-	  							ContentElement content = getContentManager().extractContent(request);
-	  							// System.out.println(((Action)ce).getAction());
-	  							
-	  							if (((Action)content).getAction() instanceof Solve){
-	  								System.out.println("Agent "+getLocalName()+": received SOLVE instance.");
-	  								return prepareComputations(request);
-	  							}
-	  							
-	  						}
-  							catch (CodecException ce) {
-  								ce.printStackTrace();
-  								}
-							catch (OntologyException oe) {
-  								oe.printStackTrace();
-  							}
-							
-							ACLMessage notUnderstood = request.createReply();
-							notUnderstood.setPerformative(ACLMessage.NOT_UNDERSTOOD);
-  							return notUnderstood;
-  														
-							// return 
-	  						
-	  					}  //  end prepareResultNotification	  					
-	  					*/	  					
+				  		
 		  	};
-	
-		  	// This method allows to register a user defined Behaviour in the HANDLE_SUBSCRIPTION state.
-		  	// send_results.registerHandleSubscription(new SendComputation(this, null));
-	        
-		  	//receive_problem.registerPrepareResultNotification( new SendComputation(this, null) );
-
 		  	addBehaviour(send_results);
 	
-		  	
 		  	
 		  	
 		  	MessageTemplate template_inform = MessageTemplate.and(
@@ -345,47 +274,23 @@ public class Agent_Manager extends Agent{
 		  		protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException, RefuseException {
 		  		System.out.println("Agent "+getLocalName()+": REQUEST received from "+request.getSender().getName()+". Action is "+request.getContent());
 
-		  		// We agree to perform the action. Note that in the FIPA-Request
-		  		// protocol the AGREE message is optional. Return null if you
-		  		// don't want to send it.
-		  		// System.out.println("Agent "+getLocalName()+": Agree");
-		  		// ACLMessage agree = request.createReply();
-		  		// agree.setPerformative(ACLMessage.AGREE);
-		  		// return agree;
-		  		return null;
-		  		} // end prepareResponse
-
-		  		/* protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException {
-		  		System.out.println("Agent "+getLocalName()+": preparing the response.");
-		  		try{
-		  		ContentElement content = getContentManager().extractContent(request);
-		  		// System.out.println(((Action)ce).getAction());
-		  		if (((Action)content).getAction() instanceof Solve){
-		  		System.out.println("Agent "+getLocalName()+": received SOLVE instance.");
-		  		return prepareComputations(request);
-		  		}
-		  		}
-		  		catch (CodecException ce) {
-		  		ce.printStackTrace();
-		  		}
-		  		catch (OntologyException oe) {
-		  		oe.printStackTrace();
-		  		}
-		  		ACLMessage notUnderstood = request.createReply();
-		  		notUnderstood.setPerformative(ACLMessage.NOT_UNDERSTOOD);
-		  		return notUnderstood;
-		  		// return
-		  		} // end prepareResultNotification
-		  		*/
-
-		  		};
-
-		  		receive_problem.registerPrepareResultNotification( new SendComputation(this, null) );
-
-		  		addBehaviour(receive_problem);
+			  		// We agree to perform the action. Note that in the FIPA-Request
+			  		// protocol the AGREE message is optional. Return null if you
+			  		// don't want to send it.
+			  		// System.out.println("Agent "+getLocalName()+": Agree");
+			  		// ACLMessage agree = request.createReply();
+			  		// agree.setPerformative(ACLMessage.AGREE);
+			  		// return agree;
+			  		return null;
+			  	} // end prepareResponse
 
 
-		  	
+	  		};
+
+	  		receive_problem.registerPrepareResultNotification( new SendComputation(this, null) );
+
+	  		addBehaviour(receive_problem);
+
 		  	
 			
 	}  // end setup

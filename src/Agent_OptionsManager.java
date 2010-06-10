@@ -182,7 +182,7 @@ public abstract class Agent_OptionsManager extends Agent {
 					storeNotification(ACLMessage.INFORM);
 				}
 				
-				msgPrev = msgNew;
+				msgPrev = msgNew; 
 				
 			}
 			
@@ -267,12 +267,10 @@ public abstract class Agent_OptionsManager extends Agent {
 					
 				} // end if (finished())	
 
-					// save the outgoing message to the dataStore
+				// save the outgoing message to the dataStore
 				String notificationkey = (String) ((AchieveREResponder) parent).RESULT_NOTIFICATION_KEY;
-						
 				getDataStore().put(notificationkey, msgOut);
-										
-				
+								
 				// System.out.println("Agent "+getLocalName()+" says good bye!");
 				// doDelete();
 				
@@ -502,7 +500,7 @@ public abstract class Agent_OptionsManager extends Agent {
   		    AchieveREResponder receive_computation = new AchieveREResponder(this, template_inform) {
 				protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException, RefuseException {
 					System.out.println("Agent "+getLocalName()+": REQUEST received from "+request.getSender().getName()+".");
-
+						
 						// We agree to perform the action. Note that in the FIPA-Request
 						// protocol the AGREE message is optional. Return null if you
 						// don't want to send it.						
@@ -511,9 +509,16 @@ public abstract class Agent_OptionsManager extends Agent {
 						ACLMessage agree = request.createReply();
 						agree.setPerformative(ACLMessage.AGREE);
 						return agree;
+						
 				}  // end prepareResponse
 				
-				
+				public int onEnd(){
+					System.out.println("Agent "+getLocalName()+" says good-bye.");
+					myAgent.doDelete();
+					// return super.onEnd();
+					return 1;
+				}
+								
 			};
 						
 			receive_computation.registerPrepareResultNotification( new ComputeComputation(this, null) );
