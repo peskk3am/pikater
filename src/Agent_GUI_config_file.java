@@ -18,6 +18,8 @@ public class Agent_GUI_config_file extends Agent_GUI{
 
 	private String path = System.getProperty("user.dir")+System.getProperty("file.separator");
 	
+	
+	
 	@Override
 	protected void displayOptions(ontology.messages.Agent agent) {
 		refreshOptions(agent);
@@ -45,6 +47,11 @@ public class Agent_GUI_config_file extends Agent_GUI{
 
 		
 	}	// end mySetup
+	
+	@Override
+  	protected void displayPartialResult(ACLMessage inform) {
+		System.out.println("Partial results");
+	} 
 	
 	void getProblemFromFile(String fileName){
 		

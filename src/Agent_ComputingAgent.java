@@ -712,4 +712,31 @@ public abstract class Agent_ComputingAgent extends Agent{
 	    		  java.io.ByteArrayInputStream(data)).readObject();
 	      return object;
 	  }
+	  
+	  
+	    /* Send partial results to the GUI Agent(s)
+	     * call it after training or during training?*/
+	    protected void sendResultsToGUI(MyWekaEvaluation _evaluation){
+	      ACLMessage msgOut = new ACLMessage(ACLMessage.INFORM);
+	      DFAgentDescription template = new DFAgentDescription();
+	        ServiceDescription sd = new ServiceDescription();
+	      sd.setType("GUIAgent");
+	        template.addServices(sd);
+	        try {
+	          DFAgentDescription[] gui_agents = DFService.search(this, template); 
+
+	            for (int i = 0; i < gui_agents.length; ++i) {
+	              msgOut.addReceiver(gui_agents[i].getName());
+	            }
+	        }catch (FIPAException fe) {
+	             fe.printStackTrace();
+	        }
+
+	        msgOut.setConversationId("partial-results");
+	       
+	        /*TODO: here should be setConent with all informations to send*/
+
+	        send(msgOut);
+	    }
+	    
 }; 
