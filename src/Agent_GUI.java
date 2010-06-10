@@ -21,6 +21,7 @@ import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.proto.AchieveREInitiator;
+import jade.proto.SubscriptionInitiator;
 import jade.util.leap.ArrayList;
 import jade.util.leap.Iterator;
 import jade.util.leap.List;
@@ -260,6 +261,7 @@ public abstract class Agent_GUI extends Agent {
 		
 		
 	  	AchieveREInitiator behav = new AchieveREInitiator(this, msg) {
+	  		// send a problem
 	  		
 			protected void handleInform(ACLMessage inform) {
 				System.out.println(getLocalName()+": Agent "+inform.getSender().getName()+" replied.");					
@@ -285,6 +287,50 @@ public abstract class Agent_GUI extends Agent {
 		
 		addBehaviour(behav);
 
+		
+		
+		msg = new ACLMessage(ACLMessage.SUBSCRIBE);
+		msg.addReceiver(new AID("manager", AID.ISLOCALNAME));
+		msg.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+	
+		msg.setLanguage(codec.getName());
+		msg.setOntology(ontology.getName());
+		
+		SubscriptionInitiator send_problem = new SubscriptionInitiator(this, msg){
+			// receive the sequence of replies
+			
+			protected void handleInform(ACLMessage inform) {
+				System.out.println(getLocalName()+": Agent "+inform.getSender().getName()+" replied.");					
+				displayResult(inform);
+			}
+
+			protected void handleRefuse(ACLMessage refuse) {
+				System.out.println(getLocalName()+": Agent "+refuse.getSender().getName()+" refused to perform the requested action");
+			}
+			
+			protected void handleFailure(ACLMessage failure) {
+				if (failure.getSender().equals(myAgent.getAMS())) {
+					// FAILURE notification from the JADE runtime: the receiver
+					// does not exist
+					System.out.println("Responder does not exist");
+				}
+				else {
+					System.out.println("Agent "+failure.getSender().getName()+" failed to perform the requested action");
+				}
+			}	
+			
+			/* cancel(AID receiver, boolean ignoreResponse)
+			Cancel the subscription to agent receiver. This method retrieves the subscription message
+			sent to receiver and sends a suitable CANCEL message with the conversationID and all other
+			protocol fields appropriately set. The content slot of this CANCEL message is filled in by means
+			of the fillCancelContent() method.
+			*/
+			//-- > zavolat, az budu mit vsechny odpovedi
+				
+		};
+		
+		addBehaviour(send_problem);
+		
 	}
 	
 	protected void addAgentToProblem(String [] agentParams){
