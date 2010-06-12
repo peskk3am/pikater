@@ -164,4 +164,10 @@ public class Agent_GUI_WS extends Agent_GUI {
 		
 	}
 
+	@Override
+	protected void displayPartialResult(ACLMessage inform) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }
