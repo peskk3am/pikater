@@ -151,14 +151,14 @@ public class MessagesOntology extends Ontology {
 	    	
 	    	cs = (ConceptSchema)getSchema(OPTION);
 	    	cs.add(OPTION_MUTABLE, (PrimitiveSchema)getSchema(BasicOntology.BOOLEAN));
-	    	cs.add(OPTION_RANGE, (ConceptSchema)getSchema(INTERVAL));
+	    	cs.add(OPTION_RANGE, (ConceptSchema)getSchema(INTERVAL), ObjectSchema.OPTIONAL);
 	    	// cs.add(OPTION_SET, (PrimitiveSchema)getSchema(BasicOntology.STRING), 1, ObjectSchema.UNLIMITED);
-	    	cs.add(OPTION_IS_A_SET, (PrimitiveSchema)getSchema(BasicOntology.BOOLEAN));  	
-	    	cs.add(OPTIONS_NUM_ARGS, (ConceptSchema)getSchema(INTERVAL));
-	    	cs.add(OPTION_DATA_TYPE, (PrimitiveSchema)getSchema(BasicOntology.STRING));
-	    	cs.add(OPTION_WEKA_DESTRIPTION, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	cs.add(OPTION_IS_A_SET, (PrimitiveSchema)getSchema(BasicOntology.BOOLEAN), ObjectSchema.OPTIONAL);  	
+	    	cs.add(OPTIONS_NUM_ARGS, (ConceptSchema)getSchema(INTERVAL), ObjectSchema.OPTIONAL);
+	    	cs.add(OPTION_DATA_TYPE, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+	    	cs.add(OPTION_WEKA_DESTRIPTION, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 	    	cs.add(OPTION_WEKA_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
-	    	cs.add(OPTION_WEKA_SYNOPSIS, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	cs.add(OPTION_WEKA_SYNOPSIS, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 	    	cs.add(OPTION_VALUE, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 	    	
 	    	cs = (ConceptSchema)getSchema(EVALUATION);

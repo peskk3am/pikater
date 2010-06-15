@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Vector;
 
+import org.jdom.JDOMException;
+
 import jade.core.Agent;
 import jade.core.AID;
 import jade.core.behaviours.CyclicBehaviour;
@@ -21,18 +23,18 @@ public class Agent_GUI_config_file extends Agent_GUI{
 	
 	
 	@Override
-	protected void displayOptions(ontology.messages.Agent agent) {
-		refreshOptions(agent);
+	protected void displayOptions(Problem problem, String message) {
+		System.out.println("Agent :"+getName()+": Displaying the options ;) "+message);
 	} //  end displayOptions
 
 	@Override
 	protected void displayResult(ACLMessage inform) {
-		System.out.println("Displaying the result ;)");
+		System.out.println("Agent :"+getName()+": Displaying the results ;)");
 	}
 
 	@Override
-	protected void allOptionsReceived() {
-		sendProblem();
+	protected void allOptionsReceived(int problem_id) {
+		sendProblem(problem_id);
 	}
 	
 	@Override
@@ -43,7 +45,31 @@ public class Agent_GUI_config_file extends Agent_GUI{
 	@Override
 	protected void mySetup() {
 		doWait(1000);
-		getProblemFromFile("config");
+		
+		String fileName = "xml_config";
+		try {
+			// System.out.println("Agent "+getLocalName()+": "+getProblemsFromXMLFile(fileName));
+			getProblemsFromXMLFile(fileName);
+		    for (Enumeration e = problems.elements() ; e.hasMoreElements() ;) {
+			       Problem next_problem = (Problem)e.nextElement();
+			       Iterator itr = next_problem.getAgents().iterator();	 		   		 
+		   		 	while (itr.hasNext()) {
+		   		 		ontology.messages.Agent next_agent = (ontology.messages.Agent) itr.next();
+		   		 		getAgentOptions(next_agent.getName());
+		   		 	}
+			       // sendProblem(next_problem);
+		    }
+		}
+		// indicates a well-formedness error
+        catch (JDOMException e) { 
+          System.out.println(fileName + " is not well-formed. "+e.getMessage());
+        }  
+        catch (IOException e) { 
+          System.out.print("Could not check " + fileName);
+          System.out.println(" because " + e.getMessage());
+        } 
+		
+        // getProblemFromFile("config");
 
 		
 	}	// end mySetup
@@ -52,15 +78,16 @@ public class Agent_GUI_config_file extends Agent_GUI{
   	protected void displayPartialResult(ACLMessage inform) {
 		System.out.println("Partial results");
 	} 
-	
+
+/*	
 	void getProblemFromFile(String fileName){
 		
 		try {
 					
-			/*  Sets up a file reader to read the init file */
+			//  Sets up a file reader to read the init file 
 			FileReader input = new FileReader(path+fileName);
-            /* Filter FileReader through a Buffered read to read a line at a
-               time */
+            // Filter FileReader through a Buffered read to read a line at a
+               time 
             BufferedReader bufRead = new BufferedReader(input);
            
             String line;    // String that holds current file line
@@ -110,10 +137,10 @@ public class Agent_GUI_config_file extends Agent_GUI{
 
             
         }catch (ArrayIndexOutOfBoundsException e){
-            /* If no file was passed on the command line, this exception is
-            generated. A message indicating how to the class should be
-            called is displayed */
-            System.out.println("Usage: java ReadFile filename\n");          
+            // If no file was passed on the command line, this exception is
+            // generated. A message indicating how to the class should be
+            // called is displayed
+            // System.out.println("Usage: java ReadFile filename\n");          
 
         }catch (IOException e){
             // If another exception is generated, print a stack trace
@@ -128,5 +155,5 @@ public class Agent_GUI_config_file extends Agent_GUI{
         
 	} // end getProblemFromFile
 
-	
+	*/
 }
