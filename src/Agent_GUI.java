@@ -2,7 +2,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.ListIterator;
 import java.util.Vector;
+
 
 import org.jdom.*;
 import org.jdom.input.SAXBuilder;
@@ -40,15 +42,8 @@ public abstract class Agent_GUI extends Agent {
 	private Ontology ontology = MessagesOntology.getInstance();
 	
 	protected Vector<Problem> problems = new Vector<Problem>();
-	
-	private List _agents;
-	protected Vector<String[]> Agents;  // vector containing the arrays [agentName, param1, valueOfParam1, nextParams...]
-	private List _fileNames;
-	// private Problem problem;
-	
+		
 	private int problem_id = 0;
-	
-	protected int numberOfReplies;
 	
 	
 	/*
@@ -74,10 +69,11 @@ public abstract class Agent_GUI extends Agent {
 	
 	protected abstract void mySetup();
 		/* it should call
-		 * ... addFileToProblem(String fileName) for each data file to be added to the Problem
-		 * ... addAgentToProblem(String[] agentParams) to add agents to the Problem,
-		 *                     agentParams is an array containing agents name and parameters in weka data format,
-		 *                     [agentName, param1, valueOfParam1, nextParams...]
+		 * ... int createNewProblem() - returns the _problem_id 
+		 * ... addAgentToProblem(int _problem_id, String name)
+		 * ... addOptionToAgent(int _problem_id, String agent_name, String option_name, String option_value )
+		 * ... addFileToProblem(int _problem_id, String _fileName)
+		 * 
 		 * ... getAgentOptions(String agentName) to receive the options from each computing agent 
 		 * */
 	
@@ -86,17 +82,7 @@ public abstract class Agent_GUI extends Agent {
 	
 	protected abstract void displayPartialResult(ACLMessage inform);
 	/* Process the partial results received from computing agents 
-	 *  maybe only the content would be better as a parameter */ 
-	
-	protected void reset(){
-		_agents = new ArrayList();
-		Agents = new Vector<String[]>();
-		_fileNames = new ArrayList();
-		// problem = new Problem();
-		
-		numberOfReplies = 0;
-	}
-	
+	 *  maybe only the content would be better as a parameter */ 	
 	
 	protected String[] getComputingAgents(){
 		// returns the array of all computing agents' local names
@@ -237,8 +223,6 @@ public abstract class Agent_GUI extends Agent {
 		addBehaviour(behav);
 		
 	} // end getAgentOptions
-
-	
 	
 	protected void sendProblem(int _problem_id){
 		// find the problem according to a _problem_id
@@ -316,7 +300,7 @@ public abstract class Agent_GUI extends Agent {
 		
 		
 		msg = new ACLMessage(ACLMessage.SUBSCRIBE);
-		msg.addReceiver(new AID("manager", AID.ISLOCALNAME));
+		msg.addReceiver(new AID("manager", AID.ISLOCALNAME));    // TODO find manager in yellow pages
 		msg.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
 	
 		msg.setLanguage(codec.getName());
@@ -356,13 +340,12 @@ public abstract class Agent_GUI extends Agent {
 	
 	protected int createNewProblem(){
 		Problem problem = new Problem();
-		problem.setId(Integer.toString(problem_id));  // agent manager changes the id afterwards
+		problem.setId(Integer.toString(problem_id));   // agent manager changes the id afterwards
 		problem.setAgents(new ArrayList());
 		problem.setFile_names(new ArrayList());
  		problems.add(problem);
 		
-		problem_id++;
-		return problem_id;
+		return problem_id++;
 	}
 	
 	
@@ -372,6 +355,7 @@ public abstract class Agent_GUI extends Agent {
 			if (Integer.parseInt(next_problem.getId()) == _problem_id) {
 				ontology.messages.Agent agent = new ontology.messages.Agent();	
 				agent.setName(name);
+				agent.setOptions(new ArrayList());
 				List agents = next_problem.getAgents();
 				agents.add(agent);
 				next_problem.setAgents(agents);
@@ -391,7 +375,12 @@ public abstract class Agent_GUI extends Agent {
 	   		 		if (next_agent.getName().equals(agent_name)){
 	   		 			Option option = new Option();
 	   		 			option.setName(option_name);
-	   		 			option.setValue(option_value);
+	   		 			if (option_value.equals("?")){
+	   		 				option.setMutable(true);
+	   		 			}
+	   		 			else{
+	   		 				option.setValue(option_value);
+	   		 			}
 	   		 			
 	   		 			List options = next_agent.getOptions();
 	   		 			options.add(option);
@@ -415,54 +404,6 @@ public abstract class Agent_GUI extends Agent {
 		}
 	}
 	
-	private void old_refreshOptions(ontology.messages.Agent agent) {
-		
-		List Options = agent.getOptions();
-		
-		for (Enumeration e = Agents.elements() ; e.hasMoreElements() ;) {
-	        String[] next;
-			next = (String[])e.nextElement();
-			// find the agent in the list
-			
-			if (next[0].equals(agent.getName())){
-				// go through its parameters
-		    	for (int i=1; i < next.length-1; i+=2){
-		    		// find the same parameter in options list
-		    		Iterator itr = Options.iterator();	 		   		 
-		   		 	while (itr.hasNext()) {
-		   		 		Option opt_next = (Option) itr.next();
-		   		 		if ( next[i].equals(("-"+opt_next.getName()))){
-		   		 			
-		   		 			if (next[i+1].equals("?")){
-		   		 				opt_next.setMutable(true);	
-		   		 			}
-		   		 			else { 
-		   		 				// set the value of the parameter
-		   		 				opt_next.setValue(next[i+1]);
-		   		 			}
-		   		 				
-		   		 		}
-		   		 	}  // end while (finding the right option in agent.options)
-		   		}
-		   	}
-		}  // end for
-		
-		// agent.setOptions(Options);
-	
-		
-	/*	Iterator itr = problem.getAgents().iterator();	 		   		 
-	 	while (itr.hasNext()) {
-	 		ontology.messages.Agent _next = (ontology.messages.Agent) itr.next();
-	 		
-	 		if (agent.getName().equals(_next.getName())){
-	 			_next.setOptions(Options);
-	 		}
-	 	}
-	*/
-		
-	} //  end old_refreshOptions
-
-
 
 	private void checkProblems(){
 		for (Enumeration pe = problems.elements() ; pe.hasMoreElements() ;) {
@@ -474,15 +415,14 @@ public abstract class Agent_GUI extends Agent {
    		 		
    		 		// if data_type is set it means that the options from a computing agent have
    		 		// been received already
-   		 		try {
-   		 			String data_type = ((Option)(next_agent.getOptions().iterator().next())).getData_type();
+   		 		// it's enough to test the first option
+   	   		 	if ( ((Option)(next_agent.getOptions().iterator().next())).getData_type() == null ){
+   	   		 		done = false;
    		 		}
-   		 		catch (Exception e){
-   		 			done = false;
-   		 		}
-   		 		
    		 	}
-   			allOptionsReceived(Integer.parseInt(next_problem.getId()));	
+   			if (done){
+   				allOptionsReceived(Integer.parseInt(next_problem.getId()));
+   			}
 		}
 	}
 	
@@ -503,7 +443,7 @@ public abstract class Agent_GUI extends Agent {
 						// update the options (merge them)
 	   		 			
 						// copy agent's options
-						List mergedOptions = new ArrayList();					
+   		 				java.util.List mergedOptions = new java.util.ArrayList();					
 						Iterator oitr = agent.getOptions().iterator();	 		   		 
 			   		 	while (oitr.hasNext()) {
 			   		 		Option next_option = (Option) oitr.next();
@@ -515,23 +455,34 @@ public abstract class Agent_GUI extends Agent {
 						Iterator opitr = next_agent.getOptions().iterator();	 		   		 
 			   		 	while (opitr.hasNext()) {
 			   		 		Option next_problem_option = (Option) opitr.next();
-				   		 	Iterator  ocaitr = mergedOptions.iterator();	 		   		 
+				   		 	ListIterator ocaitr = mergedOptions.listIterator();	 		   		 
 				   		 	while (ocaitr.hasNext()) {
 				   		 		Option next_merged_option = (Option) ocaitr.next();
 				   		 		if (next_problem_option.getName().equals(next_merged_option.getName())) {
-				   		 			next_merged_option = next_problem_option;
+				   		 			// copy all the parameters (problem -> merged)
+				   		 			if (next_problem_option.getMutable()){
+				   		 				next_merged_option.setMutable(true);
+				   		 			}
+				   		 			if (next_problem_option.getValue() != null ){
+				   		 				next_merged_option.setValue(next_problem_option.getValue());
+				   		 			}
+
+				   		 			ocaitr.set(next_merged_option);
 				   		 		}
 				   		 	}
 			   		 	}
-			   		 	next_agent.setOptions(mergedOptions);
+			   		 	// create jade.util.leap.ArrayList again
+   		 				ArrayList mergedOptionsArrayList = new ArrayList();
+   		 				mergedOptionsArrayList.fromList(mergedOptions);
+			   		 	next_agent.setOptions(mergedOptionsArrayList);
    		 			}
    		 			else{
    		 				// TODO remove the agent from the problem and let the use know
    		 			}
-			   		// display the options for a selected problem
-	                displayOptions(next_problem, message);					
    		 		}
 			}
+   	 		// display the options for a selected problem
+   		 	displayOptions(next_problem, message);
 		}	
 
 	} //  end refreshOptions
@@ -567,7 +518,6 @@ public abstract class Agent_GUI extends Agent {
 		}  
 	  	System.out.println("GUI agent "+getLocalName()+" is alive and waiting...");
 	  	
-	  	reset();
 	  	
 	  	mySetup();
 
@@ -617,7 +567,6 @@ public abstract class Agent_GUI extends Agent {
 	           java.util.Iterator fn_itr = _fileNames.iterator();	 
 	           while (fn_itr.hasNext()) {
 	        	   Element next_fileName = (Element) fn_itr.next();
-	        	   // addFileToProblem(p_id, next_fileName.getAttributeValue("name"));
 	        	   fileNames.add( next_fileName.getAttributeValue("name") );
 	           }
 	           problem.setFile_names(fileNames);
@@ -657,5 +606,44 @@ public abstract class Agent_GUI extends Agent {
 		}
 		
 	}  // end getProblemsFromXMLFile
+
+	
+	protected void _test_getProblemsFromXMLFile(String fileName) throws JDOMException, IOException {
+		SAXBuilder builder = new SAXBuilder(); 
+	    Document doc = builder.build(fileName);
+	    Element root_element = doc.getRootElement();	    
+	    
+	    java.util.List _problems = root_element.getChildren("problem"); // return all children by name
+	    java.util.Iterator p_itr = _problems.iterator();	 
+		while (p_itr.hasNext()) {
+	           Element next_problem = (Element) p_itr.next();
+	           
+	           int p_id = createNewProblem();
+	           
+	           java.util.List _fileNames = next_problem.getChildren("file");
+	           java.util.Iterator fn_itr = _fileNames.iterator();	 
+	           while (fn_itr.hasNext()) {
+	        	   Element next_fileName = (Element) fn_itr.next();
+	        	   addFileToProblem(p_id, next_fileName.getAttributeValue("name"));
+	           }
+	           
+	           java.util.List _agents = next_problem.getChildren("agent");
+	           java.util.Iterator a_itr = _agents.iterator();	 
+	           while (a_itr.hasNext()) {
+	        	   Element next_agent = (Element) a_itr.next();
+	        	   
+	        	   String agent_name = next_agent.getAttributeValue("name");
+	        	   addAgentToProblem(p_id, agent_name);
+	        	   
+	        	   java.util.List _options = next_agent.getChildren("parameter");
+		           java.util.Iterator o_itr = _options.iterator();	 
+		           while (o_itr.hasNext()) {
+		        	   Element next_option = (Element) o_itr.next();
+		        	   addOptionToAgent(p_id,  agent_name, next_option.getAttributeValue("name"), next_option.getAttributeValue("value") );
+		           }
+	           }
+		}
+		
+	}  // end _test_getProblemsFromXMLFile
 	
 }

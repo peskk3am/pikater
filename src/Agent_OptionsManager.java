@@ -296,7 +296,7 @@ public abstract class Agent_OptionsManager extends Agent {
 				 
 				 
 				 if (!finished()){
-					String opt = generateNewOptions(result);
+					String opt = generateNewOptions(result) + " "+ getImmutableOptions();
 					System.out.println(getLocalName()+": new options for agent "+receiver+" are "+opt); 
 					 
 					msg = new ACLMessage(ACLMessage.REQUEST);
@@ -454,4 +454,16 @@ public abstract class Agent_OptionsManager extends Agent {
 		 
 		 } // end setup
 
+		 String getImmutableOptions(){
+			 String str = ""; 
+			 Iterator itr = Options.iterator();	 		   		 
+   		 	while (itr.hasNext()) {
+   		 		Option next_option = (Option) itr.next();
+   		 		if (!next_option.getMutable() && next_option.getValue() != null){
+   		 			str += "-"+next_option.getName()+" "+next_option.getValue()+" ";
+   		 		}
+   		 	}
+   		 	return str;
+		 }
+		 
 }

@@ -73,8 +73,8 @@ public class Agent_Manager extends Agent{
 	private Codec codec = new SLCodec();
 	private Ontology ontology = MessagesOntology.getInstance();
 	
-	// private Set subscriptions = new HashSet();
-	private Subscription subscription;
+	private Set subscriptions = new HashSet();
+	// private Subscription subscription;
 	
 	private class SendComputation extends AchieveREInitiator{
 		
@@ -179,8 +179,15 @@ public class Agent_Manager extends Agent{
 					}
 				}  // end if				
 			
-		        subscription.notify(msgOut);
-		        
+	            // go through every subscription
+				java.util.Iterator it = subscriptions.iterator();
+				while(it.hasNext()){
+					Subscription subscription = (Subscription)it.next();
+					if (subscription.getMessage().getSender().getLocalName().equals(incomingRequest.getSender().getLocalName())){
+						subscription.notify(msgOut);
+					}
+				}	            	
+				
 			}
 			
 			
@@ -206,12 +213,7 @@ public class Agent_Manager extends Agent{
 				// and store it in the DataStore
 				String notificationkey = (String) ((AchieveREResponder) parent).RESULT_NOTIFICATION_KEY;
 				getDataStore().put(notificationkey, msgOut );
-		
-		        
-				// cancel this subscription conversation - there will be no more results
-				msgOut = new ACLMessage(ACLMessage.REFUSE);
-				subscription.notify(msgOut);
-				
+						
 			}   // end storeNotification
 
 			private void killAgent(String name){
@@ -259,13 +261,13 @@ public class Agent_Manager extends Agent{
 	  	
 		  	SubscriptionManager subscriptionManager = new SubscriptionManager() {
 		        public boolean register(Subscription s) {
-		        	subscription = s;
-		        	// subscriptions.add(s);
+		        	// subscription = s;
+		        	subscriptions.add(s);
 		        	return true;
 		        }
 		        public boolean deregister(Subscription s) {
-		        	subscription = s;
-		        	// subscriptions.remove(s);
+		        	// subscription = s;
+		        	subscriptions.remove(s);
 		        	return true;
 		        }
 		      };
