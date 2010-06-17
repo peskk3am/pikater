@@ -90,11 +90,15 @@ public class Agent_Manager extends Agent{
 				// Retrieve the incoming request from the DataStore
 				String incomingRequestKey = (String) ((AchieveREResponder) parent).REQUEST_KEY;
 				ACLMessage incomingRequest = (ACLMessage) getDataStore().get(incomingRequestKey);
-								
 				System.out.println("Agent "+getLocalName()+": Received action: "+incomingRequest.getContent()+". Preparing response.");
 				
+				// get generated problem id from agree message
+				String incomingResponsetKey = (String) ((AchieveREResponder) parent).RESPONSE_KEY;
+				ACLMessage incomingResponse = (ACLMessage) getDataStore().get(incomingRequestKey);
+				String[] ID = incomingResponse.getContent().split(" ");
+				String problemId = ID[1];
 
-				return prepareComputations(incomingRequest); // Prepare the request to forward to the responder
+				return prepareComputations(incomingRequest, problemId); // Prepare the request to forward to the responder
 										
 			}
 			
@@ -299,11 +303,34 @@ public class Agent_Manager extends Agent{
 			  		// We agree to perform the action. Note that in the FIPA-Request
 			  		// protocol the AGREE message is optional. Return null if you
 			  		// don't want to send it.
-			  		// System.out.println("Agent "+getLocalName()+": Agree");
-			  		// ACLMessage agree = request.createReply();
-			  		// agree.setPerformative(ACLMessage.AGREE);
-			  		// return agree;
-			  		return null;
+			  		
+			  		ACLMessage agree = request.createReply();
+			  		agree.setPerformative(ACLMessage.AGREE);
+			  			  		
+			  		ContentElement content;
+					try {
+						content = getContentManager().extractContent(request);
+			    		if (((Action)content).getAction() instanceof Solve){
+			                Action action = (Action) content;
+			                Solve solve = (Solve)action.getAction();
+			                Problem problem = (Problem)solve.getProblem();
+			                agree.setContent(problem.getGui_id() + " " + generateProblemID());
+			                return agree;
+			    		}
+					} catch (UngroundedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (CodecException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (OntologyException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+					agree.setPerformative(ACLMessage.REFUSE);
+			  		return agree;			  		
+			  		
 			  	} // end prepareResponse
 
 
@@ -317,7 +344,7 @@ public class Agent_Manager extends Agent{
 			
 	}  // end setup
 	
-	protected Vector<ACLMessage> prepareComputations(ACLMessage request){
+	protected Vector<ACLMessage> prepareComputations(ACLMessage request, String problemId){
 		Vector<ACLMessage> msgVector = new Vector<ACLMessage>();		
 		
 		ContentElement content;
@@ -326,13 +353,13 @@ public class Agent_Manager extends Agent{
 	    	System.out.println("Agent "+getLocalName()+": "+content);
 	    	
 	    		if (((Action)content).getAction() instanceof Solve){
-	    	// if (content instanceof Result) {
+
 	                Action action = (Action) content;
 	                Solve solve = (Solve)action.getAction();
 	                Problem problem = (Problem)solve.getProblem();
 	                          		 	
-	            	String problemID = generateProblemID();
-	            	problem.setId(problemID);
+	            	// String problemID = generateProblemID();
+	            	problem.setId(problemId);
 	            	
 	            	int computation_i = 0;
 	       		 	Iterator a_itr = problem.getAgents().iterator();	 
@@ -346,8 +373,8 @@ public class Agent_Manager extends Agent{
 	    	        	   Computation computation = new Computation();
 	    	        	   computation.setAgent(a_next);
 	    	        	   computation.setData(next_data);
-	    	        	   computation.setProblem_id(problemID);
-	    	        	   computation.setId(problemID+"_"+computation_i);
+	    	        	   computation.setProblem_id(problemId);
+	    	        	   computation.setId(problemId+"_"+computation_i);
 	    	        	   computation.setTimeout(problem.getTimeout());
 	    	        	   computation_i++;
 	    	        	   
@@ -371,7 +398,7 @@ public class Agent_Manager extends Agent{
 			
 			return msgVector;
 			
-	} // end prepareComputation
+	} // end prepareComputations
 	
 	protected ACLMessage Compute(Computation computation){
 	// creates an Option Manager agent and returns a message for this agent

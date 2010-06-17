@@ -229,15 +229,19 @@ public abstract class Agent_GUI extends Agent {
 	protected void sendProblem(int _problem_id){
 		// find the problem according to a _problem_id
 		Problem problem = null;
+
 		// TODO what if the problem could not be found
 		for (Enumeration pe = problems.elements() ; pe.hasMoreElements() ;) {
 			Problem next_problem = (Problem)pe.nextElement();
-			if (Integer.parseInt(next_problem.getId()) == _problem_id ) {
+			if (Integer.parseInt(next_problem.getGui_id()) == _problem_id 
+					&& !next_problem.getSent()) {
 				problem = next_problem;
 			}
 		}
 		
-		problem.setAid(getAID());
+		if (problem == null){  // TODO exception
+			return;
+		}
 		
 	  	// create a request message with SendProblem content
 		ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
@@ -275,8 +279,16 @@ public abstract class Agent_GUI extends Agent {
 	  	AchieveREInitiator send_problem = new AchieveREInitiator(this, msg) {
 	  		// send a problem
 	  		
+	  		protected void handleAgree(ACLMessage agree){
+	  			System.out.println(getLocalName()+": Agent "+agree.getSender().getName()+" agreed.");
+	  			updateProblemId(agree.getContent());
+	  		}
+	  		
 			protected void handleInform(ACLMessage inform) {
-				System.out.println(getLocalName()+": Agent "+inform.getSender().getName()+" replied.");					
+				System.out.println(getLocalName()+": Agent "+inform.getSender().getName()+" replied.");
+				
+				// remove problem from problems vector
+				// problems.remove(problem);
 				
 			}
 			
@@ -298,7 +310,8 @@ public abstract class Agent_GUI extends Agent {
 		};
 		
 		addBehaviour(send_problem);
-
+		
+		problem.setSent(true);
 		
 		
 		msg = new ACLMessage(ACLMessage.SUBSCRIBE);
@@ -336,14 +349,12 @@ public abstract class Agent_GUI extends Agent {
 		
 		addBehaviour(receive_results);
 		
-		// remove problem from problems vector
-		problems.remove(problem);
 	}
 	
 	protected int createNewProblem(String timeout){
 		int _timeout;
 		Problem problem = new Problem();
-		problem.setId(Integer.toString(problem_id));   // agent manager changes the id afterwards
+		problem.setGui_id(Integer.toString(problem_id));   // agent manager changes the id afterwards
 		if (timeout == null){
 			_timeout = default_timeout;
 		}
@@ -354,6 +365,7 @@ public abstract class Agent_GUI extends Agent {
 		problem.setTimeout(_timeout);
 		problem.setAgents(new ArrayList());
 		problem.setData(new ArrayList());
+		problem.setSent(false);
  		problems.add(problem);
 		
 		return problem_id++;
@@ -363,13 +375,15 @@ public abstract class Agent_GUI extends Agent {
 	protected void addAgentToProblem(int _problem_id, String name){
 		for (Enumeration pe = problems.elements() ; pe.hasMoreElements() ;) {
 			Problem next_problem = (Problem)pe.nextElement();
-			if (Integer.parseInt(next_problem.getId()) == _problem_id) {
-				ontology.messages.Agent agent = new ontology.messages.Agent();	
-				agent.setName(name);
-				agent.setOptions(new ArrayList());
-				List agents = next_problem.getAgents();
-				agents.add(agent);
-				next_problem.setAgents(agents);
+			if (!next_problem.getSent()){
+				if (Integer.parseInt(next_problem.getGui_id()) == _problem_id) {
+					ontology.messages.Agent agent = new ontology.messages.Agent();	
+					agent.setName(name);
+					agent.setOptions(new ArrayList());
+					List agents = next_problem.getAgents();
+					agents.add(agent);
+					next_problem.setAgents(agents);
+				}
 			}
 		}
 	}
@@ -378,26 +392,29 @@ public abstract class Agent_GUI extends Agent {
 		// TODO add interval ... 
 		for (Enumeration pe = problems.elements() ; pe.hasMoreElements() ;) {
 			Problem next_problem = (Problem)pe.nextElement();
-			if (Integer.parseInt(next_problem.getId()) == _problem_id) {
-				Iterator itr = next_problem.getAgents().iterator();	 		   		 
-	   		 	while (itr.hasNext()) {
-	   		 		ontology.messages.Agent next_agent = (ontology.messages.Agent) itr.next();
-	   		 		// find the right agent
-	   		 		if (next_agent.getName().equals(agent_name)){
-	   		 			Option option = new Option();
-	   		 			option.setName(option_name);
-	   		 			if (option_value.equals("?")){
-	   		 				option.setMutable(true);
-	   		 			}
-	   		 			else{
-	   		 				option.setValue(option_value);
-	   		 			}
-	   		 			
-	   		 			List options = next_agent.getOptions();
-	   		 			options.add(option);
-	   		 			next_agent.setOptions(options);
-	   		 		}
-	   		 	}
+			if (!next_problem.getSent()){
+	
+				if (Integer.parseInt(next_problem.getGui_id()) == _problem_id) {
+					Iterator itr = next_problem.getAgents().iterator();	 		   		 
+		   		 	while (itr.hasNext()) {
+		   		 		ontology.messages.Agent next_agent = (ontology.messages.Agent) itr.next();
+		   		 		// find the right agent
+		   		 		if (next_agent.getName().equals(agent_name)){
+		   		 			Option option = new Option();
+		   		 			option.setName(option_name);
+		   		 			if (option_value.equals("?")){
+		   		 				option.setMutable(true);
+		   		 			}
+		   		 			else{
+		   		 				option.setValue(option_value);
+		   		 			}
+		   		 			
+		   		 			List options = next_agent.getOptions();
+		   		 			options.add(option);
+		   		 			next_agent.setOptions(options);
+		   		 		}
+		   		 	}
+				}
 			}
 		}
 		
@@ -407,13 +424,15 @@ public abstract class Agent_GUI extends Agent {
 		// get the problem
 		for (Enumeration pe = problems.elements() ; pe.hasMoreElements() ;) {
 			Problem next_problem = (Problem)pe.nextElement();
-			if (Integer.parseInt(next_problem.getId()) == _problem_id){
-				List data = next_problem.getData();
-				Data d = new Data();
-				d.setTrain_file_name(_train);
-				d.setTest_file_name(_test);
-				data.add(d);
-		        next_problem.setData(data);
+			if (!next_problem.getSent()){
+				if (Integer.parseInt(next_problem.getGui_id()) == _problem_id){
+					List data = next_problem.getData();
+					Data d = new Data();
+					d.setTrain_file_name(_train);
+					d.setTest_file_name(_test);
+					data.add(d);
+			        next_problem.setData(data);
+				}
 			}
 		}
 	}
@@ -422,81 +441,84 @@ public abstract class Agent_GUI extends Agent {
 	private void checkProblems(){
 		for (Enumeration pe = problems.elements() ; pe.hasMoreElements() ;) {
 			Problem next_problem = (Problem)pe.nextElement();
-			boolean done = true;
-			Iterator aitr = next_problem.getAgents().iterator();	 		   		 
-   		 	while (aitr.hasNext()) {
-   		 		ontology.messages.Agent next_agent = (ontology.messages.Agent) aitr.next();
-   		 		
-   		 		// if data_type is set it means that the options from a computing agent have
-   		 		// been received already
-   		 		// it's enough to test the first option
-   	   		 	if ( ((Option)(next_agent.getOptions().iterator().next())).getData_type() == null ){
-   	   		 		done = false;
-   		 		}
-   		 	}
-   			if (done){
-   				allOptionsReceived(Integer.parseInt(next_problem.getId()));
-   			}
+			if (!next_problem.getSent()){
+				boolean done = true;
+				Iterator aitr = next_problem.getAgents().iterator();	 		   		 
+	   		 	while (aitr.hasNext()) {
+	   		 		ontology.messages.Agent next_agent = (ontology.messages.Agent) aitr.next();
+	   		 		
+	   		 		// if data_type is set it means that the options from a computing agent have
+	   		 		// been received already
+	   		 		// it's enough to test the first option
+	   	   		 	if ( ((Option)(next_agent.getOptions().iterator().next())).getData_type() == null ){
+	   	   		 		done = false;
+	   		 		}
+	   		 	}
+	   			if (done){
+	   				allOptionsReceived(Integer.parseInt(next_problem.getGui_id()));
+	   			}
+			}
 		}
 	}
 	
 	private void refreshOptions(ontology.messages.Agent agent, String message) {
 		// refresh options in all problems, where the agent is involved
-		for (Enumeration pe = problems.elements() ; pe.hasMoreElements() ;) {
+		for (Enumeration pe = problems.elements() ; pe.hasMoreElements() ;) {	
 			Problem next_problem = (Problem)pe.nextElement();
-		
-			Iterator aitr = next_problem.getAgents().iterator();	 		   		 
-   		 	while (aitr.hasNext()) {
-   		 		ontology.messages.Agent next_agent = (ontology.messages.Agent) aitr.next(); 		 	
-				
-   		 		// all problems where the agent (input parameter) figures
-   		 		if ( next_agent.getName().equals(agent.getName()) ){
+			if (!next_problem.getSent()){
+				Iterator aitr = next_problem.getAgents().iterator();	 		   		 
+	   		 	while (aitr.hasNext()) {
+	   		 		ontology.messages.Agent next_agent = (ontology.messages.Agent) aitr.next(); 		 	
 					
-   		 			if (message.equals("OK")) { 			
-	   		 			
-						// update the options (merge them)
-	   		 			
-						// copy agent's options
-   		 				java.util.List mergedOptions = new java.util.ArrayList();					
-						Iterator oitr = agent.getOptions().iterator();	 		   		 
-			   		 	while (oitr.hasNext()) {
-			   		 		Option next_option = (Option) oitr.next();
-			   		 		mergedOptions.add(next_option);
-			   		 	}
+	   		 		// all problems where the agent (input parameter) figures
+	   		 		if ( next_agent.getName().equals(agent.getName()) ){
 						
-						// go through the options set in the problem 
-			   		 	// and replace the options send by an computing agent
-						Iterator opitr = next_agent.getOptions().iterator();	 		   		 
-			   		 	while (opitr.hasNext()) {
-			   		 		Option next_problem_option = (Option) opitr.next();
-				   		 	ListIterator ocaitr = mergedOptions.listIterator();	 		   		 
-				   		 	while (ocaitr.hasNext()) {
-				   		 		Option next_merged_option = (Option) ocaitr.next();
-				   		 		if (next_problem_option.getName().equals(next_merged_option.getName())) {
-				   		 			// copy all the parameters (problem -> merged)
-				   		 			if (next_problem_option.getMutable()){
-				   		 				next_merged_option.setMutable(true);
-				   		 			}
-				   		 			if (next_problem_option.getValue() != null ){
-				   		 				next_merged_option.setValue(next_problem_option.getValue());
-				   		 			}
-
-				   		 			ocaitr.set(next_merged_option);
-				   		 		}
+	   		 			if (message.equals("OK")) { 			
+		   		 			
+							// update the options (merge them)
+		   		 			
+							// copy agent's options
+	   		 				java.util.List mergedOptions = new java.util.ArrayList();					
+							Iterator oitr = agent.getOptions().iterator();	 		   		 
+				   		 	while (oitr.hasNext()) {
+				   		 		Option next_option = (Option) oitr.next();
+				   		 		mergedOptions.add(next_option);
 				   		 	}
-			   		 	}
-			   		 	// create jade.util.leap.ArrayList again
-   		 				ArrayList mergedOptionsArrayList = new ArrayList();
-   		 				mergedOptionsArrayList.fromList(mergedOptions);
-			   		 	next_agent.setOptions(mergedOptionsArrayList);
-   		 			}
-   		 			else{
-   		 				// TODO remove the agent from the problem and let the use know
-   		 			}
-   		 		}
+							
+							// go through the options set in the problem 
+				   		 	// and replace the options send by an computing agent
+							Iterator opitr = next_agent.getOptions().iterator();	 		   		 
+				   		 	while (opitr.hasNext()) {
+				   		 		Option next_problem_option = (Option) opitr.next();
+					   		 	ListIterator ocaitr = mergedOptions.listIterator();	 		   		 
+					   		 	while (ocaitr.hasNext()) {
+					   		 		Option next_merged_option = (Option) ocaitr.next();
+					   		 		if (next_problem_option.getName().equals(next_merged_option.getName())) {
+					   		 			// copy all the parameters (problem -> merged)
+					   		 			if (next_problem_option.getMutable()){
+					   		 				next_merged_option.setMutable(true);
+					   		 			}
+					   		 			if (next_problem_option.getValue() != null ){
+					   		 				next_merged_option.setValue(next_problem_option.getValue());
+					   		 			}
+	
+					   		 			ocaitr.set(next_merged_option);
+					   		 		}
+					   		 	}
+				   		 	}
+				   		 	// create jade.util.leap.ArrayList again
+	   		 				ArrayList mergedOptionsArrayList = new ArrayList();
+	   		 				mergedOptionsArrayList.fromList(mergedOptions);
+				   		 	next_agent.setOptions(mergedOptionsArrayList);
+	   		 			}
+	   		 			else{
+	   		 				// TODO remove the agent from the problem and let the use know
+	   		 			}
+	   		 		}
+				}
+	   	 		// display the options for a selected problem
+	   		 	displayOptions(next_problem, message);
 			}
-   	 		// display the options for a selected problem
-   		 	displayOptions(next_problem, message);
 		}	
 
 	} //  end refreshOptions
@@ -597,5 +619,18 @@ public abstract class Agent_GUI extends Agent {
 		}
 		
 	}  // end _test_getProblemsFromXMLFile
+	
+	private void updateProblemId(String ids){
+		String[] ID = ids.split(" ");
+		String guiId = ID[0];
+		String id = ID[1];
+		// find problem with gui_id
+		for (Enumeration pe = problems.elements() ; pe.hasMoreElements() ;) {
+			Problem next_problem = (Problem)pe.nextElement();
+			if (next_problem.getGui_id().equals(guiId)){
+				next_problem.setId(id);
+			}
+		}
+	}
 	
 }

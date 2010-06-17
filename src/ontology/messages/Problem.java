@@ -7,7 +7,8 @@ import jade.util.leap.List;
 public class Problem implements Concept{
 	
 	private String _id;
-	private AID _aid;
+	private String _gui_id;
+	private boolean _sent;
 	private List  _agents;
 	private List _data;
 	private int _timeout;
@@ -31,16 +32,23 @@ public class Problem implements Concept{
 	public String getId() {
 		return _id;
 	}	
-	public void setAid(AID aid) {
-		_aid=aid;
+	public void setGui_id(String gui_id) {
+		_gui_id=gui_id;
 	}
-	public AID getAid() {
-		return _aid;
+	public String getGui_id() {
+		return _gui_id;
 	}
 	public void setTimeout(int timeout) {
 		_timeout = timeout;
 	}
 	public int getTimeout() {
 		return _timeout;
+	}
+	
+	public boolean getSent() {
+		return _sent;
+	}
+	public void setSent(boolean sent) {
+		_sent = sent;
 	}
 }
