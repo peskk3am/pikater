@@ -9,7 +9,7 @@ public class Problem implements Concept{
 	private String _id;
 	private AID _aid;
 	private List  _agents;
-	private List _file_names;
+	private List _data;
 	
 	public void setAgents(List agents) {
 		_agents=agents;
@@ -18,11 +18,11 @@ public class Problem implements Concept{
 		return _agents;
 	}
 	
-	public void setFile_names(List file_names) {
-		_file_names=file_names;
+	public void setData(List data) {
+		_data=data;
 	}
-	public List getFile_names() {
-		return _file_names;
+	public List getData() {
+		return _data;
 	}	
 	public void setId(String id) {
 		_id=id;

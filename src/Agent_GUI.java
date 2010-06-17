@@ -342,7 +342,7 @@ public abstract class Agent_GUI extends Agent {
 		Problem problem = new Problem();
 		problem.setId(Integer.toString(problem_id));   // agent manager changes the id afterwards
 		problem.setAgents(new ArrayList());
-		problem.setFile_names(new ArrayList());
+		problem.setData(new ArrayList());
  		problems.add(problem);
 		
 		return problem_id++;
@@ -392,14 +392,17 @@ public abstract class Agent_GUI extends Agent {
 		
 	}
 
-	protected void addFileToProblem(int _problem_id, String _fileName){
+	protected void addDatasetToProblem(int _problem_id, String _train, String _test){
 		// get the problem
 		for (Enumeration pe = problems.elements() ; pe.hasMoreElements() ;) {
 			Problem next_problem = (Problem)pe.nextElement();
 			if (Integer.parseInt(next_problem.getId()) == _problem_id){
-				List fileNames = next_problem.getFile_names();
-				fileNames.add(_fileName);
-		        next_problem.setFile_names(fileNames);
+				List data = next_problem.getData();
+				Data d = new Data();
+				d.setTrain_file_name(_train);
+				d.setTest_file_name(_test);
+				data.add(d);
+		        next_problem.setData(data);
 			}
 		}
 	}
@@ -545,86 +548,24 @@ public abstract class Agent_GUI extends Agent {
 		}
 	}
 	
-	/* read problem(s) from XML file */
+	
 	protected void getProblemsFromXMLFile(String fileName) throws JDOMException, IOException {
 		SAXBuilder builder = new SAXBuilder(); 
 	    Document doc = builder.build(fileName);
 	    Element root_element = doc.getRootElement();	    
 	    
-	    java.util.List _problems = root_element.getChildren("problem"); // return all children by name
-	    java.util.Iterator p_itr = _problems.iterator();	 
-		while (p_itr.hasNext()) {
-	           Element next_problem = (Element) p_itr.next();
-	           
-	           // int p_id = createNewProblem();
-	           Problem problem = new Problem();
-	           problem.setId(Integer.toString(problem_id));
-	           problem_id ++;
-	           
-	           List fileNames = new ArrayList();
-	           
-	           java.util.List _fileNames = next_problem.getChildren("file");
-	           java.util.Iterator fn_itr = _fileNames.iterator();	 
-	           while (fn_itr.hasNext()) {
-	        	   Element next_fileName = (Element) fn_itr.next();
-	        	   fileNames.add( next_fileName.getAttributeValue("name") );
-	           }
-	           problem.setFile_names(fileNames);
-	           
-	           List agents = new ArrayList(); 
-	           
-	           java.util.List _agents = next_problem.getChildren("agent");
-	           java.util.Iterator a_itr = _agents.iterator();	 
-	           while (a_itr.hasNext()) {
-	        	   Element next_agent = (Element) a_itr.next();
-	        	   ontology.messages.Agent agent = new ontology.messages.Agent();
-	        	   agent.setName(next_agent.getAttributeValue("name"));
-
-	        	   List options = new ArrayList();
-	        	   java.util.List _options = next_agent.getChildren("parameter");
-		           java.util.Iterator o_itr = _options.iterator();	 
-		           while (o_itr.hasNext()) {
-		        	   Element next_option = (Element) o_itr.next();
-		        	   Option option = new Option();
-		        	   option.setName(next_option.getAttributeValue("name"));
-		        	   if (next_option.getAttributeValue("value").equals("?")){
-			        	   option.setMutable(true);
-		        	   }
-		        	   else{ 
-			        	   option.setValue(next_option.getAttributeValue("value"));
-		        	   }
-		        	   options.add(option);
-		           }
-	        	   
-	        	   agent.setOptions(options);
-	        	   
-	        	   agents.add(agent);
-	           }
-	           problem.setAgents(agents);
-	           
-	           problems.add(problem);
-		}
-		
-	}  // end getProblemsFromXMLFile
-
-	
-	protected void _test_getProblemsFromXMLFile(String fileName) throws JDOMException, IOException {
-		SAXBuilder builder = new SAXBuilder(); 
-	    Document doc = builder.build(fileName);
-	    Element root_element = doc.getRootElement();	    
-	    
-	    java.util.List _problems = root_element.getChildren("problem"); // return all children by name
+	    java.util.List _problems = root_element.getChildren("experiment"); // return all children by name
 	    java.util.Iterator p_itr = _problems.iterator();	 
 		while (p_itr.hasNext()) {
 	           Element next_problem = (Element) p_itr.next();
 	           
 	           int p_id = createNewProblem();
 	           
-	           java.util.List _fileNames = next_problem.getChildren("file");
-	           java.util.Iterator fn_itr = _fileNames.iterator();	 
+	           java.util.List dataset = next_problem.getChildren("dataset");
+	           java.util.Iterator fn_itr = dataset.iterator();	 
 	           while (fn_itr.hasNext()) {
-	        	   Element next_fileName = (Element) fn_itr.next();
-	        	   addFileToProblem(p_id, next_fileName.getAttributeValue("name"));
+	        	   Element next_dataset = (Element) fn_itr.next();
+	        	   addDatasetToProblem(p_id, next_dataset.getAttributeValue("train"), next_dataset.getAttributeValue("test"));
 	           }
 	           
 	           java.util.List _agents = next_problem.getChildren("agent");

@@ -340,13 +340,13 @@ public class Agent_Manager extends Agent{
 	            	while (a_itr.hasNext()) {
 	    	           ontology.messages.Agent a_next = (ontology.messages.Agent) a_itr.next();
 	    	           
-	    	           Iterator f_itr = problem.getFile_names().iterator();	 
-	    	           while (f_itr.hasNext()) {
-	    	        	   String f_next = (String) f_itr.next();
+	    	           Iterator d_itr = problem.getData().iterator();	 
+	    	           while (d_itr.hasNext()) {
+	    	        	   Data next_data = (Data) d_itr.next();
 	    	        	   
 	    	        	   Computation computation = new Computation();
 	    	        	   computation.setAgent(a_next);
-	    	        	   computation.setData_file_name(f_next);
+	    	        	   computation.setData(next_data);
 	    	        	   computation.setProblem_id(problemID);
 	    	        	   computation.setId(problemID+"_"+computation_i);
 	    	        	   computation.setTimeout(timeout);
@@ -514,7 +514,8 @@ public class Agent_Manager extends Agent{
 		   }
 		   
 		   Element newDataSet = new Element ("dataset");
-		   newDataSet.setAttribute("name", next_task.getData_file_name());
+		   newDataSet.setAttribute("train", next_task.getData().getTrain_file_name());
+		   newDataSet.setAttribute("test", next_task.getData().getTest_file_name());
 
 		   Element newEvaluation = new Element ("evaluation");
 		   Element newMetric1 = new Element ("metric");

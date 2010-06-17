@@ -43,7 +43,9 @@ public abstract class Agent_OptionsManager extends Agent {
 	 	 private Codec codec = new SLCodec();
 	 	 private Ontology ontology = MessagesOntology.getInstance();
 	 	 
-		 private String fileName;
+		 private String trainFileName;
+		 private String testFileName;
+
 		 private String receiver;
 	 	 private String computation_id;
 	 	 private String problem_id;
@@ -90,7 +92,8 @@ public abstract class Agent_OptionsManager extends Agent {
 			  		if (((Action)content).getAction() instanceof Compute){
 	                    Compute compute = (Compute) ((Action)content).getAction();
 	                    Options = compute.getComputation().getAgent().getOptions();
-					  	fileName = compute.getComputation().getData_file_name();
+					  	trainFileName = compute.getComputation().getData().getTrain_file_name();
+					  	testFileName = compute.getComputation().getData().getTest_file_name();
 					  	receiver = compute.getComputation().getAgent().getName();
 					  	computation_id = compute.getComputation().getId();
 					  	problem_id = compute.getComputation().getProblem_id();
@@ -315,8 +318,12 @@ public abstract class Agent_OptionsManager extends Agent {
 					task.setId(id);
 					task.setComputation_id(computation_id);
 					task.setProblem_id(problem_id);
-					task.setOptions(fileName+" "+opt);
-					task.setData_file_name(fileName);
+					task.setOptions(opt);
+					
+					Data data = new Data();
+					data.setTrain_file_name(trainFileName);
+					data.setTest_file_name(testFileName);
+					task.setData(data);
 					
 					ontology.messages.Agent agent = new ontology.messages.Agent(); 
 					agent.setName(receiver);

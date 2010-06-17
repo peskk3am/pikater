@@ -10,7 +10,7 @@ public class Task implements Concept {
 	private String _problem_id;
 	private Evaluation _result;
 	private Agent _agent;
-	private String 	_data_file_name;
+	private Data _data;
 	
 	
 	public void setAgent(Agent agent) {
@@ -19,11 +19,11 @@ public class Task implements Concept {
 	public Agent getAgent() {
 		return _agent;
 	}
-	public void setData_file_name(String data_file_name) {
-		_data_file_name=data_file_name;
+	public void setData(Data data) {
+		_data=data;
 	}
-	public String getData_file_name() {
-		return _data_file_name;
+	public Data getData() {
+		return _data;
 	}
 	
 	public void setOptions(String options) {
