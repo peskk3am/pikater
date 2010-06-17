@@ -3,7 +3,7 @@ package ontology.webservices;
 import jade.content.Concept;
 import jade.util.leap.List;
 
-public class Result implements Concept {
+public class Results implements Concept {
 	
 	private static final long serialVersionUID = 1439064992523900962L;
 	

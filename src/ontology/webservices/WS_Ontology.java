@@ -26,7 +26,7 @@ public class WS_Ontology extends Ontology {
 	public static final String OPTION_SYNOPIS = "synopsis";
 	public static final String OPTION_NAME = "name";
 	public static final String OPTION_DESCRIPTION = "description";
-	public static final String RESULT = "result";
+	public static final String RESULTS = "results";
 	public static final String RESULT_OPTIONS = "options";
 	public static final String RESULT_ERROR_RATE = "errorRate";
 	public static final String RESULT_PCT_CORRECT = "pctCorrect";
@@ -45,7 +45,7 @@ public class WS_Ontology extends Ontology {
 			//add(MessagesOntology.getInstance().getSchema(ontology.messages.Results.class));
 			//add(MessagesOntology.getInstance().getSchema(ontology.messages.Agent.class));
 			add(new ConceptSchema(OPTION), Option.class);
-			add(new ConceptSchema(RESULT), Result.class);
+			add(new ConceptSchema(RESULTS), Results.class);
 			add(new AgentActionSchema(SET_PROBLEM), SetProblem.class);
 			add(new AgentActionSchema(GET_AGENTS), GetAgents.class);
 			add(new AgentActionSchema(GET_RESULTS), GetResults.class);
@@ -57,7 +57,7 @@ public class WS_Ontology extends Ontology {
 			cs.add(OPTION_SYNOPIS, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 			cs.add(OPTION_VALUE, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 			
-			cs = (ConceptSchema)getSchema(RESULT);
+			cs = (ConceptSchema)getSchema(RESULTS);
 			cs.add(RESULT_OPTIONS, (ConceptSchema)getSchema(OPTION), 0, ObjectSchema.UNLIMITED);
 			cs.add(RESULT_ERROR_RATE, (PrimitiveSchema)getSchema(BasicOntology.FLOAT));
 			cs.add(RESULT_PCT_CORRECT, (PrimitiveSchema)getSchema(BasicOntology.FLOAT));
@@ -70,7 +70,7 @@ public class WS_Ontology extends Ontology {
 			as.setResult((PrimitiveSchema)getSchema(BasicOntology.STRING), 0, ObjectSchema.UNLIMITED);
 			
 			as = (AgentActionSchema)getSchema(GET_RESULTS);
-			as.setResult((ConceptSchema)getSchema(RESULT), 0, ObjectSchema.UNLIMITED);
+			as.setResult((ConceptSchema)getSchema(RESULTS), 0, ObjectSchema.UNLIMITED);
 			
 			as = (AgentActionSchema)getSchema(GET_OPTIONS);
 			as.add(AGENT_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
