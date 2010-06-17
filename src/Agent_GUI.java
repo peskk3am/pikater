@@ -41,6 +41,8 @@ public abstract class Agent_GUI extends Agent {
 	private Codec codec = new SLCodec();
 	private Ontology ontology = MessagesOntology.getInstance();
 	
+	private int default_timeout = 30000;  // 30s 
+	
 	protected Vector<Problem> problems = new Vector<Problem>();
 		
 	private int problem_id = 0;
@@ -338,9 +340,18 @@ public abstract class Agent_GUI extends Agent {
 		problems.remove(problem);
 	}
 	
-	protected int createNewProblem(){
+	protected int createNewProblem(String timeout){
+		int _timeout;
 		Problem problem = new Problem();
 		problem.setId(Integer.toString(problem_id));   // agent manager changes the id afterwards
+		if (timeout == null){
+			_timeout = default_timeout;
+		}
+		else{
+			_timeout = Integer.parseInt(timeout);
+		}
+		
+		problem.setTimeout(_timeout);
 		problem.setAgents(new ArrayList());
 		problem.setData(new ArrayList());
  		problems.add(problem);
@@ -559,7 +570,7 @@ public abstract class Agent_GUI extends Agent {
 		while (p_itr.hasNext()) {
 	           Element next_problem = (Element) p_itr.next();
 	           
-	           int p_id = createNewProblem();
+	           int p_id = createNewProblem(next_problem.getAttributeValue("timeout"));
 	           
 	           java.util.List dataset = next_problem.getChildren("dataset");
 	           java.util.Iterator fn_itr = dataset.iterator();	 

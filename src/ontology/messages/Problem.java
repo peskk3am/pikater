@@ -10,6 +10,7 @@ public class Problem implements Concept{
 	private AID _aid;
 	private List  _agents;
 	private List _data;
+	private int _timeout;
 	
 	public void setAgents(List agents) {
 		_agents=agents;
@@ -36,5 +37,10 @@ public class Problem implements Concept{
 	public AID getAid() {
 		return _aid;
 	}
-
+	public void setTimeout(int timeout) {
+		_timeout = timeout;
+	}
+	public int getTimeout() {
+		return _timeout;
+	}
 }

@@ -39,6 +39,7 @@ public class MessagesOntology extends Ontology {
 	  public static final String PROBLEM_ID = "id";
 	  public static final String PROBLEM_AGENTS = "agents";
 	  public static final String PROBLEM_DATA = "data";
+	  public static final String PROBLEM_TIMEOUT = "timeout";
 
 	  public static final String EVALUATION = "EVALUATION";
 	  public static final String EVALUATION_ERROR_RATE = "error_rate";
@@ -140,6 +141,7 @@ public class MessagesOntology extends Ontology {
 			cs.add(PROBLEM_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 	    	cs.add(PROBLEM_AGENTS, (ConceptSchema)getSchema(AGENT), 1, ObjectSchema.UNLIMITED);
 	    	cs.add(PROBLEM_DATA, (ConceptSchema)getSchema(DATA), 1, ObjectSchema.UNLIMITED);
+			cs.add(PROBLEM_TIMEOUT, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));
 
 			cs = (ConceptSchema)getSchema(TASK);
 			cs.add(TASK_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));

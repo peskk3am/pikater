@@ -1,0 +1,8 @@
+<experiments>
+    <experiment timeout=10000>
+        <dataset train="iris.arff" test="iris.arff" />
+        <agent name="rbf1">
+            <parameter name="B" value="?" />
+        </agent>
+    </experiment>
+</experiments>
