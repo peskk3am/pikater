@@ -462,12 +462,17 @@ public abstract class Agent_OptionsManager extends Agent {
 		 } // end setup
 
 		 String getImmutableOptions(){
-			 String str = ""; 
-			 Iterator itr = Options.iterator();	 		   		 
+			String str = ""; 
+			Iterator itr = Options.iterator();	 		   		 
    		 	while (itr.hasNext()) {
    		 		Option next_option = (Option) itr.next();
    		 		if (!next_option.getMutable() && next_option.getValue() != null){
-   		 			str += "-"+next_option.getName()+" "+next_option.getValue()+" ";
+   		 			if (next_option.getData_type().equals("BOOLEAN") && next_option.getValue().equals("True")){
+   		 				str += "-"+next_option.getName()+" ";
+   		 			}
+   		 			else{
+   		 				str += "-"+next_option.getName()+" "+next_option.getValue()+" ";
+   		 			}
    		 		}
    		 	}
    		 	return str;

@@ -378,13 +378,29 @@ public abstract class Agent_GUI extends Agent {
 		
 		addAgentToProblem(_problem_id, agentName);
 				
-    	for (int i=1; i < agentParams.length-1; i+=2){
-    		addOptionToAgent(_problem_id, agentName, agentParams[i].replaceFirst("-", ""), agentParams[i+1] );
-    		//  TODO co kdyz je tam boolean parametr?
-    	}
-   		
-	}
+    	for (int i=1; i < agentParams.length; i++){
+    		if (agentParams[i].charAt(0) == "-".charAt(0)){
+    			String name = agentParams[i].replaceFirst("-", "");
+    			// if the next array element is again an option name, 
+    			// (or it is the last element)
+    			// => it's a boolean parameter
+    			String value;
+    			if (i == agentParams.length-1){
+    				value = "True";
+    			}
+    			else {
+    				if (agentParams[i+1].charAt(0) == "-".charAt(0)){
+    					value = null;
+    				}
+    				else{
+    					value = agentParams[i+1];    				
+    				}
+    			}
+    			addOptionToAgent(_problem_id, agentName, name, value);	
 
+    		}
+    	}
+	}
 	
 	protected void addAgentToProblem(int _problem_id, String name){
 		for (Enumeration pe = problems.elements() ; pe.hasMoreElements() ;) {
@@ -416,13 +432,17 @@ public abstract class Agent_GUI extends Agent {
 		   		 		if (next_agent.getName().equals(agent_name)){
 		   		 			Option option = new Option();
 		   		 			option.setName(option_name);
-		   		 			if (option_value.equals("?")){
-		   		 				option.setMutable(true);
-		   		 			}
-		   		 			else{
-		   		 				option.setValue(option_value);
-		   		 			}
 		   		 			
+			   		 		if (option_value == null){
+	   		 					option_value = "True";
+	   		 				}
+		   		 		
+			   		 		if (option_value.equals("?")){
+		   		 				option.setMutable(true);
+			   		 		}	   		 				
+		   		 		
+			   		 		option.setValue(option_value);
+			   		 	
 		   		 			List options = next_agent.getOptions();
 		   		 			options.add(option);
 		   		 			next_agent.setOptions(options);
