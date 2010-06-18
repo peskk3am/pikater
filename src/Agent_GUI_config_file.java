@@ -31,7 +31,11 @@ public class Agent_GUI_config_file extends Agent_GUI{
 	protected void displayResult(ACLMessage inform) {
 		System.out.println("Agent :"+getName()+": Displaying the results ;)");
 	}
-
+	@Override
+	protected void DisplayWrongOption(int problemGuiId, String agentName, String optionName, String errorMessage){
+		System.out.println("Agent :"+getName()+" "+problemGuiId+" "+agentName+" "+optionName+" "+errorMessage);
+	}
+	
 	@Override
 	protected void allOptionsReceived(int problem_id) {
 		sendProblem(problem_id);
@@ -66,9 +70,14 @@ public class Agent_GUI_config_file extends Agent_GUI{
           System.out.print("Could not check " + configFileName);
           System.out.println(" because " + e.getMessage());
         } 
-		
-        // getProblemFromFile("config");
-
+        
+        // test:
+        /* int newId = createNewProblem("1000");
+        addAgentToProblemWekaStyle(newId, "mp1 -L -D -M ?".split(" "));
+        addDatasetToProblem(newId, "iris.arff", "iris.arff");
+ 		getAgentOptions("mp1"); // --->>  prazdny request + vyzkouset ted vic problemu za sebou z xml
+        */
+	
 		
 	}	// end mySetup
 

@@ -84,7 +84,9 @@ public abstract class Agent_GUI extends Agent {
 	
 	protected abstract void displayPartialResult(ACLMessage inform);
 	/* Process the partial results received from computing agents 
-	 *  maybe only the content would be better as a parameter */ 	
+	 *  maybe only the content would be better as a parameter */ 
+	protected abstract void DisplayWrongOption(int problemGuiId, String agentName, String optionName, String errorMessage);
+	
 	
 	protected String[] getComputingAgents(){
 		// returns the array of all computing agents' local names
@@ -532,7 +534,14 @@ public abstract class Agent_GUI extends Agent {
 					   		 			if (next_problem_option.getMutable()){
 					   		 				next_merged_option.setMutable(true);
 					   		 			}
-					   		 			if (next_problem_option.getValue() != null ){
+					   		 			// check the value
+					   		 			if (!next_merged_option.getData_type().equals("BOOLEAN")
+					   		 					&& next_problem_option.getValue().equals("True")){
+					   		 				DisplayWrongOption(Integer.parseInt(next_problem.getGui_id()), next_agent.getName(), next_problem_option.getName(),
+					   		 						next_problem_option.getName()+ " is not a BOOLEAN type option.");
+					   		 			}
+					   		 			else{
+					   		 			//if (next_problem_option.getValue() != null ){
 					   		 				next_merged_option.setValue(next_problem_option.getValue());
 					   		 			}
 	
