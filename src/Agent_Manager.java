@@ -92,9 +92,9 @@ public class Agent_Manager extends Agent{
 				ACLMessage incomingRequest = (ACLMessage) getDataStore().get(incomingRequestKey);
 				System.out.println("Agent "+getLocalName()+": Received action: "+incomingRequest.getContent()+". Preparing response.");
 				
-				// get generated problem id from agree message
-				String incomingResponsetKey = (String) ((AchieveREResponder) parent).RESPONSE_KEY;
-				ACLMessage incomingResponse = (ACLMessage) getDataStore().get(incomingRequestKey);
+				// get generated problem id from agree message (it contains a string: "gui_id and id" of a problem 
+				String incomingResponseKey = (String) ((AchieveREResponder) parent).RESPONSE_KEY;
+				ACLMessage incomingResponse = (ACLMessage) getDataStore().get(incomingResponseKey);
 				String[] ID = incomingResponse.getContent().split(" ");
 				String problemId = ID[1];
 

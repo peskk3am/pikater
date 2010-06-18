@@ -177,6 +177,7 @@ public abstract class Agent_GUI extends Agent {
 			                	
 			                	ontology.messages.Agent agent = (ontology.messages.Agent)result.getValue();
 			              
+			                	System.out.println("aaaaaaaaaaaaaaaa"+problems);
 			                	refreshOptions(agent, "OK");			                	
 			                	checkProblems();
 			                }
@@ -371,6 +372,19 @@ public abstract class Agent_GUI extends Agent {
 		return problem_id++;
 	}
 	
+	
+	protected void addAgentToProblemWekaStyle(int _problem_id, String [] agentParams){
+		String agentName = agentParams[0];
+		
+		addAgentToProblem(_problem_id, agentName);
+				
+    	for (int i=1; i < agentParams.length-1; i+=2){
+    		addOptionToAgent(_problem_id, agentName, agentParams[i].replaceFirst("-", ""), agentParams[i+1] );
+    		//  TODO co kdyz je tam boolean parametr?
+    	}
+   		
+	}
+
 	
 	protected void addAgentToProblem(int _problem_id, String name){
 		for (Enumeration pe = problems.elements() ; pe.hasMoreElements() ;) {
