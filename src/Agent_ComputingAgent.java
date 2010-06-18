@@ -41,7 +41,6 @@ import jade.content.*;
 import jade.content.abs.*;
 import jade.content.onto.*;
 import jade.content.onto.basic.*;
-import jade.content.onto.basic.Result;
 import jade.content.lang.Codec.CodecException;
 import jade.content.lang.sl.*;
 
@@ -716,25 +715,36 @@ public abstract class Agent_ComputingAgent extends Agent{
 	  
 	    /* Send partial results to the GUI Agent(s)
 	     * call it after training or during training?*/
-	    protected void sendResultsToGUI(MyWekaEvaluation _evaluation){
-	      ACLMessage msgOut = new ACLMessage(ACLMessage.INFORM);
-	      DFAgentDescription template = new DFAgentDescription();
-	        ServiceDescription sd = new ServiceDescription();
-	      sd.setType("GUIAgent");
+	    protected void sendResultsToGUI(Boolean first_time, Task _task, List _evaluations){
+	    	ACLMessage msgOut = new ACLMessage(ACLMessage.INFORM);
+	    	DFAgentDescription template = new DFAgentDescription();
+	    	ServiceDescription sd = new ServiceDescription();
+	    	sd.setType("GUIAgent");
 	        template.addServices(sd);
 	        try {
-	          DFAgentDescription[] gui_agents = DFService.search(this, template); 
-
+	        	DFAgentDescription[] gui_agents = DFService.search(this, template); 
 	            for (int i = 0; i < gui_agents.length; ++i) {
-	              msgOut.addReceiver(gui_agents[i].getName());
+	            	msgOut.addReceiver(gui_agents[i].getName());
 	            }
 	        }catch (FIPAException fe) {
-	             fe.printStackTrace();
+	            fe.printStackTrace();
 	        }
 
 	        msgOut.setConversationId("partial-results");
 	       
-	        /*TODO: here should be setConent with all informations to send*/
+	        PartialResults content= new PartialResults();
+	        content.setResults(_evaluations);
+	        content.setTask_id(_task.getId());
+	        if(first_time){
+	        	content.setTask(_task);
+	        }
+	        try {
+				getContentManager().fillContent(msgOut, content);
+			} catch (CodecException e) {
+				e.printStackTrace();
+			} catch (OntologyException e) {
+				e.printStackTrace();
+			}
 
 	        send(msgOut);
 	    }

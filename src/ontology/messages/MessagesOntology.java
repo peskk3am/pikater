@@ -64,6 +64,10 @@ public class MessagesOntology extends Ontology {
 	  public static final String INTERVAL_MAX = "max";
 	  
 	  // Predicates
+	  public static final String PARTIALRESULTS = "PARTIALRESULTS";
+	  public static final String PARTIALRESULTS_TASK = "task";
+	  public static final String PARTIALRESULTS_TASK_ID = "task_id";
+	  public static final String PARTIALRESULTS_RESULTS = "results";
 
 	  // Actions
 	  public static final String COMPUTE = "COMPUTE";
@@ -112,6 +116,8 @@ public class MessagesOntology extends Ontology {
 			add(new ConceptSchema(PROBLEM), Problem.class);
 			add(new ConceptSchema(EVALUATION), Evaluation.class);
 			add(new ConceptSchema(RESULTS), Results.class);
+			
+			add(new PredicateSchema(PARTIALRESULTS),PartialResults.class);
 			
 			add(new AgentActionSchema(COMPUTE), Compute.class);
 			add(new AgentActionSchema(GET_OPTIONS), GetOptions.class);
@@ -169,7 +175,12 @@ public class MessagesOntology extends Ontology {
 	    	cs.add(AGENT_OPTIONS, (ConceptSchema)getSchema(OPTION), 1, ObjectSchema.UNLIMITED);
 	    	
 	    	
-			AgentActionSchema as = (AgentActionSchema)getSchema(COMPUTE);
+			PredicateSchema ps = (PredicateSchema)getSchema(PARTIALRESULTS);
+	    	ps.add(PARTIALRESULTS_TASK, (ConceptSchema)getSchema(TASK), ObjectSchema.OPTIONAL);
+			ps.add(PARTIALRESULTS_TASK_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+			ps.add(PARTIALRESULTS_RESULTS, (ConceptSchema)getSchema(EVALUATION), 0, ObjectSchema.UNLIMITED);
+			
+	    	AgentActionSchema as = (AgentActionSchema)getSchema(COMPUTE);
 			as.add(COMPUTE_COMPUTATION, (ConceptSchema)getSchema(COMPUTATION));
 
 			as = (AgentActionSchema)getSchema(SOLVE);
