@@ -7,9 +7,11 @@ import jade.util.leap.List;
 public class Problem implements Concept{
 	
 	private String _id;
-	private AID _aid;
+	private String _gui_id;
+	private boolean _sent;
 	private List  _agents;
-	private List _file_names;
+	private List _data;
+	private int _timeout;
 	
 	public void setAgents(List agents) {
 		_agents=agents;
@@ -18,11 +20,11 @@ public class Problem implements Concept{
 		return _agents;
 	}
 	
-	public void setFile_names(List file_names) {
-		_file_names=file_names;
+	public void setData(List data) {
+		_data=data;
 	}
-	public List getFile_names() {
-		return _file_names;
+	public List getData() {
+		return _data;
 	}	
 	public void setId(String id) {
 		_id=id;
@@ -30,11 +32,23 @@ public class Problem implements Concept{
 	public String getId() {
 		return _id;
 	}	
-	public void setAid(AID aid) {
-		_aid=aid;
+	public void setGui_id(String gui_id) {
+		_gui_id=gui_id;
 	}
-	public AID getAid() {
-		return _aid;
+	public String getGui_id() {
+		return _gui_id;
 	}
-
+	public void setTimeout(int timeout) {
+		_timeout = timeout;
+	}
+	public int getTimeout() {
+		return _timeout;
+	}
+	
+	public boolean getSent() {
+		return _sent;
+	}
+	public void setSent(boolean sent) {
+		_sent = sent;
+	}
 }

@@ -1,3 +1,6 @@
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 
 import java.io.Serializable;
@@ -6,6 +9,11 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Vector;
+
+import org.jdom.Document;
+import org.jdom.Element;
+import org.jdom.output.Format;
+import org.jdom.output.XMLOutputter;
 
 import jade.core.AID;
 import jade.core.Agent;
@@ -33,7 +41,10 @@ import jade.util.leap.Iterator;
 import jade.util.leap.List;
 import jade.util.*;
 import jade.wrapper.AgentController;
+import jade.wrapper.ControllerException;
 import jade.wrapper.PlatformController;
+import jade.wrapper.StaleProxyException;
+import jade.domain.JADEAgentManagement.*;
 
 import ontology.messages.*;
 import weka.core.Option;
@@ -46,6 +57,13 @@ import jade.content.lang.Codec;
 import jade.content.lang.Codec.CodecException;
 import jade.content.lang.sl.*;
 
+import org.jdom.Document;
+import org.jdom.Element;
+import org.jdom.output.Format;
+import org.jdom.output.XMLOutputter;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 
 public class Agent_Manager extends Agent{
 	
@@ -55,8 +73,8 @@ public class Agent_Manager extends Agent{
 	private Codec codec = new SLCodec();
 	private Ontology ontology = MessagesOntology.getInstance();
 	
-	// private Set subscriptions = new HashSet();
-	private Subscription subscription;
+	private Set subscriptions = new HashSet();
+	// private Subscription subscription;
 	
 	private class SendComputation extends AchieveREInitiator{
 		
@@ -73,33 +91,38 @@ public class Agent_Manager extends Agent{
 				// Retrieve the incoming request from the DataStore
 				String incomingRequestKey = (String) ((AchieveREResponder) parent).REQUEST_KEY;
 				ACLMessage incomingRequest = (ACLMessage) getDataStore().get(incomingRequestKey);
-								
 				System.out.println("Agent "+getLocalName()+": Received action: "+incomingRequest.getContent()+". Preparing response.");
 				
+				// get generated problem id from agree message (it contains a string: "gui_id and id" of a problem 
+				String incomingResponseKey = (String) ((AchieveREResponder) parent).RESPONSE_KEY;
+				ACLMessage incomingResponse = (ACLMessage) getDataStore().get(incomingResponseKey);
+				String[] ID = incomingResponse.getContent().split(" ");
+				String problemId = ID[1];
 
-				return prepareComputations(incomingRequest); // Prepare the request to forward to the responder
+				return prepareComputations(incomingRequest, problemId); // Prepare the request to forward to the responder
 										
 			}
 			
 			protected void handleInform(ACLMessage inform) {
 				System.out.println("Agent:"+getLocalName()+": Agent "+inform.getSender().getName()+" sent an inform.");
 				sendSubscription(inform);
+				killAgent(inform.getSender().getName());
 			}
-
+			
 			protected void handleFailure(ACLMessage failure) {
 				System.out.println("Agent:"+getLocalName()+": Agent "+failure.getSender().getName()+" sent a failure.");
 				sendSubscription(failure);
+				killAgent(failure.getSender().getName());				
 			}
 
 			
 			/* protected void handleAllResponses(java.util.Vector responses) {
 				Enumeration en = responses.elements();
 				while(en.hasMoreElements()){
-					ACLMessage msgNext = (ACLMessage)en.nextElement();	
-					System.out.println("Agent:"+getLocalName()+": Agent "+msgNext.getSender().getName()+" sent a reply.");
+					ACLMessage msgNext = (ACLMessage)en.nextElement();			
 				}		
-			}
-			*/
+			} */
+			
 			
 			
 			protected void handleAllResultNotifications(java.util.Vector resultNotifications) {
@@ -107,14 +130,7 @@ public class Agent_Manager extends Agent{
 			 * Known bugs: The handler handleAllResponses is not called if the 
 			 * agree message is skipped and the inform message is received instead.
 			 * One message for every receiver is sent instead of a single message for all the receivers.
-			 */
-				/* 
-				Enumeration en = resultNotifications.elements();
-				while(en.hasMoreElements()){
-					ACLMessage msgNext = (ACLMessage)en.nextElement();	
-					System.out.println("Agent:"+getLocalName()+": Agent "+msgNext.getSender().getName()+" sent a reply.");			        
-				}
-				*/
+			 */		 
 				if (resultNotifications.size() == 0){
 					storeNotification( ACLMessage.FAILURE );
 				}
@@ -140,6 +156,10 @@ public class Agent_Manager extends Agent{
 					// fill its content
 					Results results = prepareComputationResults(result);
 					if (results != null){
+						
+						writeXMLResults(results);
+						
+						
 						msgOut.setPerformative(ACLMessage.INFORM);
 						ContentElement content;
 						try {
@@ -163,7 +183,15 @@ public class Agent_Manager extends Agent{
 					}
 				}  // end if				
 			
-		        subscription.notify(msgOut);				
+	            // go through every subscription
+				java.util.Iterator it = subscriptions.iterator();
+				while(it.hasNext()){
+					Subscription subscription = (Subscription)it.next();
+					if (subscription.getMessage().getSender().getLocalName().equals(incomingRequest.getSender().getLocalName())){
+						subscription.notify(msgOut);
+					}
+				}	            	
+				
 			}
 			
 			
@@ -189,16 +217,26 @@ public class Agent_Manager extends Agent{
 				// and store it in the DataStore
 				String notificationkey = (String) ((AchieveREResponder) parent).RESULT_NOTIFICATION_KEY;
 				getDataStore().put(notificationkey, msgOut );
-		
-		        
-				// cancel this subscription conversation - there will be no more results
-				msgOut = new ACLMessage(ACLMessage.REFUSE);
-				subscription.notify(msgOut);
-				
-				// TODO - kill option manager agent
-				
+						
 			}   // end storeNotification
-	 }
+
+			private void killAgent(String name){
+				System.out.println("Agent:"+getLocalName()+": Agent "+name+" is being killed.");
+
+				PlatformController container = getContainerController();
+
+				try {
+					container.getAgent(name).kill();
+				} catch (StaleProxyException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (ControllerException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}	
+			}
+
+	} // end SendComputaion behavior
 	
 	
 	protected void setup(){
@@ -227,13 +265,13 @@ public class Agent_Manager extends Agent{
 	  	
 		  	SubscriptionManager subscriptionManager = new SubscriptionManager() {
 		        public boolean register(Subscription s) {
-		        	subscription = s;
-		        	// subscriptions.add(s);
+		        	// subscription = s;
+		        	subscriptions.add(s);
 		        	return true;
 		        }
 		        public boolean deregister(Subscription s) {
-		        	subscription = s;
-		        	// subscriptions.remove(s);
+		        	// subscription = s;
+		        	subscriptions.remove(s);
 		        	return true;
 		        }
 		      };
@@ -243,95 +281,12 @@ public class Agent_Manager extends Agent{
 					MessageTemplate.MatchOntology(ontology.getName()),   // TODO MatchLanguage, MatchProtocol...
 					MessageTemplate.or(MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE), MessageTemplate.MatchPerformative(ACLMessage.CANCEL)));
 
-	  		/*
-	  		 * It is very important to pass the right message
-			 * template to its constructor as it is used to select the ACLMessage to be served.
-			 * 
-			 * Once the subscription request has been examined the responder must then reply by
-			 * sending a not-understood, a refuse or an agree message to communicate the subscriptions state.
-			 * Each time the subscriptions condition resolves to true, the responder sends a "notification"
-			 * messages to the Initiator.
-			 * 
-			 * The applications Subscription Manager is expected to implement the register() and
-			 * deregister() methods.
-			 * 
-			 * When you subscribe using IOTA it means that you request to be notified
-			 * each time there is a new object that makes a given condition become true
-			 * --> The responder should notify the subscriber each time there is such a
-			 * new object. If you want to send a notification every xxx seconds a
-			 * TickerBehaviour is a very good solution.
-	  		 */
+
 		  	SubscriptionResponder send_results = new SubscriptionResponder(this, mt, subscriptionManager) {
-		  		// If the CANCEL message has a meaningful content, use it. 
-				// Otherwise deregister the Subscription with the same convID (default)
-				protected ACLMessage handleCancel(ACLMessage cancel) {
-
-						/*
-						Action act = (Action) myAgent.getContentManager().extractContent(cancel);
-						ACLMessage subsMsg = (ACLMessage)act.getAction();
-						Subscription s = getSubscription(subsMsg);
-						if (s != null) {
-							mySubscriptionManager.deregister(s);
-							s.close();
-							*/
-					
-					ACLMessage msgOut = new ACLMessage(ACLMessage.INFORM);
-					System.out.println("Agent "+getLocalName()+": canceled.");
-					return msgOut;
-				}		
-		  		
-		  		
-		  		/* protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException, RefuseException {
-	  						System.out.println("Agent "+getLocalName()+": REQUEST received from "+request.getSender().getName()+". Action is "+request.getContent());
-	  						
-	  							// We agree to perform the action. Note that in the FIPA-Request
-	  							// protocol the AGREE message is optional. Return null if you
-	  							// don't want to send it.						
-	  							// System.out.println("Agent "+getLocalName()+": Agree");
-	  							// ACLMessage agree = request.createReply();
-	  							// agree.setPerformative(ACLMessage.AGREE);
-	  							// return agree;
-	  							return null;
-	  					}  // end prepareResponse
-	  					
-	  		/*			protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException {
-	  						System.out.println("Agent "+getLocalName()+": preparing the response.");
-	  						
-	  						try{
-	  							ContentElement content = getContentManager().extractContent(request);
-	  							// System.out.println(((Action)ce).getAction());
-	  							
-	  							if (((Action)content).getAction() instanceof Solve){
-	  								System.out.println("Agent "+getLocalName()+": received SOLVE instance.");
-	  								return prepareComputations(request);
-	  							}
-	  							
-	  						}
-  							catch (CodecException ce) {
-  								ce.printStackTrace();
-  								}
-							catch (OntologyException oe) {
-  								oe.printStackTrace();
-  							}
-							
-							ACLMessage notUnderstood = request.createReply();
-							notUnderstood.setPerformative(ACLMessage.NOT_UNDERSTOOD);
-  							return notUnderstood;
-  														
-							// return 
-	  						
-	  					}  //  end prepareResultNotification	  					
-	  					*/	  					
+				  		
 		  	};
-	
-		  	// This method allows to register a user defined Behaviour in the HANDLE_SUBSCRIPTION state.
-		  	// send_results.registerHandleSubscription(new SendComputation(this, null));
-	        
-		  	//receive_problem.registerPrepareResultNotification( new SendComputation(this, null) );
-
 		  	addBehaviour(send_results);
 	
-		  	
 		  	
 		  	
 		  	MessageTemplate template_inform = MessageTemplate.and(
@@ -346,52 +301,51 @@ public class Agent_Manager extends Agent{
 		  		protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException, RefuseException {
 		  		System.out.println("Agent "+getLocalName()+": REQUEST received from "+request.getSender().getName()+". Action is "+request.getContent());
 
-		  		// We agree to perform the action. Note that in the FIPA-Request
-		  		// protocol the AGREE message is optional. Return null if you
-		  		// don't want to send it.
-		  		// System.out.println("Agent "+getLocalName()+": Agree");
-		  		// ACLMessage agree = request.createReply();
-		  		// agree.setPerformative(ACLMessage.AGREE);
-		  		// return agree;
-		  		return null;
-		  		} // end prepareResponse
-
-		  		/* protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException {
-		  		System.out.println("Agent "+getLocalName()+": preparing the response.");
-		  		try{
-		  		ContentElement content = getContentManager().extractContent(request);
-		  		// System.out.println(((Action)ce).getAction());
-		  		if (((Action)content).getAction() instanceof Solve){
-		  		System.out.println("Agent "+getLocalName()+": received SOLVE instance.");
-		  		return prepareComputations(request);
-		  		}
-		  		}
-		  		catch (CodecException ce) {
-		  		ce.printStackTrace();
-		  		}
-		  		catch (OntologyException oe) {
-		  		oe.printStackTrace();
-		  		}
-		  		ACLMessage notUnderstood = request.createReply();
-		  		notUnderstood.setPerformative(ACLMessage.NOT_UNDERSTOOD);
-		  		return notUnderstood;
-		  		// return
-		  		} // end prepareResultNotification
-		  		*/
-
-		  		};
-
-		  		receive_problem.registerPrepareResultNotification( new SendComputation(this, null) );
-
-		  		addBehaviour(receive_problem);
+			  		// We agree to perform the action. Note that in the FIPA-Request
+			  		// protocol the AGREE message is optional. Return null if you
+			  		// don't want to send it.
+			  		
+			  		ACLMessage agree = request.createReply();
+			  		agree.setPerformative(ACLMessage.AGREE);
+			  			  		
+			  		ContentElement content;
+					try {
+						content = getContentManager().extractContent(request);
+			    		if (((Action)content).getAction() instanceof Solve){
+			                Action action = (Action) content;
+			                Solve solve = (Solve)action.getAction();
+			                Problem problem = (Problem)solve.getProblem();
+			                agree.setContent(problem.getGui_id() + " " + generateProblemID());
+			                return agree;
+			    		}
+					} catch (UngroundedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (CodecException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (OntologyException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+					agree.setPerformative(ACLMessage.REFUSE);
+			  		return agree;			  		
+			  		
+			  	} // end prepareResponse
 
 
-		  	
+	  		};
+
+	  		receive_problem.registerPrepareResultNotification( new SendComputation(this, null) );
+
+	  		addBehaviour(receive_problem);
+
 		  	
 			
 	}  // end setup
 	
-	protected Vector<ACLMessage> prepareComputations(ACLMessage request){
+	protected Vector<ACLMessage> prepareComputations(ACLMessage request, String problemId){
 		Vector<ACLMessage> msgVector = new Vector<ACLMessage>();		
 		
 		ContentElement content;
@@ -400,28 +354,29 @@ public class Agent_Manager extends Agent{
 	    	System.out.println("Agent "+getLocalName()+": "+content);
 	    	
 	    		if (((Action)content).getAction() instanceof Solve){
-	    	// if (content instanceof Result) {
+
 	                Action action = (Action) content;
 	                Solve solve = (Solve)action.getAction();
 	                Problem problem = (Problem)solve.getProblem();
 	                          		 	
-	            	String problemID = generateProblemID();
-	            	problem.setId(problemID);
+	            	// String problemID = generateProblemID();
+	            	problem.setId(problemId);
 	            	
 	            	int computation_i = 0;
 	       		 	Iterator a_itr = problem.getAgents().iterator();	 
 	            	while (a_itr.hasNext()) {
 	    	           ontology.messages.Agent a_next = (ontology.messages.Agent) a_itr.next();
 	    	           
-	    	           Iterator f_itr = problem.getFile_names().iterator();	 
-	    	           while (f_itr.hasNext()) {
-	    	        	   String f_next = (String) f_itr.next();
+	    	           Iterator d_itr = problem.getData().iterator();	 
+	    	           while (d_itr.hasNext()) {
+	    	        	   Data next_data = (Data) d_itr.next();
 	    	        	   
 	    	        	   Computation computation = new Computation();
 	    	        	   computation.setAgent(a_next);
-	    	        	   computation.setData_file_name(f_next);
-	    	        	   computation.setProblem_id(problemID);
-	    	        	   computation.setId(problemID+"_"+computation_i);
+	    	        	   computation.setData(next_data);
+	    	        	   computation.setProblem_id(problemId);
+	    	        	   computation.setId(problemId+"_"+computation_i);
+	    	        	   computation.setTimeout(problem.getTimeout());
 	    	        	   computation_i++;
 	    	        	   
 	    	        	   msgVector.add( Compute(computation) );
@@ -444,7 +399,7 @@ public class Agent_Manager extends Agent{
 			
 			return msgVector;
 			
-	} // end prepareComputation
+	} // end prepareComputations
 	
 	protected ACLMessage Compute(Computation computation){
 	// creates an Option Manager agent and returns a message for this agent
@@ -536,7 +491,108 @@ public class Agent_Manager extends Agent{
 
 	} // prepareComputationResult
 
-  		
+	
+	 protected boolean writeXMLResults(Results results){
+	 	String file_name = "xml"+System.getProperty("file.separator")+results.getComputation_id()+".xml"; 
+	    
+		// create the "xml" directory, if it doesn't exist
+		boolean exists = (new File("xml")).exists();
+		if (!exists) {	
+			boolean success = (new File("xml")).mkdir();
+		    if (!success) {
+		      System.out.println("Directory: " + "xml" + " could not be created");  // TODO exception
+		    } 
+		}
+	 
+		
+		/* Generate the ExpML document  */
+		Document doc = new Document(new Element("result"));
+		Element root = doc.getRootElement();
+	
+		
+	 	List _results = results.getResults();
+	    
+	 	Iterator itr = _results.iterator();	  
+	    while (itr.hasNext()) {
+		   Task next_task = (Task) itr.next();
+		   
+		   ontology.messages.Agent agent = next_task.getAgent();
+		   
+		   Element newExperiment = new Element("experiment");				   
+	       Element newSetting = new Element ("setting");
+	       Element newAlgorithm = new Element ("algorithm");
+	       newAlgorithm.setAttribute("name", agent.getName());
+	       newAlgorithm.setAttribute("libname", "weka");
+	       
+		   List Options = agent.getOptions(); 
+		   Iterator itr_o = Options.iterator();	  
+		   while (itr_o.hasNext()) {
+			   ontology.messages.Option next_o = (ontology.messages.Option) itr_o.next();
+			    
+			   	Element newParameter = new Element ("parameter");
+			    newParameter.setAttribute("name", next_o.getName());
+			    
+			    String value = "";
+			    if (next_o.getValue() != null){ value = next_o.getValue(); }
+			    newParameter.setAttribute("value", value);
+			    
+			    newAlgorithm.addContent(newParameter);
+		   }
+		   
+		   Element newDataSet = new Element ("dataset");
+		   newDataSet.setAttribute("train", next_task.getData().getTrain_file_name());
+		   newDataSet.setAttribute("test", next_task.getData().getTest_file_name());
+
+		   Element newEvaluation = new Element ("evaluation");
+		   Element newMetric1 = new Element ("metric");
+		   newMetric1.setAttribute ("mean_absolute_error", Double.toString(next_task.getResult().getError_rate()));
+		   Element newMetric2 = new Element ("metric");
+		   newMetric2.setAttribute ("root_mean_squared_error", Double.toString(next_task.getResult().getPct_incorrect()));
+		   			   
+		   newEvaluation.addContent(newMetric1);
+		   newEvaluation.addContent(newMetric2);
+		   
+	       newExperiment.addContent(newSetting);
+	       newExperiment.addContent(newEvaluation);
+	       newSetting.addContent(newAlgorithm);
+	       newSetting.addContent(newDataSet);
+
+	       root.addContent(newExperiment);
+	       
+	    }  
+
+	    Element newStatistics = new Element ("statistics");
+ 	    Element newMetric1 = new Element ("metric");
+	    newMetric1.setAttribute ("average_error_rate", Double.toString(results.getAvg_error_rate()));
+	    Element newMetric2 = new Element ("metric");
+	    newMetric2.setAttribute ("average_pct_incorrect", Double.toString(results.getAvg_pct_incorrect()));
+		
+	    newStatistics.addContent(newMetric1);
+	    newStatistics.addContent(newMetric2);
+	    
+	    root.addContent(newStatistics);
+	    
+	    
+	    XMLOutputter out = new XMLOutputter(Format.getPrettyFormat());
+       	try {
+    	   FileWriter fw = new FileWriter(file_name);
+    	   BufferedWriter fout = new BufferedWriter(fw);
+    	
+    	   out.output( root, fout );
+		
+    	   fout.close();
+		
+       	} catch (IOException e) {
+    	   e.printStackTrace();
+    	   return false;
+       	}
+	    		
+		
+		 
+       return true;
+	}  // end writeXMLResults
+	 
+	
 	protected String generateProblemID(){
 		Date date = new Date();
 		String problem_id = Long.toString(date.getTime())+"_"+problem_i;

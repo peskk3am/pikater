@@ -65,6 +65,7 @@ public class WS_Ontology extends Ontology {
 			AgentActionSchema as = (AgentActionSchema)getSchema(SET_PROBLEM);
 			as.add(AGENT_DESCRIPTIONS, (PrimitiveSchema)getSchema(BasicOntology.STRING), 1, ObjectSchema.UNLIMITED);
 			as.add(FILE_NAMES, (PrimitiveSchema)getSchema(BasicOntology.STRING), 1, ObjectSchema.UNLIMITED);
+			as.setResult((PrimitiveSchema)getSchema(BasicOntology.STRING));
 			
 			as = (AgentActionSchema)getSchema(GET_AGENTS);
 			as.setResult((PrimitiveSchema)getSchema(BasicOntology.STRING), 0, ObjectSchema.UNLIMITED);

@@ -27,6 +27,7 @@ import jade.util.leap.ArrayList;
 import jade.util.leap.Iterator;
 import jade.util.leap.List;
 import ontology.messages.Agent;
+import ontology.messages.Problem;
 import ontology.messages.Results;
 import ontology.webservices.GetAgents;
 import ontology.webservices.GetResults;
@@ -42,16 +43,6 @@ public class Agent_GUI_WS extends Agent_GUI {
 	private Codec codec;
 	private Ontology wsOntology;
 	private Ontology messagesOntology;
-
-	@Override
-	protected void allOptionsReceived() {
-		sendProblem();
-	}
-
-	@Override
-	protected void displayOptions(Agent agent) {
-		refreshOptions(agent);
-	}
 
 	@Override
 	protected void displayResult(ACLMessage inform) {
@@ -122,18 +113,21 @@ public class Agent_GUI_WS extends Agent_GUI {
 						
 						jade.util.leap.Iterator it = sp.getFileNames().iterator();
 						
+						int problemID = createNewProblem("30000");
+						
 						while (it.hasNext()) {
 							String s = (String)it.next();
-							addFileToProblem(s);
+							addDatasetToProblem(problemID, s, s);
 						}
 						
 						it = sp.getAgentDescriptions().iterator();
 						
 						while (it.hasNext()) {
 							String[] params =  ((String)it.next()).split("[ ]+");
-							addAgentToProblem(params);
+							addAgentToProblemWekaStyle(problemID, params);
 							getAgentOptions(params[0]);
 						}
+						
 						
 						ACLMessage response = request.createReply();
 						response.setPerformative(ACLMessage.INFORM);
@@ -283,6 +277,17 @@ public class Agent_GUI_WS extends Agent_GUI {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+	}
+
+	@Override
+	protected void allOptionsReceived(int problemId) {
+		sendProblem(problemId);
+	}
+
+	@Override
+	protected void displayOptions(Problem problem, String message) {
+		// TODO Auto-generated method stub
 		
 	}
 

@@ -3,16 +3,8 @@ import java.io.*;
 import java.util.Date;
 import java.util.Vector;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
 
 import ontology.messages.*;
-
-import org.jdom.Document;
-import org.jdom.Element;
-import org.jdom.output.Format;
-import org.jdom.output.XMLOutputter;
 
 import weka.classifiers.Evaluation;
 import weka.core.Instances;
@@ -25,22 +17,22 @@ import jade.content.onto.OntologyException;
 import jade.content.onto.UngroundedException;
 import jade.content.onto.basic.Action;
 import jade.content.onto.basic.Result;
-	import jade.core.Agent;
-	import jade.domain.DFService;
-	import jade.domain.FIPAException;
-	import jade.domain.FIPANames;
-	import jade.domain.FIPAAgentManagement.DFAgentDescription;
-	import jade.domain.FIPAAgentManagement.FailureException;
-	import jade.domain.FIPAAgentManagement.NotUnderstoodException;
-	import jade.domain.FIPAAgentManagement.RefuseException;
-	import jade.domain.FIPAAgentManagement.ServiceDescription;
-	import jade.lang.acl.ACLMessage;
-	import jade.lang.acl.MessageTemplate;
+import jade.core.Agent;
+import jade.domain.DFService;
+import jade.domain.FIPAException;
+import jade.domain.FIPANames;
+import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.FailureException;
+import jade.domain.FIPAAgentManagement.NotUnderstoodException;
+import jade.domain.FIPAAgentManagement.RefuseException;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 import jade.proto.AchieveREResponder;
-	import jade.proto.ContractNetResponder;
+import jade.proto.ContractNetResponder;
 import jade.proto.IteratedAchieveREInitiator;
-	import jade.core.AID;
+import jade.core.AID;
 import jade.core.behaviours.DataStore;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.proto.AchieveREInitiator;
@@ -52,19 +44,23 @@ import jade.util.leap.List;
 public abstract class Agent_OptionsManager extends Agent {
 	 	 private Codec codec = new SLCodec();
 	 	 private Ontology ontology = MessagesOntology.getInstance();
-	
-		 private String fileName;
+	 	 
+		 private String trainFileName;
+		 private String testFileName;
+
 		 private String receiver;
 	 	 private String computation_id;
 	 	 private String problem_id;
 	 	 
 	 	 private int task_i = 0; // task number
 
+	 	 private long timeout = -1; 
+
 	 	 boolean working = false;
 	 	 	 	 
 		 MyWekaEvaluation result;
 	 	 protected List Options;
-	 	 
+	 	 	 	 
 		 protected abstract String getAgentType();
 		 protected abstract boolean finished();
 		 protected abstract String generateNewOptions(MyWekaEvaluation result);
@@ -98,10 +94,14 @@ public abstract class Agent_OptionsManager extends Agent {
 			  		if (((Action)content).getAction() instanceof Compute){
 	                    Compute compute = (Compute) ((Action)content).getAction();
 	                    Options = compute.getComputation().getAgent().getOptions();
-					  	fileName = compute.getComputation().getData_file_name();
+					  	trainFileName = compute.getComputation().getData().getTrain_file_name();
+					  	testFileName = compute.getComputation().getData().getTest_file_name();
 					  	receiver = compute.getComputation().getAgent().getName();
 					  	computation_id = compute.getComputation().getId();
 					  	problem_id = compute.getComputation().getProblem_id();
+					  	if (timeout < 0){
+					  		timeout = System.currentTimeMillis() + compute.getComputation().getTimeout();
+					  	}
 			  		}
 					
 				} catch (UngroundedException e) {
@@ -184,13 +184,21 @@ public abstract class Agent_OptionsManager extends Agent {
 					storeNotification(ACLMessage.INFORM);
 				}
 				
-				msgPrev = msgNew;
+				msgPrev = msgNew; 
 				
 			}
 			
 			protected void handleRefuse(ACLMessage refuse) {
-				storeNotification(ACLMessage.FAILURE);
+				
 				System.out.println(getLocalName()+": Agent "+refuse.getSender().getName()+" refused to perform the requested action");
+				if (System.currentTimeMillis() < timeout){
+					doWait(100);
+					this.reset();
+					addBehaviour(this);
+				}
+				else{
+					storeNotification(ACLMessage.FAILURE);	
+				}
 			}
 			
 			protected void handleFailure(ACLMessage failure) {
@@ -269,15 +277,10 @@ public abstract class Agent_OptionsManager extends Agent {
 					
 				} // end if (finished())	
 
-					// save the outgoing message to the dataStore
+				// save the outgoing message to the dataStore
 				String notificationkey = (String) ((AchieveREResponder) parent).RESULT_NOTIFICATION_KEY;
-						
 				getDataStore().put(notificationkey, msgOut);
-										
-				
-				// System.out.println("Agent "+getLocalName()+" says good bye!");
-				// doDelete();
-				
+											
 		
 			}   // end storeNotification
 		
@@ -298,7 +301,7 @@ public abstract class Agent_OptionsManager extends Agent {
 				 
 				 
 				 if (!finished()){
-					String opt = generateNewOptions(result);
+					String opt = generateNewOptions(result) + " "+ getImmutableOptions();
 					System.out.println(getLocalName()+": new options for agent "+receiver+" are "+opt); 
 					 
 					msg = new ACLMessage(ACLMessage.REQUEST);
@@ -317,7 +320,19 @@ public abstract class Agent_OptionsManager extends Agent {
 					task.setId(id);
 					task.setComputation_id(computation_id);
 					task.setProblem_id(problem_id);
-					task.setOptions(fileName+" "+opt);
+					task.setOptions(opt);
+					
+					Data data = new Data();
+					data.setTrain_file_name(trainFileName);
+					data.setTest_file_name(testFileName);
+					task.setData(data);
+					
+					ontology.messages.Agent agent = new ontology.messages.Agent(); 
+					agent.setName(receiver);
+					agent.setOptions(Options);
+					
+					task.setAgent(agent);
+					
 					execute.setTask(task);
 					
 					
@@ -340,18 +355,6 @@ public abstract class Agent_OptionsManager extends Agent {
 				 }
 				 else{
 					msg = new ACLMessage(ACLMessage.CANCEL);
-					// write the results to a file
-					boolean exists = (new File("xml")).exists();
-					if (!exists) {	
-						boolean success = (new File("xml")).mkdir();
-					    if (!success) {
-					      System.out.println("Directory: " + "xml" + " could not be created");  // TODO exception
-					    } 
-					}
-					
-					writeResult("xml"+System.getProperty("file.separator")+computation_id+".xml", receiver);
-					
-					
 				 }
 				 				 
 				 return msg;				
@@ -415,75 +418,7 @@ public abstract class Agent_OptionsManager extends Agent {
 	                 
 	         }
 		 }  // end registerWithDF
-		
-		 
-		 
-		 
-		 protected boolean writeResult(String file_name, String agent){
-			 
-			 
-			 	/* Generate the ExpML document  */
-			 	Document doc = new Document(new Element("experiment"));
-			 	Element root = doc.getRootElement();
-			
-					   
-		       Element newSetting = new Element ("setting");
-		       Element newAlgorithm = new Element ("algorithm");
-		       newAlgorithm.setAttribute("name", agent);
-		       newAlgorithm.setAttribute("libname", "weka");
-		       
-			    
-			   Iterator itr = Options.iterator();	  
-			   while (itr.hasNext()) {
-				   	Option next = (Option) itr.next();
-				    
-				   	Element newParameter = new Element ("parameter");
-				    newParameter.setAttribute("name", next.getName());
-				    
-				    String value = "";
-				    if (next.getValue() != null){ value = next.getValue(); }
-				    newParameter.setAttribute("value", value);
-				    
-				    newAlgorithm.addContent(newParameter);
-			   }
-			   
-			   Element newDataSet = new Element ("dataset");
-			   newDataSet.setAttribute("name", fileName);
-
-			   Element newEvaluation = new Element ("evaluation");
-			   Element newMetric1 = new Element ("metric");
-			   newMetric1.setAttribute ("mean_absolute_error", Double.toString(result.errorRate));
-			   Element newMetric2 = new Element ("metric");
-			   newMetric2.setAttribute ("root_mean_squared_error", Double.toString(result.pctIncorrect));
-			   			   
-			   newEvaluation.addContent(newMetric1);
-			   newEvaluation.addContent(newMetric2);
-			   
-		       root.addContent(newSetting);
-		       root.addContent(newEvaluation);
-		       newSetting.addContent(newAlgorithm);
-		       newSetting.addContent(newDataSet);
-		      
-		       
-		       XMLOutputter out = new XMLOutputter(Format.getPrettyFormat());
-		       try {
-		    	FileWriter fw = new FileWriter(file_name);
-		    	BufferedWriter fout = new BufferedWriter(fw);
-		    	
-				out.output( root, fout );
-				
-				fout.close();
-				
-			} catch (IOException e) {
-				e.printStackTrace();
-				return false;
-			}
-			
-			
-			 
-			 return true;
-		 }
-		 
+				 
 		 		 
 		 
 		 protected void setup() {
@@ -504,7 +439,7 @@ public abstract class Agent_OptionsManager extends Agent {
   		    AchieveREResponder receive_computation = new AchieveREResponder(this, template_inform) {
 				protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException, RefuseException {
 					System.out.println("Agent "+getLocalName()+": REQUEST received from "+request.getSender().getName()+".");
-
+						
 						// We agree to perform the action. Note that in the FIPA-Request
 						// protocol the AGREE message is optional. Return null if you
 						// don't want to send it.						
@@ -513,6 +448,7 @@ public abstract class Agent_OptionsManager extends Agent {
 						ACLMessage agree = request.createReply();
 						agree.setPerformative(ACLMessage.AGREE);
 						return agree;
+						
 				}  // end prepareResponse
 								
 			};
@@ -527,4 +463,21 @@ public abstract class Agent_OptionsManager extends Agent {
 		 
 		 } // end setup
 
+		 String getImmutableOptions(){
+			String str = ""; 
+			Iterator itr = Options.iterator();	 		   		 
+   		 	while (itr.hasNext()) {
+   		 		Option next_option = (Option) itr.next();
+   		 		if (!next_option.getMutable() && next_option.getValue() != null){
+   		 			if (next_option.getData_type().equals("BOOLEAN") && next_option.getValue().equals("True")){
+   		 				str += "-"+next_option.getName()+" ";
+   		 			}
+   		 			else{
+   		 				str += "-"+next_option.getName()+" "+next_option.getValue()+" ";
+   		 			}
+   		 		}
+   		 	}
+   		 	return str;
+		 }
+		 
 }
