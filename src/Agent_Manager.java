@@ -150,6 +150,7 @@ public class Agent_Manager extends Agent{
 				ACLMessage msgOut = incomingRequest.createReply();
 				msgOut.setPerformative(result.getPerformative());
 				
+				String problemGuiId = null;
 				if (result.getPerformative() != ACLMessage.FAILURE){
 
 					// fill its content
@@ -163,6 +164,10 @@ public class Agent_Manager extends Agent{
 						ContentElement content;
 						try {
 							content = getContentManager().extractContent(incomingRequest);
+							if (((Action)content).getAction() instanceof Solve){
+			                    Solve solve = (Solve) ((Action)content).getAction();
+			                    problemGuiId = solve.getProblem().getGui_id();
+							}
 							Result _result = new Result((Action)content, results);
 							getContentManager().fillContent(msgOut, _result);
 								
@@ -186,7 +191,8 @@ public class Agent_Manager extends Agent{
 				java.util.Iterator it = subscriptions.iterator();
 				while(it.hasNext()){
 					Subscription subscription = (Subscription)it.next();
-					if (subscription.getMessage().getSender().getLocalName().equals(incomingRequest.getSender().getLocalName())){
+				
+					if (subscription.getMessage().getConversationId().equals("subscription"+incomingRequest.getConversationId())){
 						subscription.notify(msgOut);
 					}
 				}	            	

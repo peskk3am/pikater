@@ -9,6 +9,7 @@ import org.jdom.JDOMException;
 import jade.core.Agent;
 import jade.core.AID;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.domain.FIPAAgentManagement.FailureException;
 import jade.lang.acl.ACLMessage;
 import jade.util.leap.ArrayList;
 import jade.util.leap.Iterator;
@@ -23,8 +24,12 @@ public class Agent_GUI_config_file extends Agent_GUI{
 	
 	
 	@Override
-	protected void displayOptions(Problem problem, String message) {
-		System.out.println("Agent :"+getName()+": Displaying the options ;) "+message);
+	protected void displayOptions(Problem problem, int performative) {
+		String msg = "Failed";
+		if (performative == ACLMessage.INFORM){ 
+			msg = "OK";
+		}
+		System.out.println("Agent :"+getName()+": Displaying the options ;) "+msg);
 	} //  end displayOptions
 
 	@Override
@@ -50,6 +55,8 @@ public class Agent_GUI_config_file extends Agent_GUI{
 	protected void mySetup() {
 		doWait(1000);
 		
+		System.out.println("Agent types: "+offerAgentTypes());
+		
 		configFileName = getConfigFileName();
 		try {
 			getProblemsFromXMLFile(configFileName);
@@ -69,7 +76,7 @@ public class Agent_GUI_config_file extends Agent_GUI{
         catch (IOException e) { 
           System.out.print("Could not check " + configFileName);
           System.out.println(" because " + e.getMessage());
-        } 
+        }
         
         // test:
         /* int newId = createNewProblem("1000");

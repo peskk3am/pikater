@@ -1,8 +1,12 @@
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.ListIterator;
+import java.util.Random;
 import java.util.Vector;
 
 
@@ -26,17 +30,24 @@ import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPANames;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.FailureException;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.proto.AchieveREInitiator;
+import jade.proto.AchieveREResponder;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.SubscriptionInitiator;
 import jade.util.leap.ArrayList;
 import jade.util.leap.Iterator;
 import jade.util.leap.List;
+import jade.wrapper.AgentController;
+import jade.wrapper.ControllerException;
+import jade.wrapper.PlatformController;
 
 
 public abstract class Agent_GUI extends Agent {	
+	
+	private String path = System.getProperty("user.dir")+System.getProperty("file.separator");
 	
 	private Codec codec = new SLCodec();
 	private Ontology ontology = MessagesOntology.getInstance();
@@ -46,6 +57,8 @@ public abstract class Agent_GUI extends Agent {
 	protected Vector<Problem> problems = new Vector<Problem>();
 		
 	private int problem_id = 0;
+	
+	private long timeout = 10000; 
 	
 	
 	/*
@@ -61,9 +74,11 @@ public abstract class Agent_GUI extends Agent {
 	protected abstract String getAgentType();
 		/* returns the string with agent type */
 	
-	protected abstract void displayOptions(Problem problem, String message);
+	protected abstract void displayOptions(Problem problem, int performative);
 		/* method should be used to display agent options,
-		 * it is called automatically after receiving the message from a computing agent */
+		 * it is called automatically after receiving the message from a computing agent
+		 * performative ... ACLMessage.getPerformative
+		 */
 	
 	protected abstract void displayResult(ACLMessage inform);
 		/* method should be used to display the result,
@@ -72,7 +87,12 @@ public abstract class Agent_GUI extends Agent {
 	protected abstract void mySetup();
 		/* it should call
 		 * ... int createNewProblem() - returns the _problem_id 
-		 * ... addAgentToProblem(int _problem_id, String name)
+		 * ... addAgentToProblem(int _problem_id, String name, String type)
+		 * 		- either name or type is set, the other parameter should be null
+		 * 		- throws FailureExeption, if the agent could not be found / created 
+		 * ... addAgentToProblemWekaStyle(int _problem_id, String agentName, String agentType, String [] agentParams)
+		 * 		- similar to addAgentToProblem, but it adds also agent options 
+		 * 		- throws FailureExeption, if the agent could not be found / created
 		 * ... addOptionToAgent(int _problem_id, String agent_name, String option_name, String option_value )
 		 * ... addFileToProblem(int _problem_id, String _fileName)
 		 * 
@@ -83,10 +103,12 @@ public abstract class Agent_GUI extends Agent {
 		/* automatically called after all replies from computing agents are received */
 	
 	protected abstract void displayPartialResult(ACLMessage inform);
-	/* Process the partial results received from computing agents 
-	 *  maybe only the content would be better as a parameter */ 
-	protected abstract void DisplayWrongOption(int problemGuiId, String agentName, String optionName, String errorMessage);
+		/* Process the partial results received from computing agents 
+		 *  maybe only the content would be better as a parameter */ 
 	
+	protected abstract void DisplayWrongOption(int problemGuiId, String agentName, String optionName, String errorMessage);
+		/* This method should handle missing value of the agent option */
+		 
 	
 	protected String[] getComputingAgents(){
 		// returns the array of all computing agents' local names
@@ -178,9 +200,8 @@ public abstract class Agent_GUI extends Agent {
 			                if (result.getValue() instanceof ontology.messages.Agent) {
 			                	
 			                	ontology.messages.Agent agent = (ontology.messages.Agent)result.getValue();
-			              
-			                	System.out.println("aaaaaaaaaaaaaaaa"+problems);
-			                	refreshOptions(agent, "OK");			                	
+			                	
+			                	refreshOptions(agent, inform.getPerformative());			                	
 			                	checkProblems();
 			                }
 				  		}
@@ -202,23 +223,31 @@ public abstract class Agent_GUI extends Agent {
 				agent.setName(refuse.getSender().getName());
 				
 				System.out.println(getLocalName()+": Agent "+refuse.getSender().getName()+" refused to perform the requested action");
-				refreshOptions(agent, "refuse");
+
+				refreshOptions(agent, refuse.getPerformative());
 				checkProblems();
 			}
 			
 			protected void handleFailure(ACLMessage failure) {
+				
+				String requestKey = (String)REQUEST_KEY;
+				ACLMessage request = (ACLMessage) getDataStore().get(requestKey);
+				Iterator receivers = request.getAllIntendedReceiver();
+				String agentName = ((AID)receivers.next()).getLocalName();
+				
 				ontology.messages.Agent agent = new ontology.messages.Agent();
-				agent.setName(failure.getSender().getName());
+				agent.setName(agentName);
 				
 				if (failure.getSender().equals(myAgent.getAMS())) {
 					// FAILURE notification from the JADE runtime: the receiver
 					// does not exist
-					System.out.println("Responder does not exist");
+					System.out.println("Responder "+agentName+" does not exist.");
 				}
 				else {
-					System.out.println("Agent "+failure.getSender().getName()+" failed to perform the requested action");
+					System.out.println("Agent "+agentName+" failed to perform the requested action");
 				}
-				refreshOptions(agent, "failure");
+				
+				refreshOptions(agent, failure.getPerformative());
 				checkProblems();
 
 			}
@@ -257,6 +286,7 @@ public abstract class Agent_GUI extends Agent {
 		// We want to receive a reply in 30 secs
 		msg.setReplyByDate(new Date(System.currentTimeMillis() + 30000));			
 		
+		msg.setConversationId(problem.getGui_id()+getLocalName());
 		// Prepare the content.			
 		Solve solve = new Solve();
 		solve.setProblem(problem);
@@ -317,14 +347,14 @@ public abstract class Agent_GUI extends Agent {
 		problem.setSent(true);
 		
 		
-		msg = new ACLMessage(ACLMessage.SUBSCRIBE);
-		msg.addReceiver(new AID("manager", AID.ISLOCALNAME));    // TODO find manager in yellow pages
-		msg.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
-	
-		msg.setLanguage(codec.getName());
-		msg.setOntology(ontology.getName());
+		ACLMessage subscrmsg = new ACLMessage(ACLMessage.SUBSCRIBE);
+		subscrmsg.addReceiver(new AID("manager", AID.ISLOCALNAME));    // TODO find manager in yellow pages
+		subscrmsg.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+		subscrmsg.setConversationId("subscription"+msg.getConversationId());
+		subscrmsg.setLanguage(codec.getName());
+		subscrmsg.setOntology(ontology.getName());
 		
-		SubscriptionInitiator receive_results = new SubscriptionInitiator(this, msg){
+		SubscriptionInitiator receive_results = new SubscriptionInitiator(this, subscrmsg){
 			// receive the sequence of replies
 			
 			protected void handleInform(ACLMessage inform) {
@@ -375,12 +405,12 @@ public abstract class Agent_GUI extends Agent {
 	}
 	
 	
-	protected void addAgentToProblemWekaStyle(int _problem_id, String [] agentParams){
-		String agentName = agentParams[0];
+	protected void addAgentToProblemWekaStyle(int _problem_id, String agentName, String agentType,
+			String [] agentParams) throws FailureException{
 		
-		addAgentToProblem(_problem_id, agentName);
+		addAgentToProblem(_problem_id, agentName, agentType);
 				
-    	for (int i=1; i < agentParams.length; i++){
+    	for (int i=0; i < agentParams.length; i++){
     		if (agentParams[i].charAt(0) == "-".charAt(0)){
     			String name = agentParams[i].replaceFirst("-", "");
     			// if the next array element is again an option name, 
@@ -399,12 +429,107 @@ public abstract class Agent_GUI extends Agent {
     				}
     			}
     			addOptionToAgent(_problem_id, agentName, name, value);	
-
     		}
     	}
 	}
 	
-	protected void addAgentToProblem(int _problem_id, String name){
+	protected String addAgentToProblem(int _problem_id, String name, String type) throws FailureException{		
+		AID aid = null;
+		long _timeout = timeout + System.currentTimeMillis();
+		if (type != null){
+			while (aid == null && System.currentTimeMillis() < _timeout){
+				// try until you find agent of the given type or you manage to create it
+				aid = getAgentByType(type);
+				if (aid == null){
+					// agent of given type doesn't exist
+					name = generateName(type);
+					aid = createAgent("Agent_"+type, name);
+					doWait(100);
+				}
+			}
+			if (aid == null){
+				throw new FailureException("Agent of the "+type+" type could not be found or created.");
+			}
+			name = aid.getLocalName();
+		}
+		
+		if (name != null){
+			// check if the agent exists
+			if (!exists(name)){
+				throw new FailureException("Agent "+name+" could not be found.");
+			}
+		}
+		
+		addAgent(_problem_id, name);
+
+		return name;
+	}
+
+	protected boolean exists(String name){
+		DFAgentDescription template = new DFAgentDescription();
+        ServiceDescription sd = new ServiceDescription();
+        sd.setName(name);
+        template.addServices(sd);
+        try {
+        	DFAgentDescription[] result = DFService.search(this, template);
+        	if (result.length > 0){
+        		return true;
+        	}          
+        }
+        catch (FIPAException fe) {
+          fe.printStackTrace();
+        }
+        return false;
+	}
+	
+	protected void removeAgentFromAllProblems(String name){
+
+		for (Enumeration pe = problems.elements() ; pe.hasMoreElements() ;) {
+			Problem next_problem = (Problem)pe.nextElement();
+			if (!next_problem.getSent()){
+				// find the given agent
+				Iterator itr = next_problem.getAgents().iterator();	 		   		 
+	   		 	while (itr.hasNext()) {
+	   		 		ontology.messages.Agent next_agent = (ontology.messages.Agent) itr.next();
+	   		 		if (next_agent.getName().equals(name)){
+	   		 			next_problem.getAgents().remove(next_agent);
+	   		 		}
+	   		 	}
+			}
+		}		
+	}
+	
+	private String generateName(String agentType){
+		int number = 0;
+		String name = agentType + number;
+		boolean success = false;
+		while (!success){
+			// try to find an agent with "name"
+			DFAgentDescription template = new DFAgentDescription();
+	        ServiceDescription sd = new ServiceDescription();
+	        sd.setName(name);
+	        template.addServices(sd);
+	        try {
+	        	DFAgentDescription[] result = DFService.search(this, template);
+	        	// if the agent with this name already exists, increase number
+	        	if (result.length > 0){
+	        		number++;
+	        		name = agentType + number;
+	        	}          
+	        	else {
+	        		success = true;
+	        		return name;
+	        	}
+	        }
+	        catch (FIPAException fe) {
+	          fe.printStackTrace();
+	        }
+		}
+		return null;		
+	}
+		
+	private void addAgent(int _problem_id, String name){
+			
 		for (Enumeration pe = problems.elements() ; pe.hasMoreElements() ;) {
 			Problem next_problem = (Problem)pe.nextElement();
 			if (!next_problem.getSent()){
@@ -473,7 +598,6 @@ public abstract class Agent_GUI extends Agent {
 		}
 	}
 	
-
 	private void checkProblems(){
 		for (Enumeration pe = problems.elements() ; pe.hasMoreElements() ;) {
 			Problem next_problem = (Problem)pe.nextElement();
@@ -497,20 +621,21 @@ public abstract class Agent_GUI extends Agent {
 		}
 	}
 	
-	private void refreshOptions(ontology.messages.Agent agent, String message) {
+	private void refreshOptions(ontology.messages.Agent agent, int performative) {
 		// refresh options in all problems, where the agent is involved
+
 		for (Enumeration pe = problems.elements() ; pe.hasMoreElements() ;) {	
 			Problem next_problem = (Problem)pe.nextElement();
 			if (!next_problem.getSent()){
-				Iterator aitr = next_problem.getAgents().iterator();	 		   		 
-	   		 	while (aitr.hasNext()) {
-	   		 		ontology.messages.Agent next_agent = (ontology.messages.Agent) aitr.next(); 		 	
-					
-	   		 		// all problems where the agent (input parameter) figures
-	   		 		if ( next_agent.getName().equals(agent.getName()) ){
+				if (performative == ACLMessage.INFORM) { 			
+
+					Iterator aitr = next_problem.getAgents().iterator();	 		   		 
+		   		 	while (aitr.hasNext()) {
+		   		 		ontology.messages.Agent next_agent = (ontology.messages.Agent) aitr.next(); 		 	
 						
-	   		 			if (message.equals("OK")) { 			
-		   		 			
+		   		 		// all problems where the agent (input parameter) figures
+		   		 		if ( next_agent.getName().equals(agent.getName()) ){
+							
 							// update the options (merge them)
 		   		 			
 							// copy agent's options
@@ -529,7 +654,8 @@ public abstract class Agent_GUI extends Agent {
 					   		 	ListIterator ocaitr = mergedOptions.listIterator();	 		   		 
 					   		 	while (ocaitr.hasNext()) {
 					   		 		Option next_merged_option = (Option) ocaitr.next();
-					   		 		if (next_problem_option.getName().equals(next_merged_option.getName())) {
+					   		 		if (next_problem_option.getName().equals(next_merged_option.getName())
+					   		 				&& next_problem_option.getValue() != null ) {
 					   		 			// copy all the parameters (problem -> merged)
 					   		 			if (next_problem_option.getMutable()){
 					   		 				next_merged_option.setMutable(true);
@@ -537,7 +663,8 @@ public abstract class Agent_GUI extends Agent {
 					   		 			// check the value
 					   		 			if (!next_merged_option.getData_type().equals("BOOLEAN")
 					   		 					&& next_problem_option.getValue().equals("True")){
-					   		 				DisplayWrongOption(Integer.parseInt(next_problem.getGui_id()), next_agent.getName(), next_problem_option.getName(),
+					   		 				DisplayWrongOption(Integer.parseInt(next_problem.getGui_id()),
+					   		 						next_agent.getName(), next_problem_option.getName(),
 					   		 						next_problem_option.getName()+ " is not a BOOLEAN type option.");
 					   		 			}
 					   		 			else{
@@ -548,25 +675,104 @@ public abstract class Agent_GUI extends Agent {
 					   		 			ocaitr.set(next_merged_option);
 					   		 		}
 					   		 	}
-				   		 	}
+				   		 	}  // end while - iterate over options
 				   		 	// create jade.util.leap.ArrayList again
 	   		 				ArrayList mergedOptionsArrayList = new ArrayList();
 	   		 				mergedOptionsArrayList.fromList(mergedOptions);
 				   		 	next_agent.setOptions(mergedOptionsArrayList);
-	   		 			}
-	   		 			else{
-	   		 				// TODO remove the agent from the problem and let the use know
-	   		 			}
-	   		 		}
-				}
-	   	 		// display the options for a selected problem
-	   		 	displayOptions(next_problem, message);
-			}
-		}	
+		   		 		} // end if
+		   		 	}  // end while - iterate over agents
+				}  // end if performative = inform
 
+	 			else{
+	 				// TODO remove the agent from the problem and let the user know
+	 				removeAgentFromAllProblems(agent.getName());
+	 			}
+				// display the options for a selected problem
+	   		 	displayOptions(next_problem, performative);
+			}  // end if ! sent
+		}	
 	} //  end refreshOptions
 	
+	protected Vector<String> offerAgentTypes(){
+		// read agent types from file
+		 	
+			Vector<String> AgentTypes = new Vector<String>();
+			
+			//  Sets up a file reader to read the agent_types file 
+			FileReader input;
+			try {
+				input = new FileReader(path+"agent_types");
+	            // Filter FileReader through a Buffered read to read a line at a time
+	            BufferedReader bufRead = new BufferedReader(input);
+	            String line = bufRead.readLine();
+	         
+	            // Read through file one line at time
+	            while (line != null){
+	            	AgentTypes.add(line);
+	                line = bufRead.readLine();
+	            }
+	            
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+            return AgentTypes;            
+	}
 	
+	protected AID createAgent(String type, String name){
+		// get a container controller for creating new agents
+		PlatformController container = getContainerController();
+		
+		try{	
+			AgentController agent = container.createNewAgent(name, type, new Object[0]);
+			agent.start();
+			return new AID((String) name, AID.ISLOCALNAME);
+		}
+		catch (ControllerException e) {
+	        // System.err.println( "Exception while adding agent: " + e );
+	        // e.printStackTrace();
+	        return null;
+	    }	
+	}
+	
+	protected AID getAgentByType(String agentType){
+		 AID[] Agents;
+		 
+		 // Make the list of agents of given type
+		 DFAgentDescription template = new DFAgentDescription();
+         ServiceDescription sd = new ServiceDescription();
+         sd.setType(agentType);
+         template.addServices(sd);
+         try {
+         	DFAgentDescription[] result = DFService.search(this, template); 
+         	System.out.println("Found the following "+agentType+" agents:");
+         	Agents = new AID[result.length];
+           
+           for (int i = 0; i < result.length; ++i) {
+        	   Agents[i] = result[i].getName();
+	          	System.out.println(Agents[i].getName());
+           }
+
+           if (Agents.length > 0){
+               // choose one
+               Random generator = new Random();
+        	   int rnd = generator.nextInt(Agents.length);
+	           return Agents[rnd];
+           }
+           else {
+        	   return null;
+           }
+         }
+         catch (FIPAException fe) {
+             fe.printStackTrace();
+             return null;
+         }
+	}
 	
 	protected void setup(){
 		getContentManager().registerLanguage(codec);
@@ -650,8 +856,15 @@ public abstract class Agent_GUI extends Agent {
 	        	   Element next_agent = (Element) a_itr.next();
 	        	   
 	        	   String agent_name = next_agent.getAttributeValue("name");
-	        	   addAgentToProblem(p_id, agent_name);
-	        	   
+	           	   String agent_type = next_agent.getAttributeValue("type");
+	           	   try {
+	           		   agent_name = addAgentToProblem(p_id, agent_name, agent_type);
+	           	   } catch (FailureException e) {
+	           		   System.err.println(e.getLocalizedMessage());
+	           		   // e.printStackTrace();
+	           	   } 
+
+	 
 	        	   java.util.List _options = next_agent.getChildren("parameter");
 		           java.util.Iterator o_itr = _options.iterator();	 
 		           while (o_itr.hasNext()) {
