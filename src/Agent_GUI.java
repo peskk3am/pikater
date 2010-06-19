@@ -428,7 +428,7 @@ public abstract class Agent_GUI extends Agent {
     					value = agentParams[i+1];    				
     				}
     			}
-    			addOptionToAgent(_problem_id, agentName, name, value);	
+    			addOptionToAgent(_problem_id, agentName, name, value, null, null);	
     		}
     	}
 	}
@@ -545,7 +545,8 @@ public abstract class Agent_GUI extends Agent {
 		}
 	}
 	
-	protected void addOptionToAgent(int _problem_id, String agent_name, String option_name, String option_value ){
+	protected void addOptionToAgent(int _problem_id, String agent_name, String option_name,
+			String option_value, String lower, String upper){
 		// TODO add interval ... 
 		for (Enumeration pe = problems.elements() ; pe.hasMoreElements() ;) {
 			Problem next_problem = (Problem)pe.nextElement();
@@ -566,6 +567,10 @@ public abstract class Agent_GUI extends Agent {
 		   		 		
 			   		 		if (option_value.equals("?")){
 		   		 				option.setMutable(true);
+		   		 				Interval interval = new Interval();
+		   		 				interval.setMin(Float.valueOf(lower));
+		   		 				interval.setMax(Float.valueOf(upper));
+		   		 				option.setRange(interval);
 			   		 		}	   		 				
 		   		 		
 			   		 		option.setValue(option_value);
@@ -659,6 +664,12 @@ public abstract class Agent_GUI extends Agent {
 					   		 			// copy all the parameters (problem -> merged)
 					   		 			if (next_problem_option.getMutable()){
 					   		 				next_merged_option.setMutable(true);
+					   		 				if (next_merged_option.getRange().getMin() != null){
+					   		 					next_merged_option.getRange().setMin(next_problem_option.getRange().getMin());
+					   		 				}
+					   		 				if (next_merged_option.getRange().getMax() != null){
+					   		 					next_merged_option.getRange().setMax(next_problem_option.getRange().getMax());
+					   		 				}
 					   		 			}
 					   		 			// check the value
 					   		 			if (!next_merged_option.getData_type().equals("BOOLEAN")
@@ -869,7 +880,9 @@ public abstract class Agent_GUI extends Agent {
 		           java.util.Iterator o_itr = _options.iterator();	 
 		           while (o_itr.hasNext()) {
 		        	   Element next_option = (Element) o_itr.next();
-		        	   addOptionToAgent(p_id,  agent_name, next_option.getAttributeValue("name"), next_option.getAttributeValue("value") );
+		        	   addOptionToAgent(p_id,  agent_name, next_option.getAttributeValue("name"),
+		        			   next_option.getAttributeValue("value"),
+		        			   next_option.getAttributeValue("lower"), next_option.getAttributeValue("upper"));
 		           }
 	           }
 		}

@@ -2,7 +2,10 @@
     <experiment timeout="10000">
         <dataset train="iris.arff" test="iris.arff" />
         <agent name="rbf1">
-            <parameter name="B" value="?" />
+            <parameter name="B" value="?" lower="3" upper="5"/>
+        </agent>
+        <agent type="MultilayerPerceptron">
+            <parameter name="L" value="0.5" />
         </agent>
     </experiment>
 </experiments>
