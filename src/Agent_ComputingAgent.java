@@ -263,6 +263,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 			           opt.setDescription(next.description);
 			           opt.setName(next.name);
 			           opt.setSynopsis(next.synopsis);
+			           opt.setValue(next.default_value);
 			           _options.add(opt);
 			       }
 				   agent.setOptions(_options);

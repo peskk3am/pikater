@@ -9,6 +9,7 @@ import org.jdom.JDOMException;
 import jade.core.Agent;
 import jade.core.AID;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.domain.FIPAAgentManagement.FailureException;
 import jade.lang.acl.ACLMessage;
 import jade.util.leap.ArrayList;
 import jade.util.leap.Iterator;
@@ -23,15 +24,23 @@ public class Agent_GUI_config_file extends Agent_GUI{
 	
 	
 	@Override
-	protected void displayOptions(Problem problem, String message) {
-		System.out.println("Agent :"+getName()+": Displaying the options ;) "+message);
+	protected void displayOptions(Problem problem, int performative) {
+		String msg = "Failed";
+		if (performative == ACLMessage.INFORM){ 
+			msg = "OK";
+		}
+		System.out.println("Agent :"+getName()+": Displaying the options ;) "+msg);
 	} //  end displayOptions
 
 	@Override
 	protected void displayResult(ACLMessage inform) {
 		System.out.println("Agent :"+getName()+": Displaying the results ;)");
 	}
-
+	@Override
+	protected void DisplayWrongOption(int problemGuiId, String agentName, String optionName, String errorMessage){
+		System.out.println("Agent :"+getName()+" "+problemGuiId+" "+agentName+" "+optionName+" "+errorMessage);
+	}
+	
 	@Override
 	protected void allOptionsReceived(int problem_id) {
 		sendProblem(problem_id);
@@ -45,6 +54,8 @@ public class Agent_GUI_config_file extends Agent_GUI{
 	@Override
 	protected void mySetup() {
 		doWait(1000);
+		
+		System.out.println("Agent types: "+offerAgentTypes());
 		
 		configFileName = getConfigFileName();
 		try {
@@ -65,10 +76,15 @@ public class Agent_GUI_config_file extends Agent_GUI{
         catch (IOException e) { 
           System.out.print("Could not check " + configFileName);
           System.out.println(" because " + e.getMessage());
-        } 
-		
-        // getProblemFromFile("config");
-
+        }
+        
+        // test:
+        /* int newId = createNewProblem("1000");
+        addAgentToProblemWekaStyle(newId, "mp1 -L -D -M ?".split(" "));
+        addDatasetToProblem(newId, "iris.arff", "iris.arff");
+ 		getAgentOptions("mp1"); // --->>  prazdny request + vyzkouset ted vic problemu za sebou z xml
+        */
+	
 		
 	}	// end mySetup
 

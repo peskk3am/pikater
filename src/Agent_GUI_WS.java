@@ -122,12 +122,16 @@ public class Agent_GUI_WS extends Agent_GUI {
 						
 						it = sp.getAgentDescriptions().iterator();
 						
-						while (it.hasNext()) {
-							String[] params =  ((String)it.next()).split("[ ]+");
-							addAgentToProblemWekaStyle(problemID, params);
-							getAgentOptions(params[0]);
+						try {
+							while (it.hasNext()) {
+								String[] params =  ((String)it.next()).split("[ ]+");
+								addAgentToProblemWekaStyle(problemID, params[0], null, params);
+								getAgentOptions(params[0]);
+							}
 						}
-						
+						catch (FailureException e) {
+							e.printStackTrace();
+						}
 						
 						ACLMessage response = request.createReply();
 						response.setPerformative(ACLMessage.INFORM);
@@ -286,7 +290,14 @@ public class Agent_GUI_WS extends Agent_GUI {
 	}
 
 	@Override
-	protected void displayOptions(Problem problem, String message) {
+	protected void DisplayWrongOption(int problemGuiId, String agentName,
+			String optionName, String errorMessage) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void displayOptions(Problem problem, int performative) {
 		// TODO Auto-generated method stub
 		
 	}
