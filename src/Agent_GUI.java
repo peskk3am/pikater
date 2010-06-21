@@ -567,11 +567,14 @@ public abstract class Agent_GUI extends Agent {
 		   		 		
 			   		 		if (option_value.equals("?")){
 		   		 				option.setMutable(true);
-		   		 				Interval interval = new Interval();
-		   		 				interval.setMin(Float.valueOf(lower));
-		   		 				interval.setMax(Float.valueOf(upper));
-		   		 				option.setRange(interval);
-			   		 		}	   		 				
+		   		 				
+		   		 				if (lower != null && upper != null){
+		   		 					Interval interval = new Interval();
+		   		 					interval.setMin(Float.valueOf(lower));
+		   		 					interval.setMax(Float.valueOf(upper));
+		   		 					option.setRange(interval);
+		   		 				}
+		   		 			}	   		 				
 		   		 		
 			   		 		option.setValue(option_value);
 			   		 	
@@ -664,10 +667,8 @@ public abstract class Agent_GUI extends Agent {
 					   		 			// copy all the parameters (problem -> merged)
 					   		 			if (next_problem_option.getMutable()){
 					   		 				next_merged_option.setMutable(true);
-					   		 				if (next_merged_option.getRange().getMin() != null){
+					   		 				if (next_problem_option.getRange() != null){
 					   		 					next_merged_option.getRange().setMin(next_problem_option.getRange().getMin());
-					   		 				}
-					   		 				if (next_merged_option.getRange().getMax() != null){
 					   		 					next_merged_option.getRange().setMax(next_problem_option.getRange().getMax());
 					   		 				}
 					   		 			}

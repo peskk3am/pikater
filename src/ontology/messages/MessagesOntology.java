@@ -49,6 +49,7 @@ public class MessagesOntology extends Ontology {
 	  
 	  public static final String RESULTS = "RESULTS";
 	  public static final String RESULTS_COMPUTATION_ID = "computation_id";
+	  public static final String RESULTS_AVG_ERROR_RATE = "avg_error_rate";
 	  public static final String RESULTS_PROBLEM_ID = "problem_id";
 	  public static final String RESULTS_RESULTS = "results";
 	  
@@ -183,6 +184,7 @@ public class MessagesOntology extends Ontology {
 	    	cs = (ConceptSchema)getSchema(RESULTS);
 	    	cs.add(RESULTS_COMPUTATION_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 	    	cs.add(RESULTS_PROBLEM_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	cs.add(RESULTS_AVG_ERROR_RATE, (PrimitiveSchema)getSchema(BasicOntology.FLOAT));
 	    	cs.add(RESULTS_RESULTS, (ConceptSchema)getSchema(TASK), 0, ObjectSchema.UNLIMITED);
 
 	    	cs = (ConceptSchema)getSchema(AGENT);
