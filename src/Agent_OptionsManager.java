@@ -51,6 +51,7 @@ public abstract class Agent_OptionsManager extends Agent {
 	 	 private String problem_id;
 	 	 
 	 	 protected float error_rate = (float) 0.3; 
+	 	 protected int maximum_tries = 10;
 	 	 
 	 	 private int task_i = 0; // task number
 
@@ -99,6 +100,7 @@ public abstract class Agent_OptionsManager extends Agent {
 					  	receiver = computation.getAgent().getName();
 					  	computation_id = computation.getId();
 					  	error_rate = computation.getMethod().getError_rate();
+					  	maximum_tries = computation.getMethod().getMaximum_tries();
 					  	problem_id = computation.getProblem_id();
 					  	if (timeout < 0){
 					  		timeout = System.currentTimeMillis() + computation.getTimeout();

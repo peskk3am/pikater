@@ -48,6 +48,7 @@ public class MessagesOntology extends Ontology {
 	  public static final String METHOD = "METHOD";
 	  public static final String METHOD_NAME = "name";
 	  public static final String METHOD_ERROR_RATE = "error_rate";
+	  public static final String METHOD_MAXIMUM_TRIES = "maximum_tries";
 
 	  public static final String EVALUATION = "EVALUATION";
 	  public static final String EVALUATION_ERROR_RATE = "error_rate";
@@ -160,6 +161,7 @@ public class MessagesOntology extends Ontology {
 			cs = (ConceptSchema)getSchema(METHOD);
 			cs.add(METHOD_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 			cs.add(METHOD_ERROR_RATE, (PrimitiveSchema)getSchema(BasicOntology.FLOAT), ObjectSchema.OPTIONAL);
+			cs.add(METHOD_MAXIMUM_TRIES, (PrimitiveSchema)getSchema(BasicOntology.INTEGER), ObjectSchema.OPTIONAL);
 			
 			cs = (ConceptSchema)getSchema(TASK);
 			cs.add(TASK_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
