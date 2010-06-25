@@ -382,6 +382,7 @@ public class Agent_Manager extends Agent{
 	    	        	   computation.setProblem_id(problemId);
 	    	        	   computation.setId(problemId+"_"+computation_i);
 	    	        	   computation.setTimeout(problem.getTimeout());
+	    	        	   computation.setMethod(problem.getMethod());
 	    	        	   computation_i++;
 	    	        	   
 	    	        	   msgVector.add( Compute(computation) );
@@ -414,11 +415,14 @@ public class Agent_Manager extends Agent{
 		PlatformController container = getContainerController(); // get a container controller for creating new agents
 		
 		try{	
-			AgentController agent = container.createNewAgent(option_manager_name, "Agent_Random", new String[0] );
+			// AgentController agent = container.createNewAgent(option_manager_name, "Agent_Random", new String[0] );
+			AgentController agent = container.createNewAgent(
+					option_manager_name, "Agent_"+computation.getMethod().getName(), new String[0] );
 			agent.start();
 		}
 		catch (Exception e) {
 	        System.err.println( "Exception while adding agent"+computation.getId()+": " + e );
+	        // TODO send it to GUI agent
 	        e.printStackTrace();
 	    }
 	

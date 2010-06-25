@@ -50,6 +50,8 @@ public abstract class Agent_OptionsManager extends Agent {
 	 	 private String computation_id;
 	 	 private String problem_id;
 	 	 
+	 	 protected float error_rate = (float) 0.3; 
+	 	 
 	 	 private int task_i = 0; // task number
 
 	 	 private long timeout = -1; 
@@ -90,15 +92,16 @@ public abstract class Agent_OptionsManager extends Agent {
 				try {
 			  		ContentElement content = getContentManager().extractContent(incomingRequest);
 			  		if (((Action)content).getAction() instanceof Compute){
-	                    Compute compute = (Compute) ((Action)content).getAction();
-	                    Options = compute.getComputation().getAgent().getOptions();
-					  	trainFileName = compute.getComputation().getData().getTrain_file_name();
-					  	testFileName = compute.getComputation().getData().getTest_file_name();
-					  	receiver = compute.getComputation().getAgent().getName();
-					  	computation_id = compute.getComputation().getId();
-					  	problem_id = compute.getComputation().getProblem_id();
+	                    Computation computation = (Computation)((Compute) ((Action)content).getAction()).getComputation();
+	                    Options = computation.getAgent().getOptions();
+					  	trainFileName = computation.getData().getTrain_file_name();
+					  	testFileName = computation.getData().getTest_file_name();
+					  	receiver = computation.getAgent().getName();
+					  	computation_id = computation.getId();
+					  	error_rate = computation.getMethod().getError_rate();
+					  	problem_id = computation.getProblem_id();
 					  	if (timeout < 0){
-					  		timeout = System.currentTimeMillis() + compute.getComputation().getTimeout();
+					  		timeout = System.currentTimeMillis() + computation.getTimeout();
 					  	}
 			  		}
 					

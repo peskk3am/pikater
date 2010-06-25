@@ -33,7 +33,7 @@ public class Agent_Random extends Agent_OptionsManager {
 	 
 	 protected boolean finished(){
 		 if (result != null) {
-			 if (result.errorRate < 0.3 ){
+			 if (result.errorRate < error_rate ){
 				 return true;
 			 }
 		 }

@@ -34,6 +34,7 @@ public class MessagesOntology extends Ontology {
 	  public static final String COMPUTATION_AGENT = "agent";
 	  public static final String COMPUTATION_DATA = "data";
 	  public static final String COMPUTATION_TIMEOUT = "timeout";
+	  public static final String COMPUTATION_METHOD = "method";
 	  
 	  public static final String PROBLEM = "PROBLEM";
 	  public static final String PROBLEM_ID = "id";
@@ -42,6 +43,11 @@ public class MessagesOntology extends Ontology {
 	  public static final String PROBLEM_AGENTS = "agents";
 	  public static final String PROBLEM_DATA = "data";
 	  public static final String PROBLEM_TIMEOUT = "timeout";
+	  public static final String PROBLEM_METHOD = "method";
+
+	  public static final String METHOD = "METHOD";
+	  public static final String METHOD_NAME = "name";
+	  public static final String METHOD_ERROR_RATE = "error_rate";
 
 	  public static final String EVALUATION = "EVALUATION";
 	  public static final String EVALUATION_ERROR_RATE = "error_rate";
@@ -64,7 +70,7 @@ public class MessagesOntology extends Ontology {
 	  public static final String OPTION_WEKA_NAME = "name";
 	  public static final String OPTION_WEKA_SYNOPSIS = "synopsis";
 	  public static final String OPTION_VALUE = "value";
-	  
+	  public static final String OPTION_NUMBER_OF_VALUES_TO_TRY = "number_of_values_to_try";
 
 	  public static final String AGENT = "AGENT";
 	  public static final String AGENT_NAME = "name";
@@ -122,6 +128,7 @@ public class MessagesOntology extends Ontology {
 			add(new ConceptSchema(INTERVAL), Interval.class);
 			add(new ConceptSchema(AGENT), Agent.class);
 			add(new ConceptSchema(PROBLEM), Problem.class);
+			add(new ConceptSchema(METHOD), Method.class);
 			add(new ConceptSchema(EVALUATION), Evaluation.class);
 			add(new ConceptSchema(RESULTS), Results.class);
 			
@@ -139,6 +146,7 @@ public class MessagesOntology extends Ontology {
 			cs.add(COMPUTATION_AGENT, (ConceptSchema)getSchema(AGENT));
 			cs.add(COMPUTATION_DATA, (ConceptSchema)getSchema(DATA));
 			cs.add(COMPUTATION_TIMEOUT, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));
+			cs.add(COMPUTATION_METHOD, (ConceptSchema)getSchema(METHOD));
 			
 			cs = (ConceptSchema)getSchema(PROBLEM);
 			cs.add(PROBLEM_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
@@ -147,7 +155,12 @@ public class MessagesOntology extends Ontology {
 			cs.add(PROBLEM_AGENTS, (ConceptSchema)getSchema(AGENT), 1, ObjectSchema.UNLIMITED);
 	    	cs.add(PROBLEM_DATA, (ConceptSchema)getSchema(DATA), 1, ObjectSchema.UNLIMITED);
 			cs.add(PROBLEM_TIMEOUT, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));
+			cs.add(PROBLEM_METHOD, (ConceptSchema)getSchema(METHOD));
 
+			cs = (ConceptSchema)getSchema(METHOD);
+			cs.add(METHOD_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+			cs.add(METHOD_ERROR_RATE, (PrimitiveSchema)getSchema(BasicOntology.FLOAT), ObjectSchema.OPTIONAL);
+			
 			cs = (ConceptSchema)getSchema(TASK);
 			cs.add(TASK_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 	    	cs.add(TASK_COMPUTATION_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
@@ -176,7 +189,8 @@ public class MessagesOntology extends Ontology {
 	    	cs.add(OPTION_WEKA_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 	    	cs.add(OPTION_WEKA_SYNOPSIS, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 	    	cs.add(OPTION_VALUE, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
-	    	
+	    	cs.add(OPTION_NUMBER_OF_VALUES_TO_TRY, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));
+  	
 	    	cs = (ConceptSchema)getSchema(EVALUATION);
 	    	cs.add(EVALUATION_ERROR_RATE, (PrimitiveSchema)getSchema(BasicOntology.FLOAT));
 	    	cs.add(EVALUATION_PCT_INCORRECT, (PrimitiveSchema)getSchema(BasicOntology.FLOAT));

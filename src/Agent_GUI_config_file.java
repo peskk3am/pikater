@@ -53,6 +53,8 @@ public class Agent_GUI_config_file extends Agent_GUI{
 
 	@Override
 	protected void mySetup() {
+		setDefault_number_of_values_to_try(4);
+		
 		doWait(1000);
 		
 		System.out.println("Agent types: "+offerAgentTypes());
@@ -60,7 +62,7 @@ public class Agent_GUI_config_file extends Agent_GUI{
 		configFileName = getConfigFileName();
 		try {
 			getProblemsFromXMLFile(configFileName);
-		    for (Enumeration e = problems.elements() ; e.hasMoreElements() ;) {
+		  /*  for (Enumeration e = problems.elements() ; e.hasMoreElements() ;) {
 			       Problem next_problem = (Problem)e.nextElement();
 			       Iterator itr = next_problem.getAgents().iterator();	 		   		 
 		   		 	while (itr.hasNext()) {
@@ -68,6 +70,7 @@ public class Agent_GUI_config_file extends Agent_GUI{
 		   		 		getAgentOptions(next_agent.getName());
 		   		 	}
 		    }
+		    */
 		}
 		// indicates a well-formedness error
         catch (JDOMException e) { 
@@ -78,11 +81,17 @@ public class Agent_GUI_config_file extends Agent_GUI{
           System.out.println(" because " + e.getMessage());
         }
         
+        /*
         // test:
-        /* int newId = createNewProblem("1000");
-        addAgentToProblemWekaStyle(newId, "mp1 -L -D -M ?".split(" "));
-        addDatasetToProblem(newId, "iris.arff", "iris.arff");
- 		getAgentOptions("mp1"); // --->>  prazdny request + vyzkouset ted vic problemu za sebou z xml
+        int newId = createNewProblem("1000");
+        try {
+			addAgentToProblemWekaStyle(newId, "mp1", null, "-L -D -M ?".split(" "));
+		} catch (FailureException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+         addDatasetToProblem(newId, "iris.arff", "iris.arff");
+ 		// getAgentOptions("mp1"); 
         */
 	
 		

@@ -9,9 +9,6 @@ import ontology.messages.Problem;
 
 
 public class Agent_ChooseXValues extends Agent_OptionsManager {
-	private int _x = 0;
-	private int x = 4;
-	
 	private int n = Integer.MAX_VALUE;
 	private int ni = 0;
 	
@@ -38,10 +35,11 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
     	Random generator = new Random();
     	String optionName = " -"+next.getName()+" ";
     	// choose random number of arguments
-    	int numArgs = (int)(next.getNumber_of_args().getMin()+generator.nextInt((int)(next.getNumber_of_args().getMax()-next.getNumber_of_args().getMin()+1)));
+    	int numArgs = (int)(next.getNumber_of_args().getMin()+generator.nextInt((int)(next.getNumber_of_args().getMax()
+    			-next.getNumber_of_args().getMin()+1)));
 	    if (!next.getIs_a_set()){	    		   
 		   if(next.getData_type().equals("INT")){
-
+			    int x = next.getNumber_of_values_to_try();
 	   			int range = (int)(next.getRange().getMax() - next.getRange().getMin() + 1);
 	   			// if there is less possibilities than x -> change x
 	   			if (range < x){
@@ -57,23 +55,16 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
 		   			int vInt = (int) (next.getRange().getMin() + i * range / x );
 		   			si += Integer.toString(vInt);
 		   			 
-		   			// str += (optionName+si);
-		   			// System.out.println(x+" "+ (next.getRange().getMin() + i * range / x)+" i: "+i
-		   			// 		+" min: "+next.getRange().getMin()+"max: "+next.getRange().getMax() );
-		   			//next.setValue(si);
 		   			a[i] = optionName+si;
 	   			}
 	   			return a;
 		   }	
 		   if(next.getData_type().equals("FLOAT")){
-
+			    int x = next.getNumber_of_values_to_try();
 	   			float dv = (next.getRange().getMax() - next.getRange().getMin()) / (x-1);
 	   			String[] a = new String[x];
 	   			
 	   			for (int i=0; i<x; i++){
-	   				// chci 0, 1.5, 3
-	   				// i = 0, 1, 2
-	   				// x = 3
 		   			String sf = "";
 		   			for (int j=1; j<numArgs; j++){
 		   				float vFloat = next.getRange().getMin() + i * dv ;
@@ -81,8 +72,7 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
 		   			}
 	   				float vFloat = next.getRange().getMin() + i * dv ;
 		   			sf += Float.toString(vFloat);
-		   			// str += (optionName+sf);
-		   			// next.setValue(sf);
+
 		   			a[i] = optionName+sf;
 		   		}
 	   			return a;
@@ -156,19 +146,5 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
 			       String next_option = (String)e.nextElement();      
 			       System.out.println("--"+next_option);
 			}
-
 	 }
-	
-/*	protected String generateNewOptions(MyWekaEvaluation result) {
-		System.out.println("-----------------------------------");
-		
-		String[][] possible_options_array = { {"1", "2"}, {"a", "b", "c"}, {"True", "False"}};
-		
-		System.out.println(generate("", possible_options_array));
-		System.out.println("-----------------------------------");
-		
-		return "";
-		
-	}
-	*/
 }

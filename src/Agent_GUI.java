@@ -60,6 +60,8 @@ public abstract class Agent_GUI extends Agent {
 	
 	private long timeout = 10000; 
 	
+	private int default_number_of_values_to_try = 10;
+	private float default_error_rate = (float) 0.3;
 	
 	/*
 	 * 	should use the following methods:
@@ -95,6 +97,7 @@ public abstract class Agent_GUI extends Agent {
 		 * 		- throws FailureExeption, if the agent could not be found / created
 		 * ... addOptionToAgent(int _problem_id, String agent_name, String option_name, String option_value )
 		 * ... addFileToProblem(int _problem_id, String _fileName)
+		 * ... addMethodToProblem(int problem_id, String name, String errorRate) - name...{ChooseXValue, Random}
 		 * 
 		 * ... getAgentOptions(String agentName) to receive the options from each computing agent 
 		 * */
@@ -109,6 +112,13 @@ public abstract class Agent_GUI extends Agent {
 	protected abstract void DisplayWrongOption(int problemGuiId, String agentName, String optionName, String errorMessage);
 		/* This method should handle missing value of the agent option */
 		 
+	
+	protected void setDefault_number_of_values_to_try(int number){
+		/* default_number_of_values_to_try - when ChooseXValues method is selected;
+		 *  should be set in GUI agent setup */
+		default_number_of_values_to_try = number;
+	}
+	
 	
 	protected String[] getComputingAgents(){
 		// returns the array of all computing agents' local names
@@ -395,6 +405,11 @@ public abstract class Agent_GUI extends Agent {
 			_timeout = Integer.parseInt(timeout);
 		}
 		
+		Method method = new Method();
+		method.setName("Random");
+		method.setError_rate(default_error_rate);
+		problem.setMethod(method);
+		
 		problem.setTimeout(_timeout);
 		problem.setAgents(new ArrayList());
 		problem.setData(new ArrayList());
@@ -428,7 +443,7 @@ public abstract class Agent_GUI extends Agent {
     					value = agentParams[i+1];    				
     				}
     			}
-    			addOptionToAgent(_problem_id, agentName, name, value, null, null);	
+    			addOptionToAgent(_problem_id, agentName, name, value, null, null, null);	
     		}
     	}
 	}
@@ -461,7 +476,8 @@ public abstract class Agent_GUI extends Agent {
 		}
 		
 		addAgent(_problem_id, name);
-
+		getAgentOptions(name);
+		
 		return name;
 	}
 
@@ -546,7 +562,7 @@ public abstract class Agent_GUI extends Agent {
 	}
 	
 	protected void addOptionToAgent(int _problem_id, String agent_name, String option_name,
-			String option_value, String lower, String upper){
+			String option_value, String lower, String upper, String number_of_values_to_try){
 		// TODO add interval ... 
 		for (Enumeration pe = problems.elements() ; pe.hasMoreElements() ;) {
 			Problem next_problem = (Problem)pe.nextElement();
@@ -577,7 +593,16 @@ public abstract class Agent_GUI extends Agent {
 		   		 			}	   		 				
 		   		 		
 			   		 		option.setValue(option_value);
-			   		 	
+			   		 		
+			   		 		if (next_problem.getMethod().getName().equals("ChooseXValues")){
+			   		 			if (number_of_values_to_try == null){
+			   		 				option.setNumber_of_values_to_try(default_number_of_values_to_try);
+			   		 			}
+			   		 			else{
+			   		 				option.setNumber_of_values_to_try(Integer.parseInt(number_of_values_to_try));
+			   		 			}
+			   		 		}
+			   		 		
 		   		 			List options = next_agent.getOptions();
 		   		 			options.add(option);
 		   		 			next_agent.setOptions(options);
@@ -602,6 +627,27 @@ public abstract class Agent_GUI extends Agent {
 					data.add(d);
 			        next_problem.setData(data);
 				}
+			}
+		}
+	}
+	
+	protected void addMethodToProblem(int problem_id, String name, String errorRate){
+		// get the problem
+		for (Enumeration pe = problems.elements() ; pe.hasMoreElements() ;) {
+			Problem next_problem = (Problem)pe.nextElement();
+			if (Integer.parseInt(next_problem.getGui_id()) == problem_id
+					&& !next_problem.getSent()){
+				
+				Method method = new Method();
+				method.setName(name);
+				
+				if (errorRate != null){
+					method.setError_rate(Float.parseFloat(errorRate));
+				}
+				if (name.equals("Random") && errorRate == null){
+					method.setError_rate(default_error_rate);
+				}	
+				next_problem.setMethod(method);
 			}
 		}
 	}
@@ -671,6 +717,8 @@ public abstract class Agent_GUI extends Agent {
 					   		 					next_merged_option.getRange().setMin(next_problem_option.getRange().getMin());
 					   		 					next_merged_option.getRange().setMax(next_problem_option.getRange().getMax());
 					   		 				}
+					   		 				next_merged_option.setNumber_of_values_to_try(
+					   		 						next_problem_option.getNumber_of_values_to_try() );
 					   		 			}
 					   		 			// check the value
 					   		 			if (!next_merged_option.getData_type().equals("BOOLEAN")
@@ -855,6 +903,19 @@ public abstract class Agent_GUI extends Agent {
 	           
 	           int p_id = createNewProblem(next_problem.getAttributeValue("timeout"));
 	           
+	           java.util.List method = next_problem.getChildren("method");
+	           java.util.Iterator m_itr = method.iterator();	
+	           if (method.size() == 0 ){
+	        	   // TODO select default
+	           }
+	           if (method.size() > 1 ){
+	        	   // TODO error
+	           }
+	           while (m_itr.hasNext()) {
+	        	   Element next_method = (Element) m_itr.next();
+	        	   addMethodToProblem(p_id, next_method.getAttributeValue("name"), next_method.getAttributeValue("error_rate"));
+	           }
+	           
 	           java.util.List dataset = next_problem.getChildren("dataset");
 	           java.util.Iterator fn_itr = dataset.iterator();	 
 	           while (fn_itr.hasNext()) {
@@ -883,7 +944,8 @@ public abstract class Agent_GUI extends Agent {
 		        	   Element next_option = (Element) o_itr.next();
 		        	   addOptionToAgent(p_id,  agent_name, next_option.getAttributeValue("name"),
 		        			   next_option.getAttributeValue("value"),
-		        			   next_option.getAttributeValue("lower"), next_option.getAttributeValue("upper"));
+		        			   next_option.getAttributeValue("lower"), next_option.getAttributeValue("upper"),
+		        			   next_option.getAttributeValue("number_of_values_to_try") );
 		           }
 	           }
 		}
