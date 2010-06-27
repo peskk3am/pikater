@@ -58,9 +58,11 @@ public class Agent_Random extends Agent_OptionsManager {
 	    		   
 	    		   String optionName = " -"+next.getName()+" ";
 	    		   
+	    		   // int numArgs = (int)(next.getNumber_of_args().getMin()
+	    		   //	   +generator.nextInt((int)(next.getNumber_of_args().getMax()-next.getNumber_of_args().getMin()+1)));
 	    		   
-	    		   int numArgs = (int)(next.getNumber_of_args().getMin()
-	    				   +generator.nextInt((int)(next.getNumber_of_args().getMax()-next.getNumber_of_args().getMin()+1)));
+	    	    	String[] values = next.getValue().split(",");
+	    	    	int numArgs = values.length;
 	    		   
 	    		   if (!next.getIs_a_set()){	    		   
 		    		   if(next.getData_type().equals("INT")){
@@ -107,11 +109,22 @@ public class Agent_Random extends Agent_OptionsManager {
 	    			   	    			   
 	    			   String s = "";
 	    			   for (int i=1; i<numArgs; i++){
-	    				   int index = generator.nextInt(next.getSet().size());
-	    				   s += next.getSet().get(index)+",";	    		   
+	    				   if (values[i-1].equals("?")){
+	    					   int index = generator.nextInt(next.getSet().size());
+	    					   s += next.getSet().get(index)+",";
+	    				   }
+	    				   else{
+	    					   s += values[i-1]+",";
+	    				   }
+	    					   
 	    			   }
-	    			   int index = generator.nextInt(next.getSet().size());
-    				   s += next.getSet().get(index);
+    				   if (values[numArgs-1].equals("?")){
+    					   int index = generator.nextInt(next.getSet().size());
+    					   s += next.getSet().get(index);
+    				   }
+    				   else{
+    					   s += values[numArgs-1];
+    				   }
     				   
     				   str += (optionName+s);
 	    		   }

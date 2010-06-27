@@ -1,5 +1,5 @@
 import jade.util.leap.Iterator;
-
+import jade.util.leap.List;
 import java.util.Enumeration;
 import java.util.Random;
 import java.util.Vector;
@@ -13,7 +13,7 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
 	private int ni = 0;
 	
 	private Vector<String> options_vector = new Vector<String>();
-	
+	private Vector<String> sub_options_vector = new Vector<String>();
 	
 	@Override
 	protected boolean finished() {
@@ -34,10 +34,11 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
 	private String[] generateOptionValues(Option next){
     	Random generator = new Random();
     	String optionName = " -"+next.getName()+" ";
-    	// choose random number of arguments
-    	int numArgs = (int)(next.getNumber_of_args().getMin()+generator.nextInt((int)(next.getNumber_of_args().getMax()
-    			-next.getNumber_of_args().getMin()+1)));
-	    if (!next.getIs_a_set()){	    		   
+    	// number of values ~ number of "?"s set by user
+    	String[] values = next.getValue().split(",");
+    	int numArgs = values.length;
+    	
+    	if (!next.getIs_a_set()){	    		   
 		   if(next.getData_type().equals("INT")){
 			    int x = next.getNumber_of_values_to_try();
 	   			int range = (int)(next.getRange().getMax() - next.getRange().getMin() + 1);
@@ -81,8 +82,24 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
 			  return new String[] {optionName, ""};
 		  }
 	   }
-	   else{
-		   // TODO
+	   else{		   
+		   
+		   //  int x = next.getNumber_of_values_to_try();
+		   //  if (next.getSet().size() < x){
+		   //	   x = next.getSet().size();
+		   //  }
+		   
+		   sub_generate(0, "-H ", next.getSet().toArray(), values );
+		   
+		   // copy vector to array:
+		   String[] a = new String[sub_options_vector.size()];
+		   int i = 0;
+		   for (Enumeration e = sub_options_vector.elements() ; e.hasMoreElements() ;) {
+		       String next_option = (String)e.nextElement();      
+		       a[i] = next_option;
+		       i++;
+		   }
+		   return a; 		   
 	   }
 		   
 	   return new String[0];
@@ -138,7 +155,7 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
 			       System.out.println("------------next array");
 			}
 						
-			generate("", possible_options.toArray(new String[possible_options.size()][]));
+			generate("", possible_options.toArray(new String[possible_options.size()][]) );
 						
 			n = options_vector.size();
 
@@ -146,5 +163,31 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
 			       String next_option = (String)e.nextElement();      
 			       System.out.println("--"+next_option);
 			}
+	 }
+	 
+	 
+	 private void sub_generate(int j, String str, Object[] possible_options_array, String[] values){
+		 	if ((str.split("[, ]")).length > values.length){		
+		 		sub_options_vector.add(str);
+				return;
+			}
+						
+			if (!values[j].equals("?")){
+				
+				if (str.startsWith("-")){
+					sub_generate(++j, str+values[j-1], possible_options_array, values);
+				}
+				else{
+					sub_generate(++j, str+","+values[j-1], possible_options_array, values);
+				}
+			}
+			else{	
+				for (int i=0; i < possible_options_array.length; i++){
+					sub_generate(++j, str+","+possible_options_array[i], possible_options_array, values);
+					j--;					
+				}
+			}
+			
+			return;		 
 	 }
 }

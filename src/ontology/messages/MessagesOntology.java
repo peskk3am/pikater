@@ -183,7 +183,7 @@ public class MessagesOntology extends Ontology {
 	    	cs = (ConceptSchema)getSchema(OPTION);
 	    	cs.add(OPTION_MUTABLE, (PrimitiveSchema)getSchema(BasicOntology.BOOLEAN));
 	    	cs.add(OPTION_RANGE, (ConceptSchema)getSchema(INTERVAL), ObjectSchema.OPTIONAL);
-	    	// cs.add(OPTION_SET, (PrimitiveSchema)getSchema(BasicOntology.STRING), 1, ObjectSchema.UNLIMITED);
+	    	cs.add(OPTION_SET, (PrimitiveSchema)getSchema(BasicOntology.STRING), 0, ObjectSchema.UNLIMITED);
 	    	cs.add(OPTION_IS_A_SET, (PrimitiveSchema)getSchema(BasicOntology.BOOLEAN), ObjectSchema.OPTIONAL);  	
 	    	cs.add(OPTIONS_NUM_ARGS, (ConceptSchema)getSchema(INTERVAL), ObjectSchema.OPTIONAL);
 	    	cs.add(OPTION_DATA_TYPE, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);

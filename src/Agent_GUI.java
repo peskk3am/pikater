@@ -424,10 +424,10 @@ public abstract class Agent_GUI extends Agent {
 	protected void addAgentToProblemWekaStyle(int _problem_id, String agentName, String agentType,
 			String [] agentParams) throws FailureException{
 		
-		addAgentToProblem(_problem_id, agentName, agentType);
+		String newAgentName = addAgentToProblem(_problem_id, agentName, agentType);
 				
     	for (int i=0; i < agentParams.length; i++){
-    		if (agentParams[i].charAt(0) == "-".charAt(0)){
+    		if (agentParams[i].startsWith("-")){
     			String name = agentParams[i].replaceFirst("-", "");
     			// if the next array element is again an option name, 
     			// (or it is the last element)
@@ -437,14 +437,14 @@ public abstract class Agent_GUI extends Agent {
     				value = "True";
     			}
     			else {
-    				if (agentParams[i+1].charAt(0) == "-".charAt(0)){
-    					value = null;
+    				if (agentParams[i+1].startsWith("-")){
+    					value = "True";
     				}
     				else{
     					value = agentParams[i+1];    				
     				}
     			}
-    			addOptionToAgent(_problem_id, agentName, name, value, null, null, null);	
+    			addOptionToAgent(_problem_id, newAgentName, name, value, null, null, null);	
     		}
     	}
 	}
@@ -581,8 +581,9 @@ public abstract class Agent_GUI extends Agent {
 			   		 		if (option_value == null){
 	   		 					option_value = "True";
 	   		 				}
-		   		 		
-			   		 		if (option_value.equals("?")){
+			   		 		
+			   		 		if (option_value.indexOf("?") > -1){
+			   		 		// if (option_value.equals("?")){
 		   		 				option.setMutable(true);
 		   		 				
 		   		 				if (lower != null && upper != null){
@@ -952,7 +953,7 @@ public abstract class Agent_GUI extends Agent {
 		           java.util.Iterator o_itr = _options.iterator();	 
 		           while (o_itr.hasNext()) {
 		        	   Element next_option = (Element) o_itr.next();
-		        	   addOptionToAgent(p_id,  agent_name, next_option.getAttributeValue("name"),
+		        	   addOptionToAgent(p_id, agent_name, next_option.getAttributeValue("name"),
 		        			   next_option.getAttributeValue("value"),
 		        			   next_option.getAttributeValue("lower"), next_option.getAttributeValue("upper"),
 		        			   next_option.getAttributeValue("number_of_values_to_try") );

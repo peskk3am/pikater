@@ -4,7 +4,7 @@ import java.io.*;
 
 public class MyWekaOption implements Serializable{
 	public enum dataType {
-		    INT, FLOAT, BOOLEAN 
+		    INT, FLOAT, BOOLEAN, MIXED 
 	}
 	// list - pocet polozek, range
 	
@@ -48,7 +48,8 @@ public class MyWekaOption implements Serializable{
 		}
         if (range.equals("s")){
         	isASet = true;
-			set = params;
+        	set = new String[params.length];
+			System.arraycopy(params, 0, set, 0, params.length);
         }
         	
 	}  // end constructor

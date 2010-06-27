@@ -239,7 +239,6 @@ public abstract class Agent_ComputingAgent extends Agent{
 	  								
 					ontology.messages.Option opt = null;
 					Interval interval = null;
-					List set = null;
 				    for (Enumeration e = Options.elements() ; e.hasMoreElements() ;) {
 				       MyWekaOption next = (MyWekaOption)e.nextElement();
 			    	   opt = new ontology.messages.Option();
@@ -250,8 +249,15 @@ public abstract class Agent_ComputingAgent extends Agent{
 			           interval.setMax(next.upper);		  					           					           
 			           opt.setRange(interval);
 			           
-			           // opt.setSet((List)Arrays.asList(next.set));
-			           // opt.setSet(null);
+			           if (next.set != null){
+			        	   // copy array to List
+			        	   List set = new ArrayList();
+			        	   for (int i=0; i<next.set.length; i++){
+			        		   set.add(next.set[i]);
+			        	   }
+			        	   opt.setSet(set);
+			           }
+			           
 			           opt.setIs_a_set(next.isASet);
 			           
 			           interval = new Interval();
@@ -638,7 +644,9 @@ public abstract class Agent_ComputingAgent extends Agent{
 	                	   if (params[2].equals("int")){
 	                		   dt = MyWekaOption.dataType.INT; 
 	                	   }
-               	   
+	                	   if (params[2].equals("mixed")){
+	                		   dt = MyWekaOption.dataType.MIXED; 
+	                	   }
 	                	   
 	                	   Enumeration en = getModelObject().listOptions();
 

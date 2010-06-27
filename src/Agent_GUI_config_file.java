@@ -60,17 +60,8 @@ public class Agent_GUI_config_file extends Agent_GUI{
 		System.out.println("Agent types: "+offerAgentTypes());
 		
 		configFileName = getConfigFileName();
-		try {
+		/* try {
 			getProblemsFromXMLFile(configFileName);
-		  /*  for (Enumeration e = problems.elements() ; e.hasMoreElements() ;) {
-			       Problem next_problem = (Problem)e.nextElement();
-			       Iterator itr = next_problem.getAgents().iterator();	 		   		 
-		   		 	while (itr.hasNext()) {
-		   		 		ontology.messages.Agent next_agent = (ontology.messages.Agent) itr.next();
-		   		 		getAgentOptions(next_agent.getName());
-		   		 	}
-		    }
-		    */
 		}
 		// indicates a well-formedness error
         catch (JDOMException e) { 
@@ -80,19 +71,19 @@ public class Agent_GUI_config_file extends Agent_GUI{
           System.out.print("Could not check " + configFileName);
           System.out.println(" because " + e.getMessage());
         }
+		 */        
         
-        /*
         // test:
         int newId = createNewProblem("1000");
         try {
-			addAgentToProblemWekaStyle(newId, "mp1", null, "-L -D -M ?".split(" "));
+			addAgentToProblemWekaStyle(newId, null, "MultilayerPerceptron", "-L 0.2 -D -M ? -H ?,?".split(" "));
 		} catch (FailureException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
          addDatasetToProblem(newId, "iris.arff", "iris.arff");
  		// getAgentOptions("mp1"); 
-        */
+        // */
 	
 		
 	}	// end mySetup
