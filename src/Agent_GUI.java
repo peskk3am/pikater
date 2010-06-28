@@ -444,7 +444,7 @@ public abstract class Agent_GUI extends Agent {
     					value = agentParams[i+1];    				
     				}
     			}
-    			addOptionToAgent(_problem_id, newAgentName, name, value, null, null, null);	
+    			addOptionToAgent(_problem_id, newAgentName, name, value, null, null, null, null);	
     		}
     	}
 	}
@@ -563,7 +563,7 @@ public abstract class Agent_GUI extends Agent {
 	}
 	
 	protected void addOptionToAgent(int _problem_id, String agent_name, String option_name,
-			String option_value, String lower, String upper, String number_of_values_to_try){
+			String option_value, String lower, String upper, String number_of_values_to_try, String set){
 		// TODO add interval ... 
 		for (Enumeration pe = problems.elements() ; pe.hasMoreElements() ;) {
 			Problem next_problem = (Problem)pe.nextElement();
@@ -595,6 +595,15 @@ public abstract class Agent_GUI extends Agent {
 		   		 			}	   		 				
 		   		 		
 			   		 		option.setValue(option_value);
+			   		 		
+			   		 		if (set != null){
+			   		 			String[] set_array = (set.replace(" ", "")).split(",");
+			   		 			List set_list = new ArrayList();
+			   		 			for (int i=0; i<set_array.length; i++){
+			   		 				set_list.add(set_array[i]);
+			   		 			}
+			   		 			option.setSet(set_list);
+			   		 		}
 			   		 		
 			   		 		if (next_problem.getMethod().getName().equals("ChooseXValues")){
 			   		 			if (number_of_values_to_try == null){
@@ -956,7 +965,8 @@ public abstract class Agent_GUI extends Agent {
 		        	   addOptionToAgent(p_id, agent_name, next_option.getAttributeValue("name"),
 		        			   next_option.getAttributeValue("value"),
 		        			   next_option.getAttributeValue("lower"), next_option.getAttributeValue("upper"),
-		        			   next_option.getAttributeValue("number_of_values_to_try") );
+		        			   next_option.getAttributeValue("number_of_values_to_try"),
+		        			   next_option.getAttributeValue("set") );
 		           }
 	           }
 		}
