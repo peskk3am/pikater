@@ -269,7 +269,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 			           opt.setDescription(next.description);
 			           opt.setName(next.name);
 			           opt.setSynopsis(next.synopsis);
-			           opt.setValue(next.default_value);
+			           opt.setDefault_value(next.default_value);
 			           _options.add(opt);
 			       }
 				   agent.setOptions(_options);
@@ -648,24 +648,50 @@ public abstract class Agent_ComputingAgent extends Agent{
 	                		   dt = MyWekaOption.dataType.MIXED; 
 	                	   }
 	                	   
+	                	   String[] default_options = getModelObject().getOptions();
+	                	   
 	                	   Enumeration en = getModelObject().listOptions();
-
 			       	       while(en.hasMoreElements()){
 			       	    	   
 			       	    	   Option next = (weka.core.Option)en.nextElement();
+			       	    	   String default_value = "False";
+			       	    	   for (int i=0; i<default_options.length; i++){
+			       	    		 System.out.println("i: "+i+" "+default_options[i]+" "+"-"+next.name());  
+			       	    		 if (default_options[i].equals("-"+next.name())){
+			       	    			System.out.println("match"); 
+									if (default_options[i].startsWith("-")){
+										System.out.println("StartsWith-");
+										// if the next array element is again an option name, 
+										// (or it is the last element)
+										// => it's a boolean parameter
+										if (i == default_options.length-1){
+											default_value = "True";
+										}
+										else {
+											if (default_options[i+1].startsWith("-")){
+												default_value = "True";
+											}
+											else{
+												default_value = default_options[i+1];    				
+											}
+										}	
+									}  
+			       	    		 }
+			       	    	   }
 			       	    	   
 			       	    	   if ((next.name()).equals(params[1])){
 			       	    		   MyWekaOption o;
 			                	   if (params.length > 3){
 			                		   o = new MyWekaOption(
 				       	    				   next.description(), next.name(), next.numArguments(), next.synopsis(), 
-				       	    				   dt, new Integer(params[3]).intValue(), new Integer(params[4]).intValue(), params[5], params[6]
+				       	    				   dt, new Integer(params[3]).intValue(), new Integer(params[4]).intValue(),
+				       	    				   params[5], default_value, params[6]
 				       	    		   ); 
 			                	   }
 			                	   else{
 			                		   o = new MyWekaOption(
 				       	    				   next.description(), next.name(), next.numArguments(), next.synopsis(), 
-				       	    				   dt, 0, 0, "", ""
+				       	    				   dt, 0, 0, "", default_value, ""
 				       	    		   );   
 			                	   }
 			       	    		   

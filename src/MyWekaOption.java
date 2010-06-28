@@ -26,7 +26,7 @@ public class MyWekaOption implements Serializable{
 	public boolean isASet = false;
 	
 	public MyWekaOption(String arg0, String arg1, int arg2, String arg3, dataType _type,
-			int _numArgsMin, int _numArgsMax, String range, String rest) {
+			int _numArgsMin, int _numArgsMax, String range, String _default_value, String rest) {
 		// super(arg0, arg1, arg2, arg3);
 		
 		description = arg0;
@@ -38,6 +38,8 @@ public class MyWekaOption implements Serializable{
         numArgsMax = _numArgsMax;
         
         type = _type;
+        
+        default_value = _default_value;
         
 		String delims = "[, ]+";
         String[] params = rest.split(delims);

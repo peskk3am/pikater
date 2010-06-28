@@ -71,6 +71,7 @@ public class MessagesOntology extends Ontology {
 	  public static final String OPTION_WEKA_NAME = "name";
 	  public static final String OPTION_WEKA_SYNOPSIS = "synopsis";
 	  public static final String OPTION_VALUE = "value";
+	  public static final String OPTION_DEFAULT_VALUE = "default_value";
 	  public static final String OPTION_NUMBER_OF_VALUES_TO_TRY = "number_of_values_to_try";
 
 	  public static final String AGENT = "AGENT";
@@ -191,6 +192,7 @@ public class MessagesOntology extends Ontology {
 	    	cs.add(OPTION_WEKA_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 	    	cs.add(OPTION_WEKA_SYNOPSIS, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 	    	cs.add(OPTION_VALUE, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+	    	cs.add(OPTION_DEFAULT_VALUE, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 	    	cs.add(OPTION_NUMBER_OF_VALUES_TO_TRY, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));
   	
 	    	cs = (ConceptSchema)getSchema(EVALUATION);
