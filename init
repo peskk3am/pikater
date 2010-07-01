@@ -10,7 +10,8 @@ $a Agent_MultilayerPerceptron mp1
 
 $a Agent_Manager manager
 
-# get a Problem from "config" file
-$a Agent_GUI_config_file very_simple_GUI config
+# get a Problem from a xml file
+$a Agent_GUI_config_file very_simple_GUI1 xml_config
+$a Agent_GUI_config_file very_simple_GUI2 xml_config
 
-$a  jade.tools.sniffer.Sniffer sniffer01 very_simple_GUI
+$a jade.tools.sniffer.Sniffer sniffer01 manager

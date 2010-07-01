@@ -101,7 +101,7 @@ public class Agent_RBFNetwork extends Agent_ComputingAgent{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		    
+		 working = false;   
 		 return eval;
 	 }  // end test
 	 

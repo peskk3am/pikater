@@ -24,7 +24,7 @@ import jade.util.leap.Iterator;
 
 
 public class Agent_Random extends Agent_OptionsManager {
-
+	private int number_of_tries = 0;
 	
 	 protected String getAgentType(){
 		 return "Random";
@@ -33,7 +33,7 @@ public class Agent_Random extends Agent_OptionsManager {
 	 
 	 protected boolean finished(){
 		 if (result != null) {
-			 if (result.errorRate < 0.3 ){
+			 if (result.errorRate < error_rate || number_of_tries >= maximum_tries ){
 				 return true;
 			 }
 		 }
@@ -58,18 +58,23 @@ public class Agent_Random extends Agent_OptionsManager {
 	    		   
 	    		   String optionName = " -"+next.getName()+" ";
 	    		   
+	    		   // int numArgs = (int)(next.getNumber_of_args().getMin()
+	    		   //	   +generator.nextInt((int)(next.getNumber_of_args().getMax()-next.getNumber_of_args().getMin()+1)));
 	    		   
-	    		   int numArgs = (int)(next.getNumber_of_args().getMin()+generator.nextInt((int)(next.getNumber_of_args().getMax()-next.getNumber_of_args().getMin()+1)));
+	    	    	String[] values = next.getValue().split(",");
+	    	    	int numArgs = values.length;
 	    		   
 	    		   if (!next.getIs_a_set()){	    		   
 		    		   if(next.getData_type().equals("INT")){
 		    		   		
 		    		   			String si = "";
 		    		   			for (int i=1; i<numArgs; i++){
-		 	    					int rInt = (int) (next.getRange().getMin() + generator.nextInt((int)(next.getRange().getMax()-next.getRange().getMin())));
+		 	    					int rInt = (int) (next.getRange().getMin() 
+		 	    								+ generator.nextInt((int)(next.getRange().getMax()-next.getRange().getMin())));
 		 	    					si += Integer.toString(rInt)+",";
 		    		   			}
-		    		   			int rInt = (int) (next.getRange().getMin() + generator.nextInt((int)(next.getRange().getMax()-next.getRange().getMin())));
+		    		   			int rInt = (int) (next.getRange().getMin() 
+		    		   					+ generator.nextInt((int)(next.getRange().getMax()-next.getRange().getMin())));
 		    		   			si += Integer.toString(rInt);
 		    		   			 
 		    		   			str += (optionName+si);
@@ -78,10 +83,12 @@ public class Agent_Random extends Agent_OptionsManager {
 		    		   if(next.getData_type().equals("FLOAT")){
 		    		   			String sf = "";
 		    		   			for (int i=1; i<numArgs; i++){
-		    		   				float rFloat = next.getRange().getMin() + (float)(generator.nextDouble())*(next.getRange().getMax() - next.getRange().getMin());
+		    		   				float rFloat = next.getRange().getMin() + (float)(generator.nextDouble())
+		    		   						*(next.getRange().getMax() - next.getRange().getMin());
 		 	    					sf += Float.toString(rFloat)+",";
 		    		   			}
-		    		   			float rFloat = next.getRange().getMin() + (float)(generator.nextDouble())*(next.getRange().getMax() - next.getRange().getMin());
+		    		   			float rFloat = next.getRange().getMin() + (float)(generator.nextDouble())
+		    		   					*(next.getRange().getMax() - next.getRange().getMin());
 		    		   			sf += Float.toString(rFloat);
 		    		   			 
 		    		   			str += (optionName+sf);
@@ -102,18 +109,29 @@ public class Agent_Random extends Agent_OptionsManager {
 	    			   	    			   
 	    			   String s = "";
 	    			   for (int i=1; i<numArgs; i++){
-	    				   int index = generator.nextInt(next.getSet().size());
-	    				   s += next.getSet().get(index)+",";	    		   
+	    				   if (values[i-1].equals("?")){
+	    					   int index = generator.nextInt(next.getSet().size());
+	    					   s += next.getSet().get(index)+",";
+	    				   }
+	    				   else{
+	    					   s += values[i-1]+",";
+	    				   }
+	    					   
 	    			   }
-	    			   int index = generator.nextInt(next.getSet().size());
-    				   s += next.getSet().get(index);
+    				   if (values[numArgs-1].equals("?")){
+    					   int index = generator.nextInt(next.getSet().size());
+    					   s += next.getSet().get(index);
+    				   }
+    				   else{
+    					   s += values[numArgs-1];
+    				   }
     				   
     				   str += (optionName+s);
 	    		   }
 	    	   }
 	           
 	       }
-		 		 	 		 
+		 number_of_tries++;		 	 		 
 		 return str;
 	 }
 	 

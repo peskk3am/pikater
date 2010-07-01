@@ -1,0 +1,20 @@
+<experiments>
+    <experiment timeout="10000">
+        <method name="Random" error_rate="0.001" maximum_tries="4" /> 
+        <!-- <method name="ChooseXValues" />  -->
+        
+        <dataset train="iris.arff" test="iris.arff" />
+        
+        <!-- <agent name="rbf1">
+            <parameter name="B" value="?" lower="3" upper="5" number_of_values_to_try="5" />
+            <parameter name="W" value="?" />
+        </agent>
+        -->
+        
+        <agent type="MultilayerPerceptron">
+            <parameter name="H" value="3,?" set="2,6" />
+        <!--    <parameter name="L" value="?" /> -->
+        </agent>
+
+    </experiment>    
+</experiments>

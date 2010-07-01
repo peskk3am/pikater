@@ -4,7 +4,7 @@ import java.io.*;
 
 public class MyWekaOption implements Serializable{
 	public enum dataType {
-		    INT, FLOAT, BOOLEAN 
+		    INT, FLOAT, BOOLEAN, MIXED 
 	}
 	// list - pocet polozek, range
 	
@@ -19,14 +19,15 @@ public class MyWekaOption implements Serializable{
 	public String name;
 	public int numArguments;
 	public String synopsis;
+	public String default_value;
 	
 	
 	public String[] set;
 	public boolean isASet = false;
 	
-	public MyWekaOption(String arg0, String arg1, int arg2, String arg3, dataType _type, int _numArgsMin, int _numArgsMax, String range, String rest) {
+	public MyWekaOption(String arg0, String arg1, int arg2, String arg3, dataType _type,
+			int _numArgsMin, int _numArgsMax, String range, String rest) {
 		// super(arg0, arg1, arg2, arg3);
-		// TODO Auto-generated constructor stub
 		
 		description = arg0;
 		name = arg1;
@@ -47,12 +48,10 @@ public class MyWekaOption implements Serializable{
 		}
         if (range.equals("s")){
         	isASet = true;
-			set = params;
+        	set = new String[params.length];
+			System.arraycopy(params, 0, set, 0, params.length);
         }
-        
-
-		
+        	
 	}  // end constructor
-	
 	
 }
