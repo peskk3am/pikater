@@ -137,6 +137,8 @@ public class MessagesOntology extends Ontology {
 			add(new ConceptSchema(EVALUATION), Evaluation.class);
 			add(new ConceptSchema(RESULTS), Results.class);
 			
+			add(new PredicateSchema(PARTIALRESULTS),PartialResults.class);
+			
 			add(new AgentActionSchema(COMPUTE), Compute.class);
 			add(new AgentActionSchema(GET_OPTIONS), GetOptions.class);
 			add(new AgentActionSchema(EXECUTE), Execute.class);

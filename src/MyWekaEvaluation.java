@@ -12,5 +12,11 @@ public class MyWekaEvaluation implements Serializable{
 		// double pctIncorrect() Gets the percentage of instances incorrectly classified (that is, for which an incorrect prediction was made).
 		pctIncorrect = eval.pctIncorrect();
 	}
+
+
+	public MyWekaEvaluation(double _errorRate, double _pctIncorrect) {
+		errorRate=_errorRate;
+		pctIncorrect = _pctIncorrect;
+	}
 	
 }
