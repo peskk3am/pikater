@@ -42,6 +42,8 @@ import jade.util.leap.List;
 public abstract class Agent_OptionsManager extends Agent {
 	 	 private Codec codec = new SLCodec();
 	 	 private Ontology ontology = MessagesOntology.getInstance();
+
+		 boolean _finished = false;
 	 	 
 		 private String trainFileName;
 		 private String testFileName;
@@ -183,7 +185,7 @@ public abstract class Agent_OptionsManager extends Agent {
 				}
 				
 				
-				if (finished()){
+				if (_finished){
 					storeNotification(ACLMessage.INFORM);
 				}
 				
@@ -245,7 +247,7 @@ public abstract class Agent_OptionsManager extends Agent {
 				msgOut.setPerformative(performative);
 				
 				
-				if (finished()){
+				if (_finished){
 					String incomingReplykey = (String) this.REPLY_KEY;
 					ACLMessage incomingReply = (ACLMessage) getDataStore().get(incomingReplykey);   // TODO incomingReply ~ MyWekaEvaluation -> change to ontology Evaluation
 
@@ -301,10 +303,16 @@ public abstract class Agent_OptionsManager extends Agent {
 				 }
 				 
 				 
-				 
-				 
-				 if (!finished()){
-					String opt = generateNewOptions(result) + " "+ getImmutableOptions();
+				 if (!_finished){
+					String opt;
+					if (Options != null){ 
+						_finished = finished();
+						opt = generateNewOptions(result) + " "+ getImmutableOptions();
+					}
+					else{
+						opt = "";
+						_finished = true;
+					}
 					System.out.println(getLocalName()+": new options for agent "+receiver+" are "+opt); 
 					 
 					msg = new ACLMessage(ACLMessage.REQUEST);

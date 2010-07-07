@@ -1,2 +1,13 @@
 RBFNetwork
 MultilayerPerceptron
+NaiveBayes
+LinearRegression
+J48
+ZeroR
+SMO
+SMOreg
+NNge
+PART
+OneR
+RandomTree
+NBTree

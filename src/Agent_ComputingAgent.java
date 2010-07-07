@@ -77,7 +77,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 	 
 	 boolean working = false;  // TODO -> state?
 	
-	 protected abstract void train();
+	 protected abstract void train() throws Exception;
 	 protected abstract Evaluation test();
 	 
 	 public abstract String getAgentType();
@@ -353,8 +353,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 			// saveAgent();
 			// loadAgent(getLocalName());
  	  	
-			result = test();
-			
+			result = test();			
 			my_result = new MyWekaEvaluation(result);
 		}
 		catch (Exception e){
@@ -628,8 +627,6 @@ public abstract class Agent_ComputingAgent extends Agent{
 	                // parse the line
 	                String delims = "[ ]+";
 	                String[] params = line.split(delims, 7);
-
-	                
 	                
 	                if (params[0].equals("$")){
 	          		  	                 	   
@@ -655,12 +652,9 @@ public abstract class Agent_ComputingAgent extends Agent{
 			       	    	   
 			       	    	   Option next = (weka.core.Option)en.nextElement();
 			       	    	   String default_value = "False";
-			       	    	   for (int i=0; i<default_options.length; i++){
-			       	    		 System.out.println("i: "+i+" "+default_options[i]+" "+"-"+next.name());  
-			       	    		 if (default_options[i].equals("-"+next.name())){
-			       	    			System.out.println("match"); 
-									if (default_options[i].startsWith("-")){
-										System.out.println("StartsWith-");
+			       	    	   for (int i=0; i<default_options.length; i++){ 
+			       	    		 if (default_options[i].equals("-"+next.name())){ 
+									if (default_options[i].startsWith("-")){									
 										// if the next array element is again an option name, 
 										// (or it is the last element)
 										// => it's a boolean parameter
@@ -678,15 +672,18 @@ public abstract class Agent_ComputingAgent extends Agent{
 									}  
 			       	    		 }
 			       	    	   }
-			       	    	   
+			       	    	   			       	    	    
 			       	    	   if ((next.name()).equals(params[1])){
 			       	    		   MyWekaOption o;
-			                	   if (params.length > 3){
+			                	   if (params.length > 4){
+					       	    				                		   
 			                		   o = new MyWekaOption(
 				       	    				   next.description(), next.name(), next.numArguments(), next.synopsis(), 
-				       	    				   dt, new Integer(params[3]).intValue(), new Integer(params[4]).intValue(),
+				       	    				   dt, new Integer(params[3]).intValue(),
+				       	    				   new Integer(params[4]).intValue(),
 				       	    				   params[5], default_value, params[6]
 				       	    		   ); 
+			                		   
 			                	   }
 			                	   else{
 			                		   o = new MyWekaOption(
@@ -698,8 +695,8 @@ public abstract class Agent_ComputingAgent extends Agent{
 			       	    		   
 			       	    		   // save o to options vector
 			       	    		   Options.add(o);
-			       	    	   }
-			       	       }
+			       	    	   }  
+			       	       } 
 
 	                }
 	                
@@ -715,10 +712,6 @@ public abstract class Agent_ComputingAgent extends Agent{
 	            generated. A message indicating how to the class should be
 	            called is displayed */
 	            System.out.println("Usage: java ReadFile filename\n");          
-
-	        }catch (IOException e){
-	            // If another exception is generated, print a stack trace
-	            e.printStackTrace();
 	        }
 	        catch (Exception e){
 	        	e.printStackTrace();

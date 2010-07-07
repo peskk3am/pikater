@@ -3,7 +3,6 @@
 # s ... set  (example: s 1, 2, 3, 4, 5, 6, 7, 8)
 # 
 
-
 # learning rate, default 0.3; 1 arguments
 $ L float 1 1 r 0 1
 
@@ -15,7 +14,6 @@ $ D boolean
 
 # Momentum Rate for the backpropagation algorithm., Default = 0.2
 $ M float 1 1 r 0 1
-
 
 # The hidden layers to be created for the network.
 # (Value should be a list of comma seperated Natural numbers or the letters 'a' = (attribs + classes) / 2,

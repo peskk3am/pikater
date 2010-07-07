@@ -207,7 +207,7 @@ public class MessagesOntology extends Ontology {
 
 	    	cs = (ConceptSchema)getSchema(AGENT);
 	    	cs.add(AGENT_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
-	    	cs.add(AGENT_OPTIONS, (ConceptSchema)getSchema(OPTION), 1, ObjectSchema.UNLIMITED);
+	    	cs.add(AGENT_OPTIONS, (ConceptSchema)getSchema(OPTION), 0, ObjectSchema.UNLIMITED);
 	    	
 	    	
 			AgentActionSchema as = (AgentActionSchema)getSchema(COMPUTE);

@@ -680,12 +680,14 @@ public abstract class Agent_GUI extends Agent {
 	   		 	while (aitr.hasNext()) {
 	   		 		ontology.messages.Agent next_agent = (ontology.messages.Agent) aitr.next();
 	   		 		
-	   		 		// if data_type is set it means that the options from a computing agent have
-	   		 		// been received already
-	   		 		// it's enough to test the first option
-	   	   		 	if ( ((Option)(next_agent.getOptions().iterator().next())).getData_type() == null ){
-	   	   		 		done = false;
-	   		 		}
+	   		 		if (next_agent.getOptions().size() > 0 ){ // if there is at least one option
+		   		 		// if data_type is set it means that the options from a computing agent have
+		   		 		// been received already
+		   		 		// it's enough to test the first option
+		   	   		 	if ( ((Option)(next_agent.getOptions().iterator().next())).getData_type() == null ){
+		   	   		 		done = false;
+		   		 		}
+		   		 	}
 	   		 	}
 	   			if (done){
 	   				allOptionsReceived(Integer.parseInt(next_problem.getGui_id()));
@@ -701,7 +703,7 @@ public abstract class Agent_GUI extends Agent {
 			Problem next_problem = (Problem)pe.nextElement();
 			if (!next_problem.getSent()){
 				if (performative == ACLMessage.INFORM) { 			
-
+					
 					Iterator aitr = next_problem.getAgents().iterator();	 		   		 
 		   		 	while (aitr.hasNext()) {
 		   		 		ontology.messages.Agent next_agent = (ontology.messages.Agent) aitr.next(); 		 	
@@ -709,56 +711,58 @@ public abstract class Agent_GUI extends Agent {
 		   		 		// all problems where the agent (input parameter) figures
 		   		 		if ( next_agent.getName().equals(agent.getName()) ){
 							
-							// update the options (merge them)
-		   		 			
-							// copy agent's options
-	   		 				java.util.List mergedOptions = new java.util.ArrayList();					
-							Iterator oitr = agent.getOptions().iterator();	 		   		 
-				   		 	while (oitr.hasNext()) {
-				   		 		Option next_option = (Option) oitr.next();
-				   		 		mergedOptions.add(next_option);
-				   		 	}
-							
-							// go through the options set in the problem 
-				   		 	// and replace the options send by an computing agent
-							Iterator opitr = next_agent.getOptions().iterator();	 		   		 
-				   		 	while (opitr.hasNext()) {
-				   		 		Option next_problem_option = (Option) opitr.next();
-					   		 	ListIterator ocaitr = mergedOptions.listIterator();	 		   		 
-					   		 	while (ocaitr.hasNext()) {
-					   		 		Option next_merged_option = (Option) ocaitr.next();
-					   		 		if (next_problem_option.getName().equals(next_merged_option.getName())
-					   		 				&& next_problem_option.getValue() != null ) {
-					   		 			// copy all the parameters (problem -> merged)
-					   		 			if (next_problem_option.getMutable()){
-					   		 				next_merged_option.setMutable(true);
-					   		 				if (next_problem_option.getRange() != null){
-					   		 					next_merged_option.getRange().setMin(next_problem_option.getRange().getMin());
-					   		 					next_merged_option.getRange().setMax(next_problem_option.getRange().getMax());
-					   		 				}
-					   		 				next_merged_option.setNumber_of_values_to_try(
-					   		 						next_problem_option.getNumber_of_values_to_try() );
-					   		 			}
-					   		 			// check the value
-					   		 			if (!next_merged_option.getData_type().equals("BOOLEAN")
-					   		 					&& next_problem_option.getValue().equals("True")){
-					   		 				DisplayWrongOption(Integer.parseInt(next_problem.getGui_id()),
-					   		 						next_agent.getName(), next_problem_option.getName(),
-					   		 						next_problem_option.getName()+ " is not a BOOLEAN type option.");
-					   		 			}
-					   		 			else{
-					   		 			//if (next_problem_option.getValue() != null ){
-					   		 				next_merged_option.setValue(next_problem_option.getValue());
-					   		 			}
-	
-					   		 			ocaitr.set(next_merged_option);
-					   		 		}
+							if (agent.getOptions() != null) {
+			   		 			// update the options (merge them)
+			   		 			
+								// copy agent's options
+		   		 				java.util.List mergedOptions = new java.util.ArrayList();					
+								Iterator oitr = agent.getOptions().iterator();	 		   		 
+					   		 	while (oitr.hasNext()) {
+					   		 		Option next_option = (Option) oitr.next();
+					   		 		mergedOptions.add(next_option);
 					   		 	}
-				   		 	}  // end while - iterate over options
-				   		 	// create jade.util.leap.ArrayList again
-	   		 				ArrayList mergedOptionsArrayList = new ArrayList();
-	   		 				mergedOptionsArrayList.fromList(mergedOptions);
-				   		 	next_agent.setOptions(mergedOptionsArrayList);
+								
+								// go through the options set in the problem 
+					   		 	// and replace the options send by an computing agent
+								Iterator opitr = next_agent.getOptions().iterator();	 		   		 
+					   		 	while (opitr.hasNext()) {
+					   		 		Option next_problem_option = (Option) opitr.next();
+						   		 	ListIterator ocaitr = mergedOptions.listIterator();	 		   		 
+						   		 	while (ocaitr.hasNext()) {
+						   		 		Option next_merged_option = (Option) ocaitr.next();
+						   		 		if (next_problem_option.getName().equals(next_merged_option.getName())
+						   		 				&& next_problem_option.getValue() != null ) {
+						   		 			// copy all the parameters (problem -> merged)
+						   		 			if (next_problem_option.getMutable()){
+						   		 				next_merged_option.setMutable(true);
+						   		 				if (next_problem_option.getRange() != null){
+						   		 					next_merged_option.getRange().setMin(next_problem_option.getRange().getMin());
+						   		 					next_merged_option.getRange().setMax(next_problem_option.getRange().getMax());
+						   		 				}
+						   		 				next_merged_option.setNumber_of_values_to_try(
+						   		 						next_problem_option.getNumber_of_values_to_try() );
+						   		 			}
+						   		 			// check the value
+						   		 			if (!next_merged_option.getData_type().equals("BOOLEAN")
+						   		 					&& next_problem_option.getValue().equals("True")){
+						   		 				DisplayWrongOption(Integer.parseInt(next_problem.getGui_id()),
+						   		 						next_agent.getName(), next_problem_option.getName(),
+						   		 						next_problem_option.getName()+ " is not a BOOLEAN type option.");
+						   		 			}
+						   		 			else{
+						   		 			//if (next_problem_option.getValue() != null ){
+						   		 				next_merged_option.setValue(next_problem_option.getValue());
+						   		 			}
+		
+						   		 			ocaitr.set(next_merged_option);
+						   		 		}
+						   		 	}
+					   		 	}  // end while - iterate over options
+					   		 	// create jade.util.leap.ArrayList again
+		   		 				ArrayList mergedOptionsArrayList = new ArrayList();
+		   		 				mergedOptionsArrayList.fromList(mergedOptions);
+					   		 	next_agent.setOptions(mergedOptionsArrayList);
+							} // end if (empty option list)
 		   		 		} // end if
 		   		 	}  // end while - iterate over agents
 				}  // end if performative = inform

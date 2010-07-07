@@ -45,15 +45,15 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
 	   			// if there is less possibilities than x -> change x
 	   			if (range < x){
 	   				x = range;
-	   			}
+	   			}	   			
 	   			String[] a = new String[x];
 	   			for (int i=0; i<x; i++){
 		   			String si = "";
 	   				for (int j=1; j<numArgs; j++){
-		   				int vInt = (int) (next.getRange().getMin() + i * range / x );
+		   				int vInt = (int) (next.getRange().getMin() + i * (range / x) );
     		   			si += Integer.toString(vInt)+",";
 		   			}
-		   			int vInt = (int) (next.getRange().getMin() + i * range / x );
+		   			int vInt = (int) (next.getRange().getMin() + i * (range / x) );
 		   			si += Integer.toString(vInt);
 		   			 
 		   			a[i] = optionName+si;

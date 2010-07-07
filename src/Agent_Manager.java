@@ -535,20 +535,21 @@ public class Agent_Manager extends Agent{
 	       newAlgorithm.setAttribute("libname", "weka");
 	       
 		   List Options = agent.getOptions(); 
-		   Iterator itr_o = Options.iterator();	  
-		   while (itr_o.hasNext()) {
-			   ontology.messages.Option next_o = (ontology.messages.Option) itr_o.next();
-			    
-			   	Element newParameter = new Element ("parameter");
-			    newParameter.setAttribute("name", next_o.getName());
-			    
-			    String value = "";
-			    if (next_o.getValue() != null){ value = next_o.getValue(); }
-			    newParameter.setAttribute("value", value);
-			    
-			    newAlgorithm.addContent(newParameter);
+		   if (Options != null){
+			   Iterator itr_o = Options.iterator();	  
+			   while (itr_o.hasNext()) {
+				   ontology.messages.Option next_o = (ontology.messages.Option) itr_o.next();
+				    
+				   	Element newParameter = new Element ("parameter");
+				    newParameter.setAttribute("name", next_o.getName());
+				    
+				    String value = "";
+				    if (next_o.getValue() != null){ value = next_o.getValue(); }
+				    newParameter.setAttribute("value", value);
+				    
+				    newAlgorithm.addContent(newParameter);
+			   }
 		   }
-		   
 		   Element newDataSet = new Element ("dataset");
 		   newDataSet.setAttribute("train", next_task.getData().getTrain_file_name());
 		   newDataSet.setAttribute("test", next_task.getData().getTest_file_name());
