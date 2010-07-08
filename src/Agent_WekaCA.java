@@ -1,3 +1,6 @@
+import jade.util.leap.ArrayList;
+import jade.util.leap.List;
+
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -8,7 +11,10 @@ import java.io.ObjectOutputStream;
 import java.util.Enumeration;
 import java.util.Vector;
 
+import ontology.messages.Interval;
+
 import weka.classifiers.Classifier;
+import weka.classifiers.Evaluation;
 import weka.core.Instances;
 import weka.core.Option;
 
@@ -17,7 +23,19 @@ public abstract class Agent_WekaCA extends Agent_ComputingAgent {
 	 protected abstract Classifier getModelObject();
 	 protected abstract boolean setModelObject(Classifier _cls);
 	 protected abstract String getOptFileName();
+	 protected abstract Evaluation test();
 	 
+	 @Override
+	 protected ontology.messages.Evaluation evaluateCA() {
+		 Evaluation eval = test();
+		 
+		 ontology.messages.Evaluation result = new ontology.messages.Evaluation();
+		 result.setError_rate((float) eval.errorRate());
+		 result.setPct_incorrect((float) eval.pctIncorrect());
+		 return result;
+	 }
+	 
+	 @Override
 	 public boolean saveAgent(){
 		 try{
 			 ObjectOutputStream oos = new ObjectOutputStream(
@@ -44,7 +62,7 @@ public abstract class Agent_WekaCA extends Agent_ComputingAgent {
 		 }
 	 } // end saveAgent
 
-
+	 @Override
 	 public boolean loadAgent(String agentName){
 		 try{
 			 // deserialize model + header
@@ -82,13 +100,50 @@ public abstract class Agent_WekaCA extends Agent_ComputingAgent {
 		}
 	 }  // end loadAgent
 	 
+	 private ontology.messages.Option convertOption(MyWekaOption _weka_opt){
+		 ontology.messages.Option opt = new ontology.messages.Option();
+		 Interval interval = null;
+		 opt.setMutable(_weka_opt.mutable);
+         
+         interval = new Interval();
+         interval.setMin(_weka_opt.lower);
+         interval.setMax(_weka_opt.upper);		  					           					           
+         opt.setRange(interval);
+         
+         if (_weka_opt.set != null){
+      	   // copy array to List
+      	   List set = new ArrayList();
+      	   for (int i=0; i<_weka_opt.set.length; i++){
+      		   set.add(_weka_opt.set[i]);
+      	   }
+      	   opt.setSet(set);
+         }
+         
+         opt.setIs_a_set(_weka_opt.isASet);
+         
+         interval = new Interval();
+         interval.setMin(_weka_opt.numArgsMin);
+         interval.setMax(_weka_opt.numArgsMax);		  					           					           
+         opt.setNumber_of_args(interval);
+         
+         opt.setData_type(_weka_opt.type.toString());
+         opt.setDescription(_weka_opt.description);
+         opt.setName(_weka_opt.name);
+         opt.setSynopsis(_weka_opt.synopsis);
+         opt.setDefault_value(_weka_opt.default_value);
+         return opt;
+	 }
+	 
+	 @Override
 	 protected void getParameters(){
 			// fills the global Options vector
-			 
+		 
 			System.out.println(getLocalName()+": The options are: ");
 			 
 			String optPath = System.getProperty("user.dir")+getOptFileName();   
 			
+			agent_options = new ontology.messages.Agent();
+			agent_options.setName(getLocalName());
 			 // read options from file
 			try {
 				/*  Sets up a file reader to read the options file */
@@ -102,8 +157,9 @@ public abstract class Agent_WekaCA extends Agent_ComputingAgent {
 	            // Read first line
 	            line = bufRead.readLine();
 	            count++;
-	            
-	            Options = new Vector<MyWekaOption>();
+				
+	            //list of ontology.messages.Option
+	            List _options = new ArrayList();
 	            
 	            // Read through file one line at time. Print line # and line
 	            while (line != null){
@@ -112,8 +168,6 @@ public abstract class Agent_WekaCA extends Agent_ComputingAgent {
 	                // parse the line
 	                String delims = "[ ]+";
 	                String[] params = line.split(delims, 7);
-
-	                
 	                
 	                if (params[0].equals("$")){
 	          		  	                 	   
@@ -132,32 +186,58 @@ public abstract class Agent_WekaCA extends Agent_ComputingAgent {
 	                		   dt = MyWekaOption.dataType.MIXED; 
 	                	   }
 	                	   
+	                	   String[] default_options = getModelObject().getOptions();
+	                	   
 	                	   Enumeration en = getModelObject().listOptions();
-
 			       	       while(en.hasMoreElements()){
 			       	    	   
 			       	    	   Option next = (weka.core.Option)en.nextElement();
-			       	    	   
+			       	    	   String default_value = "False";
+			       	    	   for (int i=0; i<default_options.length; i++){ 
+			       	    		 if (default_options[i].equals("-"+next.name())){ 
+									if (default_options[i].startsWith("-")){									
+										// if the next array element is again an option name, 
+										// (or it is the last element)
+										// => it's a boolean parameter
+										if (i == default_options.length-1){
+											default_value = "True";
+										}
+										else {
+											if (default_options[i+1].startsWith("-")){
+												default_value = "True";
+											}
+											else{
+												default_value = default_options[i+1];    				
+											}
+										}	
+									}  
+			       	    		 }
+			       	    	   }
+			       	    	   			       	    	    
 			       	    	   if ((next.name()).equals(params[1])){
 			       	    		   MyWekaOption o;
-			                	   if (params.length > 3){
+			                	   if (params.length > 4){
+					       	    				                		   
 			                		   o = new MyWekaOption(
 				       	    				   next.description(), next.name(), next.numArguments(), next.synopsis(), 
-				       	    				   dt, new Integer(params[3]).intValue(), new Integer(params[4]).intValue(), params[5], params[6]
+				       	    				   dt, new Integer(params[3]).intValue(),
+				       	    				   new Integer(params[4]).intValue(),
+				       	    				   params[5], default_value, params[6]
 				       	    		   ); 
+			                		   
 			                	   }
 			                	   else{
 			                		   o = new MyWekaOption(
 				       	    				   next.description(), next.name(), next.numArguments(), next.synopsis(), 
-				       	    				   dt, 0, 0, "", ""
+				       	    				   dt, 0, 0, "", default_value, ""
 				       	    		   );   
 			                	   }
 			       	    		   
 			       	    		   
-			       	    		   // save o to options vector
-			       	    		   Options.add(o);
-			       	    	   }
-			       	       }
+			       	    		   // convert&save o to options vector
+			                	   _options.add(convertOption(o));
+			       	    	   }  
+			       	       } 
 
 	                }
 	                
@@ -165,7 +245,7 @@ public abstract class Agent_WekaCA extends Agent_ComputingAgent {
 	                
 	                count++;
 	            }
-	            
+	            agent_options.setOptions(_options);
 	            bufRead.close();
 	            
 	        }catch (ArrayIndexOutOfBoundsException e){
@@ -173,16 +253,12 @@ public abstract class Agent_WekaCA extends Agent_ComputingAgent {
 	            generated. A message indicating how to the class should be
 	            called is displayed */
 	            System.out.println("Usage: java ReadFile filename\n");          
-
-	        }catch (IOException e){
-	            // If another exception is generated, print a stack trace
-	            e.printStackTrace();
 	        }
 	        catch (Exception e){
 	        	e.printStackTrace();
 	        	System.err.println(getLocalName()+": Reading options from .opt file failed.");
 	        }
-			  
+			//Save the agent's options  
 			  
 			/*  Enumeration en = cls.listOptions();
 

@@ -62,7 +62,8 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 public states state = states.NEW;
 	 public boolean hasGotRightData = false;
 	 
-	 protected Vector<MyWekaOption> Options;
+	 //protected Vector<MyWekaOption> Options;
+	 protected ontology.messages.Agent agent_options = null;
 	 
 	 protected Instances data; // data read from fileName file
 	 Instances train;  // TODO - divide data
@@ -78,7 +79,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 boolean working = false;  // TODO -> state?
 	
 	 protected abstract void train() throws Exception;
-	 protected abstract Evaluation test();
+	 protected abstract ontology.messages.Evaluation evaluateCA();
 	 
 	 public abstract String getAgentType();
 	 
@@ -159,84 +160,39 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 
 	 
 	 protected ACLMessage sendOptions(ACLMessage request){
-			ACLMessage msgOut = new ACLMessage(ACLMessage.INFORM);
-				msgOut.setLanguage(codec.getName());
-				msgOut.setOntology(ontology.getName());
-				
-				msgOut.addReceiver(request.getSender());
-				try {
-				// msgOut.setContentObject(Options);
-					
-					// Prepare the content
-					ontology.messages.Agent agent = new ontology.messages.Agent();
-					agent.setName(getLocalName());
-					List _options = new ArrayList();
-	  								
-					ontology.messages.Option opt = null;
-					Interval interval = null;
-				    for (Enumeration e = Options.elements() ; e.hasMoreElements() ;) {
-				       MyWekaOption next = (MyWekaOption)e.nextElement();
-			    	   opt = new ontology.messages.Option();
-			           opt.setMutable(next.mutable);
-			           
-			           interval = new Interval();
-			           interval.setMin(next.lower);
-			           interval.setMax(next.upper);		  					           					           
-			           opt.setRange(interval);
-			           
-			           if (next.set != null){
-			        	   // copy array to List
-			        	   List set = new ArrayList();
-			        	   for (int i=0; i<next.set.length; i++){
-			        		   set.add(next.set[i]);
-			        	   }
-			        	   opt.setSet(set);
-			           }
-			           
-			           opt.setIs_a_set(next.isASet);
-			           
-			           interval = new Interval();
-			           interval.setMin(next.numArgsMin);
-			           interval.setMax(next.numArgsMax);		  					           					           
-			           opt.setNumber_of_args(interval);
-			           
-			           opt.setData_type(next.type.toString());
-			           opt.setDescription(next.description);
-			           opt.setName(next.name);
-			           opt.setSynopsis(next.synopsis);
-			           opt.setDefault_value(next.default_value);
-			           _options.add(opt);
-			       }
-				   agent.setOptions(_options);
-				   
-				   // System.out.println(_options);
-				   
-				   ContentElement content = getContentManager().extractContent(request); // TODO exception block?
-				   Result result = new Result((Action)content, agent);
-				   // result.setValue(options);	
-					
-				   try {
-						// Let JADE convert from Java objects to string
-						getContentManager().fillContent(msgOut, result);
-						// send(msgOut);
-				   }
-				   catch (CodecException ce) {
-						ce.printStackTrace();
-				   }
-				   catch (OntologyException oe) {
-						oe.printStackTrace();
-				   }
-				
-				
-				
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			
-			return msgOut;
-			
+		 ACLMessage msgOut = new ACLMessage(ACLMessage.INFORM);
+		 msgOut.setLanguage(codec.getName());
+		 msgOut.setOntology(ontology.getName());
+
+		 msgOut.addReceiver(request.getSender());
+		 try {
+			 // Prepare the content
+			 ContentElement content = getContentManager().extractContent(request); // TODO exception block?
+			 Result result = new Result((Action)content, agent_options);
+			 // result.setValue(options);	
+
+			 try {
+				 // Let JADE convert from Java objects to string
+				 getContentManager().fillContent(msgOut, result);
+				 // send(msgOut);
+			 }
+			 catch (CodecException ce) {
+				 ce.printStackTrace();
+			 }
+			 catch (OntologyException oe) {
+				 oe.printStackTrace();
+			 }
+
+
+
+		 } catch (Exception e) {
+			 // TODO Auto-generated catch block
+			 e.printStackTrace();
+		 }
+
+
+		 return msgOut;
+
 	 }  // end SendOptions
 	 
 	 
@@ -247,8 +203,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 		
 		setOptions(OPTIONS_);
 			
-		Evaluation result = null;
-		MyWekaEvaluation my_result = null;
+		ontology.messages.Evaluation eval = null;
 		
 		boolean success = true;
 		
@@ -287,9 +242,9 @@ public abstract class Agent_ComputingAgent extends Agent{
 			if (state != states.TRAINED) { train(); }
 			// saveAgent();
 			// loadAgent(getLocalName());
- 	  	
-			result = test();			
-			my_result = new MyWekaEvaluation(result);
+			
+			//testing...
+			eval = evaluateCA();			
 		}
 		catch (Exception e){
 			success = false;
@@ -300,10 +255,18 @@ public abstract class Agent_ComputingAgent extends Agent{
 			System.out.println("Agent "+getLocalName()+": Action successfully performed.");
 			ACLMessage inform = request.createReply();
 			inform.setPerformative(ACLMessage.INFORM);
-			
 			try {
-				inform.setContentObject(my_result);
-			} catch (IOException e) {
+				// Prepare the content - Result with Evaluation instead of MyWekaEvaluation is sended!!!
+				ContentElement content = getContentManager().extractContent(request); // TODO exception block?
+				Result result = new Result((Action)content, eval);
+				getContentManager().fillContent(inform, result);
+			} catch (UngroundedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (CodecException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (OntologyException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
