@@ -60,7 +60,7 @@ public class Agent_GUI_config_file extends Agent_GUI{
 		System.out.println("Agent types: "+offerAgentTypes());
 		
 		configFileName = getConfigFileName();
-		/* try {
+		try {
 			getProblemsFromXMLFile(configFileName);
 		}
 		// indicates a well-formedness error
@@ -71,8 +71,9 @@ public class Agent_GUI_config_file extends Agent_GUI{
           System.out.print("Could not check " + configFileName);
           System.out.println(" because " + e.getMessage());
         }
-		 */        
+		// */        
         
+		/*
         // test:
         int newId = createNewProblem("1000");
         try {

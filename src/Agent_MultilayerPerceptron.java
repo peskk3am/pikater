@@ -39,31 +39,25 @@ public class Agent_MultilayerPerceptron extends Agent_WekaCA {
 	 }
 		 
 	 
-	 protected void train(){
-		 working = true;   
-		 System.out.println("Agent "+getLocalName()+": Training... ");
+	 protected void train() throws Exception{
+		working = true;   
+		System.out.println("Agent "+getLocalName()+": Training... ");
 		       
 		
-		 try {
-			if (OPTIONS.length > 0){
-				cls.setOptions(OPTIONS);
-			}
-			cls.setAutoBuild(true);
-			cls.buildClassifier(train);
-			
-			state = states.TRAINED;  // change agent state
-			
-			OPTIONS = cls.getOptions(); 
-			
-			// write out net parameters
-			System.out.println(getLocalName()+" "+getOptions());
-
-	 	 } catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		 }
+		if (OPTIONS.length > 0){
+			cls.setOptions(OPTIONS);
+		}
+		cls.setAutoBuild(true);
+		cls.buildClassifier(train);
+		
+		state = states.TRAINED;  // change agent state
+		
+		OPTIONS = cls.getOptions(); 
+		
+		// write out net parameters
+		System.out.println(getLocalName()+" "+getOptions());
 		 
-		 working = false;
+		working = false;
      }  // end train
      
      

@@ -46,11 +46,8 @@ public class Agent_Random extends Agent_OptionsManager {
 		 // go through the Options Vector, find mutable options, generate random values, make it a string
 		 
 		 String str = "";
-		 
-		 Random generator = new Random();
-		    
+		 Random generator = new Random();		    
 		 Iterator itr = Options.iterator();	 
-		 
 		 while (itr.hasNext()) {
 	           Option next = (Option) itr.next();
 	           
@@ -128,12 +125,9 @@ public class Agent_Random extends Agent_OptionsManager {
     				   
     				   str += (optionName+s);
 	    		   }
-	    	   }
-	           
+	    	   }	           
 	       }
-		 number_of_tries++;		 	 		 
+		 number_of_tries++;
 		 return str;
 	 }
-	 
-
 }

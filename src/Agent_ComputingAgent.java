@@ -77,7 +77,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 	 
 	 boolean working = false;  // TODO -> state?
 	
-	 protected abstract void train();
+	 protected abstract void train() throws Exception;
 	 protected abstract Evaluation test();
 	 
 	 public abstract String getAgentType();
@@ -204,7 +204,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 			           opt.setDescription(next.description);
 			           opt.setName(next.name);
 			           opt.setSynopsis(next.synopsis);
-			           opt.setValue(next.default_value);
+			           opt.setDefault_value(next.default_value);
 			           _options.add(opt);
 			       }
 				   agent.setOptions(_options);
@@ -288,8 +288,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 			// saveAgent();
 			// loadAgent(getLocalName());
  	  	
-			result = test();
-			
+			result = test();			
 			my_result = new MyWekaEvaluation(result);
 		}
 		catch (Exception e){
