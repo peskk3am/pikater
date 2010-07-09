@@ -1,0 +1,38 @@
+# name, type, number od values, parameters range / set
+# r ... range
+# s ... set  (example: s 1, 2, 3, 4, 5, 6, 7, 8)
+# 
+
+# -S num
+# The amount up to which deviation are tolerated (epsilon). (default 1e-3)
+# Watch out, the value of epsilon is used with the (normalized/standardize) data
+
+# -C num
+# The complexity constant C. (default 1)
+
+# -E num
+# The exponent for the polynomial kernel. (default 1)
+
+# -G num
+# Gamma for the RBF kernel. (default 0.01) 
+
+# Whether to 0=normalize/1=standardize/2=neither. (default 0=normalize)
+$ N int 1 1 s 0, 1, 2
+
+# Feature-space normalization (only for non-linear polynomial kernels).
+$ F boolean
+
+# Use lower-order terms (only for non-linear polynomial kernels).
+$ O boolean
+
+# Use RBF kernel (default poly).
+$ R boolean
+
+# Sets the size of the kernel cache. Should be a prime number. (default 250007, use 0 for full cache)
+$ A int 1 1 r 0 MAXINT
+
+# -T num
+# Sets the tolerance parameter. (default 1.0e-3)
+
+# -P num
+# Sets the epsilon for round-off error. (default 1.0e-12)

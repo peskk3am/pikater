@@ -1,11 +1,3 @@
-import java.io.*;
-import java.util.Date;
-import java.util.Vector;
-
-import ontology.messages.*;
-
-import weka.classifiers.Evaluation;
-import weka.core.Instances;
 import jade.content.ContentElement;
 import jade.content.lang.Codec;
 import jade.content.lang.Codec.CodecException;
@@ -15,28 +7,34 @@ import jade.content.onto.OntologyException;
 import jade.content.onto.UngroundedException;
 import jade.content.onto.basic.Action;
 import jade.content.onto.basic.Result;
+import jade.core.AID;
 import jade.core.Agent;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPANames;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
-import jade.domain.FIPAAgentManagement.FailureException;
 import jade.domain.FIPAAgentManagement.NotUnderstoodException;
 import jade.domain.FIPAAgentManagement.RefuseException;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import jade.lang.acl.UnreadableException;
 import jade.proto.AchieveREResponder;
-import jade.proto.ContractNetResponder;
 import jade.proto.IteratedAchieveREInitiator;
-import jade.core.AID;
-import jade.core.behaviours.DataStore;
-import jade.core.behaviours.SimpleBehaviour;
-import jade.proto.AchieveREInitiator;
 import jade.util.leap.ArrayList;
 import jade.util.leap.Iterator;
 import jade.util.leap.List;
+
+import java.util.Date;
+import java.util.Vector;
+
+import ontology.messages.Computation;
+import ontology.messages.Compute;
+import ontology.messages.Data;
+import ontology.messages.Execute;
+import ontology.messages.MessagesOntology;
+import ontology.messages.Option;
+import ontology.messages.Results;
+import ontology.messages.Task;
 
 
 public abstract class Agent_OptionsManager extends Agent {
@@ -61,12 +59,12 @@ public abstract class Agent_OptionsManager extends Agent {
 
 	 	 boolean working = false;
 	 	 	 	 
-		 MyWekaEvaluation result;
+		 protected ontology.messages.Evaluation evaluation;
 	 	 protected List Options;
 	 	 	 	 
 		 protected abstract String getAgentType();
 		 protected abstract boolean finished();
-		 protected abstract String generateNewOptions(MyWekaEvaluation result);
+		 protected abstract String generateNewOptions(ontology.messages.Evaluation result);
 		 
 
 		 private class ComputeComputation extends IteratedAchieveREInitiator{
@@ -158,9 +156,9 @@ public abstract class Agent_OptionsManager extends Agent {
 				// prepare the result to be added to results List:
 				
 				// set the Evaluation					
-				ontology.messages.Evaluation evaluation = new ontology.messages.Evaluation();
-				evaluation.setError_rate((float)result.errorRate);
-				evaluation.setPct_incorrect((float)result.pctIncorrect);
+				// ontology.messages.Evaluation evaluation = new ontology.messages.Evaluation();
+				// evaluation.setError_rate((float)result.errorRate);
+				// evaluation.setPct_incorrect((float)result.pctIncorrect);
 				
 				// get the Task from the last message						
 				try {
@@ -293,13 +291,25 @@ public abstract class Agent_OptionsManager extends Agent {
 				 
 				 ACLMessage msg;
 				 if (_result != null){
-					 try {
-						result = (MyWekaEvaluation) _result.getContentObject();
-					 } catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					 }
-					 System.out.println(getLocalName()+": Agent "+_result.getSender().getLocalName()+"'s errorRate was "+result.errorRate);
+					 ContentElement content;
+						try {
+							content = getContentManager().extractContent(_result);
+							// System.out.println(getLocalName()+": Action: "+((Result)content).getAction());
+							if (content instanceof Result) {
+				                Result result = (Result) content;
+				                
+				                if (result.getValue() instanceof ontology.messages.Evaluation) {
+				                	evaluation = (ontology.messages.Evaluation)result.getValue();
+				                }
+					  		}
+						} catch (CodecException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (OntologyException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}	 
+					 System.out.println(getLocalName()+": Agent "+_result.getSender().getLocalName()+"'s errorRate was "+evaluation.getError_rate());
 				 }
 				 
 				 
@@ -307,7 +317,7 @@ public abstract class Agent_OptionsManager extends Agent {
 					String opt;
 					if (Options != null){ 
 						_finished = finished();
-						opt = generateNewOptions(result) + " "+ getImmutableOptions();
+						opt = generateNewOptions(evaluation) + " "+ getImmutableOptions();
 					}
 					else{
 						opt = "";
@@ -331,8 +341,8 @@ public abstract class Agent_OptionsManager extends Agent {
 					task.setId(id);
 					task.setComputation_id(computation_id);
 					task.setProblem_id(problem_id);
-					task.setOptions(opt);
-					
+					// task.setOptions(opt);
+
 					Data data = new Data();
 					data.setTrain_file_name(trainFileName);
 					data.setTest_file_name(testFileName);
@@ -340,8 +350,8 @@ public abstract class Agent_OptionsManager extends Agent {
 					
 					ontology.messages.Agent agent = new ontology.messages.Agent(); 
 					agent.setName(receiver);
-					agent.setOptions(Options);
-					
+					agent.setOptions(agent.stringToOptions(opt));
+										
 					task.setAgent(agent);
 					
 					execute.setTask(task);

@@ -19,7 +19,6 @@ public class MessagesOntology extends Ontology {
 	  public static final String TASK_ID = "id";
 	  public static final String TASK_COMPUTATION_ID = "computation_id";
 	  public static final String TASK_PROBLEM_ID = "problem_id";
-	  public static final String TASK_OPTIONS = "options";
 	  public static final String TASK_AGENT = "agent";
 	  public static final String TASK_DATA = "data";
 	  public static final String TASK_RESULT = "result";
@@ -168,7 +167,6 @@ public class MessagesOntology extends Ontology {
 			cs.add(TASK_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 	    	cs.add(TASK_COMPUTATION_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 	    	cs.add(TASK_PROBLEM_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
-	    	cs.add(TASK_OPTIONS, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 			cs.add(TASK_AGENT, (ConceptSchema)getSchema(AGENT));
 			cs.add(TASK_DATA,  (ConceptSchema)getSchema(DATA));
 	    	cs.add(TASK_RESULT, (ConceptSchema)getSchema(EVALUATION), ObjectSchema.OPTIONAL);
