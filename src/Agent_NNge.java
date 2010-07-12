@@ -3,7 +3,7 @@ import weka.classifiers.Evaluation;
 import weka.classifiers.rules.NNge;
 
 
-public class Agent_NNge extends Agent_ComputingAgent{
+public class Agent_NNge extends Agent_WekaCA{
 	 private NNge cls = new NNge(); 
 	 
 	 protected NNge getModelObject(){

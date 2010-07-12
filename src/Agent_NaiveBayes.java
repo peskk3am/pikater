@@ -3,7 +3,7 @@ import weka.classifiers.Evaluation;
 import weka.classifiers.bayes.NaiveBayes;
 
 
-public class Agent_NaiveBayes extends Agent_ComputingAgent{
+public class Agent_NaiveBayes extends Agent_WekaCA{
 	 private NaiveBayes cls = new NaiveBayes(); 
 	 
 	 protected NaiveBayes getModelObject(){

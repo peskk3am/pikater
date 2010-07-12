@@ -3,7 +3,7 @@ import weka.classifiers.Evaluation;
 import weka.classifiers.functions.LinearRegression;
 
 
-public class Agent_LinearRegression extends Agent_ComputingAgent{
+public class Agent_LinearRegression extends Agent_WekaCA{
 	 private LinearRegression cls = new LinearRegression(); 
 	 
 	 protected LinearRegression getModelObject(){

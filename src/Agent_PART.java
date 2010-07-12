@@ -3,7 +3,7 @@ import weka.classifiers.Evaluation;
 import weka.classifiers.rules.PART;
 
 
-public class Agent_PART extends Agent_ComputingAgent{
+public class Agent_PART extends Agent_WekaCA{
 	 private PART cls = new PART(); 
 	 
 	 protected PART getModelObject(){

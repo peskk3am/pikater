@@ -3,7 +3,7 @@ import weka.classifiers.Evaluation;
 import weka.classifiers.rules.ZeroR;
 
 
-public class Agent_ZeroR extends Agent_ComputingAgent{
+public class Agent_ZeroR extends Agent_WekaCA{
 	 private ZeroR cls = new ZeroR(); 
 	 
 	 protected ZeroR getModelObject(){

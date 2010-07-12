@@ -3,7 +3,7 @@ import weka.classifiers.Evaluation;
 import weka.classifiers.trees.NBTree;
 
 
-public class Agent_NBTree extends Agent_ComputingAgent{
+public class Agent_NBTree extends Agent_WekaCA{
 	 private NBTree cls = new NBTree(); 
 	 
 	 protected NBTree getModelObject(){

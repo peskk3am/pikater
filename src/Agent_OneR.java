@@ -3,7 +3,7 @@ import weka.classifiers.Evaluation;
 import weka.classifiers.rules.OneR;
 
 
-public class Agent_OneR extends Agent_ComputingAgent{
+public class Agent_OneR extends Agent_WekaCA{
 	 private OneR cls = new OneR(); 
 	 
 	 protected OneR getModelObject(){

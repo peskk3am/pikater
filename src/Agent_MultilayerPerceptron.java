@@ -11,7 +11,7 @@ import weka.core.Option;
 
 import java.util.Random;
 
-public class Agent_MultilayerPerceptron extends Agent_ComputingAgent {
+public class Agent_MultilayerPerceptron extends Agent_WekaCA {
 	private MultilayerPerceptron cls = new MultilayerPerceptron();
 	
 	

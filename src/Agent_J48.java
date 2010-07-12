@@ -3,7 +3,7 @@ import weka.classifiers.Evaluation;
 import weka.classifiers.trees.J48;
 
 
-public class Agent_J48 extends Agent_ComputingAgent{
+public class Agent_J48 extends Agent_WekaCA{
 	 private J48 cls = new J48(); 
 	 
 	 protected J48 getModelObject(){

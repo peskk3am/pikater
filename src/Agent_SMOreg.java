@@ -3,7 +3,7 @@ import weka.classifiers.Evaluation;
 import weka.classifiers.functions.SMOreg;
 
 
-public class Agent_SMOreg extends Agent_ComputingAgent{
+public class Agent_SMOreg extends Agent_WekaCA{
 	 private SMOreg cls = new SMOreg(); 
 	 
 	 protected SMOreg getModelObject(){

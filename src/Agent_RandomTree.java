@@ -3,7 +3,7 @@ import weka.classifiers.Evaluation;
 import weka.classifiers.trees.RandomTree;
 
 
-public class Agent_RandomTree extends Agent_ComputingAgent{
+public class Agent_RandomTree extends Agent_WekaCA{
 	 private RandomTree cls = new RandomTree(); 
 	 
 	 protected RandomTree getModelObject(){
