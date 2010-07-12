@@ -19,7 +19,6 @@ public class MessagesOntology extends Ontology {
 	  public static final String TASK_ID = "id";
 	  public static final String TASK_COMPUTATION_ID = "computation_id";
 	  public static final String TASK_PROBLEM_ID = "problem_id";
-	  public static final String TASK_OPTIONS = "options";
 	  public static final String TASK_AGENT = "agent";
 	  public static final String TASK_DATA = "data";
 	  public static final String TASK_RESULT = "result";
@@ -53,6 +52,7 @@ public class MessagesOntology extends Ontology {
 	  public static final String EVALUATION = "EVALUATION";
 	  public static final String EVALUATION_ERROR_RATE = "error_rate";
 	  public static final String EVALUATION_PCT_INCORRECT = "pct_incorrect";
+	  public static final String EVALUATION_DATA_TABLE = "data_table";
 	  
 	  public static final String RESULTS = "RESULTS";
 	  public static final String RESULTS_COMPUTATION_ID = "computation_id";
@@ -81,6 +81,20 @@ public class MessagesOntology extends Ontology {
 	  public static final String INTERVAL = "INTERVAL";
 	  public static final String INTERVAL_MIN = "min";
 	  public static final String INTERVAL_MAX = "max";
+	  
+	  public static final String DATA_INSTANCES = "DATA-INSTANCES";
+	  public static final String DATA_INSTANCES_ATTRIBUTES = "attributes";
+	  public static final String DATA_INSTANCES_INSTANCES = "instances";
+	  public static final String DATA_INSTANCES_NAME = "name";
+
+	  public static final String ATTRIBUTE = "ATTRIBUTE";
+	  public static final String ATTRIBUTE_NAME = "name";
+	  public static final String ATTRIBUTE_TYPE = "type";
+	  public static final String ATTRIBUTE_VALUES = "values";
+	  public static final String ATTRIBUTE_DATE_FORMAT = "date_format";
+
+	  public static final String INSTANCE = "INSTANCE";
+	  public static final String INSTANCE_VALUES = "values";
 	  
 	  // Predicates
 	  public static final String PARTIALRESULTS = "PARTIALRESULTS";
@@ -137,9 +151,10 @@ public class MessagesOntology extends Ontology {
 			add(new ConceptSchema(METHOD), Method.class);
 			add(new ConceptSchema(EVALUATION), Evaluation.class);
 			add(new ConceptSchema(RESULTS), Results.class);
-			
+			add(new ConceptSchema(DATA_INSTANCES), DataInstances.class);
+			add(new ConceptSchema(ATTRIBUTE), Attribute.class);
+			add(new ConceptSchema(INSTANCE), Instance.class);
 			add(new PredicateSchema(PARTIALRESULTS),PartialResults.class);
-			
 			add(new AgentActionSchema(COMPUTE), Compute.class);
 			add(new AgentActionSchema(GET_OPTIONS), GetOptions.class);
 			add(new AgentActionSchema(EXECUTE), Execute.class);
@@ -174,7 +189,6 @@ public class MessagesOntology extends Ontology {
 			cs.add(TASK_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 	    	cs.add(TASK_COMPUTATION_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 	    	cs.add(TASK_PROBLEM_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
-	    	cs.add(TASK_OPTIONS, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 			cs.add(TASK_AGENT, (ConceptSchema)getSchema(AGENT));
 			cs.add(TASK_DATA,  (ConceptSchema)getSchema(DATA));
 	    	cs.add(TASK_RESULT, (ConceptSchema)getSchema(EVALUATION), ObjectSchema.OPTIONAL);
@@ -198,12 +212,13 @@ public class MessagesOntology extends Ontology {
 	    	cs.add(OPTION_WEKA_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 	    	cs.add(OPTION_WEKA_SYNOPSIS, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 	    	cs.add(OPTION_VALUE, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
-	    	cs.add(OPTION_DEFAULT_VALUE, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	cs.add(OPTION_DEFAULT_VALUE, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 	    	cs.add(OPTION_NUMBER_OF_VALUES_TO_TRY, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));
   	
 	    	cs = (ConceptSchema)getSchema(EVALUATION);
 	    	cs.add(EVALUATION_ERROR_RATE, (PrimitiveSchema)getSchema(BasicOntology.FLOAT));
 	    	cs.add(EVALUATION_PCT_INCORRECT, (PrimitiveSchema)getSchema(BasicOntology.FLOAT));
+	    	cs.add(EVALUATION_DATA_TABLE, (ConceptSchema)getSchema(DATA_INSTANCES), ObjectSchema.OPTIONAL);
     	
 	    	cs = (ConceptSchema)getSchema(RESULTS);
 	    	cs.add(RESULTS_COMPUTATION_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
@@ -214,7 +229,21 @@ public class MessagesOntology extends Ontology {
 	    	cs = (ConceptSchema)getSchema(AGENT);
 	    	cs.add(AGENT_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 	    	cs.add(AGENT_OPTIONS, (ConceptSchema)getSchema(OPTION), 0, ObjectSchema.UNLIMITED);
-	    	
+
+	    	cs = (ConceptSchema)getSchema(DATA_INSTANCES);
+	    	cs.add(DATA_INSTANCES_ATTRIBUTES, (ConceptSchema)getSchema(ATTRIBUTE), 0, ObjectSchema.UNLIMITED);
+	    	cs.add(DATA_INSTANCES_INSTANCES, (ConceptSchema)getSchema(INSTANCE), 0, ObjectSchema.UNLIMITED);
+	    	cs.add(DATA_INSTANCES_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+
+	    	cs = (ConceptSchema)getSchema(ATTRIBUTE);
+	    	cs.add(ATTRIBUTE_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+	    	cs.add(ATTRIBUTE_TYPE, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	cs.add(ATTRIBUTE_VALUES, (PrimitiveSchema)getSchema(BasicOntology.STRING), 0, ObjectSchema.UNLIMITED);
+	    	cs.add(ATTRIBUTE_DATE_FORMAT, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+
+	    	cs = (ConceptSchema)getSchema(INSTANCE);
+	    	cs.add(INSTANCE_VALUES, (PrimitiveSchema)getSchema(BasicOntology.FLOAT), 0, ObjectSchema.UNLIMITED);
+
 	    	
 			PredicateSchema ps = (PredicateSchema)getSchema(PARTIALRESULTS);
 	    	ps.add(PARTIALRESULTS_TASK, (ConceptSchema)getSchema(TASK), ObjectSchema.OPTIONAL);

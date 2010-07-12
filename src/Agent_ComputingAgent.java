@@ -70,7 +70,8 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 Instances test;
 
 	 protected String[] OPTIONS;
-	 protected String[] OPTIONS_;
+	 protected ontology.messages.Task current_task = null;
+	 //protected String[] OPTIONS_;
 	 protected String[] OPTIONS_ARGS;
 	 
 	 protected Object[] args;
@@ -199,9 +200,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 protected ACLMessage Execute(ACLMessage request, Execute execute, AchieveREResponder behavior) throws FailureException{
 		state = states.NEW;
 					
-		OPTIONS_ = execute.getTask().getOptions().split(" ");
-		
-		setOptions(OPTIONS_);
+		setOptions(execute.getTask());
 			
 		ontology.messages.Evaluation eval = null;
 		
@@ -435,11 +434,12 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 
 	 
 	 
-	 public boolean setOptions(String[] CONFIGURATION){
-		  /* INPUT: weka parameters
-		   * Fills the OPTIONS array.
+	 public boolean setOptions(ontology.messages.Task task){
+		  /* INPUT: task with weka options
+		   * Fills the OPTIONS array and current_task.
 		   */
-		 OPTIONS = CONFIGURATION;
+		 current_task = task;
+		 OPTIONS = task.getAgent().optionsToString().split(" ");
 		 
 		 return true;
 	 }  // end loadConfiguration

@@ -29,9 +29,9 @@ public class Agent_NBTree extends Agent_WekaCA{
 		 return "NBTree";
 	 }
 	
-	 protected void getParameters(){
+	 /*protected void getParameters(){
 		 System.out.println(cls.listOptions());
-	 }
+	 }*/
 	  
 	 protected void train() throws Exception{
 		working = true;   

@@ -77,7 +77,7 @@ public class Agent_GUI_config_file extends Agent_GUI{
         // test:
         int newId = createNewProblem("1000");
         try {
-			addAgentToProblemWekaStyle(newId, null, "MultilayerPerceptron", "-L 0.2 -D -M ? -H ?,?".split(" "));
+			addAgentToProblemWekaStyle(newId, null, "MultilayerPerceptron", "-L 0.2 -D -M ? -H ?,?", null);
 		} catch (FailureException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

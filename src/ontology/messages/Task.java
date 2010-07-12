@@ -4,7 +4,6 @@ import jade.content.Concept;
 import jade.util.leap.List;
 
 public class Task implements Concept {
-	private String _options;
 	private String _id;
 	private String _computation_id;
 	private String _problem_id;
@@ -24,13 +23,6 @@ public class Task implements Concept {
 	}
 	public Data getData() {
 		return _data;
-	}
-	
-	public void setOptions(String options) {
-		_options=options;
-	}
-	public String getOptions() {
-		return _options;
 	}
 	public void setId(String id) {
 		_id=id;

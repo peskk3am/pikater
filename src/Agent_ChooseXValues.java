@@ -1,3 +1,4 @@
+import jade.util.leap.ArrayList;
 import jade.util.leap.Iterator;
 import jade.util.leap.List;
 import java.util.Enumeration;
@@ -6,7 +7,7 @@ import java.util.Vector;
 
 import ontology.messages.Option;
 import ontology.messages.Problem;
-
+import ontology.messages.Evaluation;
 
 public class Agent_ChooseXValues extends Agent_OptionsManager {
 	private int n = Integer.MAX_VALUE;
@@ -106,7 +107,7 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
 	}
 	
 	@Override
-	protected String generateNewOptions(MyWekaEvaluation result) {
+	protected String generateNewOptions(Evaluation result) {
 		if (n == Integer.MAX_VALUE){
 			// generate the options_vector when called for the first time
 			generateOptions_vector();

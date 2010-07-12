@@ -28,10 +28,10 @@ public class Agent_RandomTree extends Agent_WekaCA{
 	 public String getAgentType(){
 		 return "RandomTree";
 	 }
-	
+	 /*
 	 protected void getParameters(){
 		 System.out.println(cls.listOptions());
-	 }
+	 }*/
 	  
 	 protected void train() throws Exception{
 		working = true;   

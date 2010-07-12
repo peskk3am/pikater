@@ -28,11 +28,11 @@ public class Agent_SMOreg extends Agent_WekaCA{
 	 public String getAgentType(){
 		 return "SMOreg";
 	 }
-	
+	/*
 	 protected void getParameters(){
 		 System.out.println(cls.listOptions());
 	 }
-	  
+	  */
 	 protected void train() throws Exception{
 		working = true;   
 		System.out.println("Agent "+getLocalName()+": Training...");	       

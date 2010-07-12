@@ -422,34 +422,13 @@ public abstract class Agent_GUI extends Agent {
 	
 	
 	protected void addAgentToProblemWekaStyle(int _problem_id, String agentName, String agentType,
-			String [] agentParams) throws FailureException{
+		String agentParams) throws FailureException{
 		
-		String newAgentName = addAgentToProblem(_problem_id, agentName, agentType);
-				
-    	for (int i=0; i < agentParams.length; i++){
-    		if (agentParams[i].startsWith("-")){
-    			String name = agentParams[i].replaceFirst("-", "");
-    			// if the next array element is again an option name, 
-    			// (or it is the last element)
-    			// => it's a boolean parameter
-    			String value;
-    			if (i == agentParams.length-1){
-    				value = "True";
-    			}
-    			else {
-    				if (agentParams[i+1].startsWith("-")){
-    					value = "True";
-    				}
-    				else{
-    					value = agentParams[i+1];    				
-    				}
-    			}
-    			addOptionToAgent(_problem_id, newAgentName, name, value, null, null, null, null);	
-    		}
-    	}
+		String newAgentName = addAgentToProblem(_problem_id, agentName, agentType, agentParams);				
 	}
 	
-	protected String addAgentToProblem(int _problem_id, String name, String type) throws FailureException{		
+	protected String addAgentToProblem(int _problem_id, String name,
+			String type, String optString) throws FailureException{		
 		AID aid = null;
 		long _timeout = timeout + System.currentTimeMillis();
 		if (type != null){
@@ -476,7 +455,7 @@ public abstract class Agent_GUI extends Agent {
 			}
 		}
 		
-		addAgent(_problem_id, name);
+		addAgent(_problem_id, name, optString);
 		getAgentOptions(name);
 		
 		return name;
@@ -545,7 +524,7 @@ public abstract class Agent_GUI extends Agent {
 		return null;		
 	}
 		
-	private void addAgent(int _problem_id, String name){
+	private void addAgent(int _problem_id, String name, String optString){
 			
 		for (Enumeration pe = problems.elements() ; pe.hasMoreElements() ;) {
 			Problem next_problem = (Problem)pe.nextElement();
@@ -553,7 +532,12 @@ public abstract class Agent_GUI extends Agent {
 				if (Integer.parseInt(next_problem.getGui_id()) == _problem_id) {
 					ontology.messages.Agent agent = new ontology.messages.Agent();	
 					agent.setName(name);
-					agent.setOptions(new ArrayList());
+					if (optString == null){
+						agent.setOptions(new ArrayList());
+					}
+					else {
+						agent.setOptions(agent.stringToOptions(optString));
+					}
 					List agents = next_problem.getAgents();
 					agents.add(agent);
 					next_problem.setAgents(agents);
@@ -955,7 +939,7 @@ public abstract class Agent_GUI extends Agent {
 	        	   String agent_name = next_agent.getAttributeValue("name");
 	           	   String agent_type = next_agent.getAttributeValue("type");
 	           	   try {
-	           		   agent_name = addAgentToProblem(p_id, agent_name, agent_type);
+	           		   agent_name = addAgentToProblem(p_id, agent_name, agent_type, null);
 	           	   } catch (FailureException e) {
 	           		   System.err.println(e.getLocalizedMessage());
 	           		   // e.printStackTrace();
