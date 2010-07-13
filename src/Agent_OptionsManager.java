@@ -61,10 +61,11 @@ public abstract class Agent_OptionsManager extends Agent {
 	 	 	 	 
 		 protected ontology.messages.Evaluation evaluation;
 	 	 protected List Options;
+	 	 protected ontology.messages.Agent Agent;
 	 	 	 	 
 		 protected abstract String getAgentType();
 		 protected abstract boolean finished();
-		 protected abstract String generateNewOptions(ontology.messages.Evaluation result);
+		 protected abstract void generateNewOptions(ontology.messages.Evaluation result);
 		 
 
 		 private class ComputeComputation extends IteratedAchieveREInitiator{
@@ -94,7 +95,8 @@ public abstract class Agent_OptionsManager extends Agent {
 			  		ContentElement content = getContentManager().extractContent(incomingRequest);
 			  		if (((Action)content).getAction() instanceof Compute){
 	                    Computation computation = (Computation)((Compute) ((Action)content).getAction()).getComputation();
-	                    Options = computation.getAgent().getOptions();
+	                    Agent = computation.getAgent();
+	                    Options = Agent.getOptions();
 					  	trainFileName = computation.getData().getTrain_file_name();
 					  	testFileName = computation.getData().getTest_file_name();
 					  	receiver = computation.getAgent().getName();
@@ -314,16 +316,15 @@ public abstract class Agent_OptionsManager extends Agent {
 				 
 				 
 				 if (!_finished){
-					String opt;
 					if (Options != null){ 
+						generateNewOptions(evaluation);
 						_finished = finished();
-						opt = generateNewOptions(evaluation) + " "+ getImmutableOptions();
 					}
 					else{
-						opt = "";
 						_finished = true;
 					}
-					System.out.println(getLocalName()+": new options for agent "+receiver+" are "+opt); 
+					System.out.println(getLocalName()+": new options for agent "+receiver+" are "
+							+new ontology.messages.Agent().optionsToString(Options) ); 
 					 
 					msg = new ACLMessage(ACLMessage.REQUEST);
 					msg.setLanguage(codec.getName());
@@ -347,12 +348,8 @@ public abstract class Agent_OptionsManager extends Agent {
 					data.setTrain_file_name(trainFileName);
 					data.setTest_file_name(testFileName);
 					task.setData(data);
-					
-					ontology.messages.Agent agent = new ontology.messages.Agent(); 
-					agent.setName(receiver);
-					agent.setOptions(agent.stringToOptions(opt));
 										
-					task.setAgent(agent);
+					task.setAgent(Agent);
 					
 					execute.setTask(task);
 					

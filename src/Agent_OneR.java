@@ -28,10 +28,6 @@ public class Agent_OneR extends Agent_WekaCA{
 	 public String getAgentType(){
 		 return "OneR";
 	 }
-	
-	 protected void getParameters(){
-		 System.out.println(cls.listOptions());
-	 }
 	  
 	 protected void train() throws Exception{
 		working = true;   

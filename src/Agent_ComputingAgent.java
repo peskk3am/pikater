@@ -168,6 +168,8 @@ public abstract class Agent_ComputingAgent extends Agent{
 		 try {
 			 // Prepare the content
 			 ContentElement content = getContentManager().extractContent(request); // TODO exception block?
+			 System.out.println("kkkkkkkkkk1 "+agent_options.getName());
+			 
 			 Result result = new Result((Action)content, agent_options);
 			 // result.setValue(options);	
 
@@ -199,7 +201,10 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 protected ACLMessage Execute(ACLMessage request, Execute execute, AchieveREResponder behavior) throws FailureException{
 		state = states.NEW;
 					
-		OPTIONS_ = execute.getTask().getOptions().split(" ");
+		ontology.messages.Agent agent = execute.getTask().getAgent();
+		String optStr =  agent.optionsToString(agent.getOptions());
+		System.out.println("Agent "+getLocalName()+" received options: "+optStr);
+		OPTIONS_ = optStr.split("[ ]+");
 		
 		setOptions(OPTIONS_);
 			
@@ -359,14 +364,12 @@ public abstract class Agent_ComputingAgent extends Agent{
 				for (String s : OPTIONS_ARGS) {
 					System.out.print(s+" ");
 				}
-					
 		    }
 		}
 		 
 		registerWithDF();
 
-		getParameters();
-		 			
+		getParameters();		 			
 			                
 	  		  	MessageTemplate template_inform = MessageTemplate.and(
 	  		  		MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST),

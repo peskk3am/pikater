@@ -28,10 +28,6 @@ public class Agent_NaiveBayes extends Agent_WekaCA{
 	 public String getAgentType(){
 		 return "NaiveBayes";
 	 }
-	
-	 protected void getParameters(){
-		 System.out.println(cls.listOptions());
-	 }
 	  
 	 protected void train(){
 		 working = true;   

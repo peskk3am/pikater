@@ -28,10 +28,6 @@ public class Agent_J48 extends Agent_WekaCA{
 	 public String getAgentType(){
 		 return "J48";
 	 }
-	
-	 protected void getParameters(){
-		 System.out.println(cls.listOptions());
-	 }
 	  
 	 protected void train() throws Exception{
 		working = true;   

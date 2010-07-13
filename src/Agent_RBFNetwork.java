@@ -48,12 +48,6 @@ public class Agent_RBFNetwork extends Agent_WekaCA{
 		 return "RBFNetwork";
 	 }
 	
-	 /*
-	 protected void getParameters(){
-		 System.out.println(cls.listOptions());
-	 }*/
-	 
-	 
 	 protected void train() throws Exception{
 		working = true;   
 		System.out.println("Agent "+getLocalName()+": Training...");

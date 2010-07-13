@@ -1,4 +1,6 @@
+import jade.util.leap.ArrayList;
 import jade.util.leap.Iterator;
+import jade.util.leap.List;
 
 import java.util.Random;
 
@@ -22,13 +24,12 @@ public class Agent_Random extends Agent_OptionsManager {
 		 }
 		 return false;
 	 }
-	 
-	 
-	 
-	 protected String generateNewOptions(Evaluation result){
+	 	 
+	 protected void generateNewOptions(Evaluation result){
 		 // go through the Options Vector, find mutable options, generate random values, make it a string
 		 
-		 String str = "";
+		 List newOptions = new ArrayList();
+		 
 		 Random generator = new Random();		    
 		 Iterator itr = Options.iterator();	 
 		 while (itr.hasNext()) {
@@ -36,12 +37,12 @@ public class Agent_Random extends Agent_OptionsManager {
 	           
 	    	   if (next.getMutable()){
 	    		   
-	    		   String optionName = " -"+next.getName()+" ";
+	    		   // String optionName = " -"+next.getName()+" ";
 	    		   
 	    		   // int numArgs = (int)(next.getNumber_of_args().getMin()
 	    		   //	   +generator.nextInt((int)(next.getNumber_of_args().getMax()-next.getNumber_of_args().getMin()+1)));
 	    		   
-	    	    	String[] values = next.getValue().split(",");
+	    	    	String[] values = next.getUser_value().split(",");
 	    	    	int numArgs = values.length;
 	    		   
 	    		   if (!next.getIs_a_set()){	    		   
@@ -57,7 +58,6 @@ public class Agent_Random extends Agent_OptionsManager {
 		    		   					+ generator.nextInt((int)(next.getRange().getMax()-next.getRange().getMin())));
 		    		   			si += Integer.toString(rInt);
 		    		   			 
-		    		   			str += (optionName+si);
 		    		   			next.setValue(si);
 		    		   }	
 		    		   if(next.getData_type().equals("FLOAT")){
@@ -71,13 +71,11 @@ public class Agent_Random extends Agent_OptionsManager {
 		    		   					*(next.getRange().getMax() - next.getRange().getMin());
 		    		   			sf += Float.toString(rFloat);
 		    		   			 
-		    		   			str += (optionName+sf);
 		    		   			next.setValue(sf);
 		    		  }
 		    		  if(next.getData_type().equals("BOOLEAN")){
 		    		   			int rInt2 = generator.nextInt(2);
 		    		   			if (rInt2 == 1){
-		    		   				str += optionName;
 		    		   				next.setValue("True");
 		    		   			}
 		    		   			else{
@@ -85,8 +83,7 @@ public class Agent_Random extends Agent_OptionsManager {
 		    		   			}
 		    		  }  
 	    		   }
-	    		   else{
-	    			   	    			   
+	    		   else{	    			   	    			   
 	    			   String s = "";
 	    			   for (int i=1; i<numArgs; i++){
 	    				   if (values[i-1].equals("?")){
@@ -105,12 +102,10 @@ public class Agent_Random extends Agent_OptionsManager {
     				   else{
     					   s += values[numArgs-1];
     				   }
-    				   
-    				   str += (optionName+s);
+    				   next.setValue(s);
 	    		   }
 	    	   }	           
 	       }
 		 number_of_tries++;
-		 return str;
 	 }
 }

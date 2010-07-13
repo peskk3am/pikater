@@ -569,7 +569,7 @@ public abstract class Agent_GUI extends Agent {
 			   		 		if (option_value.indexOf("?") > -1){
 			   		 		// if (option_value.equals("?")){
 		   		 				option.setMutable(true);
-		   		 				
+		   		 				option.setUser_value(option_value);	
 		   		 				if (lower != null && upper != null){
 		   		 					Interval interval = new Interval();
 		   		 					interval.setMin(Float.valueOf(lower));
@@ -577,9 +577,9 @@ public abstract class Agent_GUI extends Agent {
 		   		 					option.setRange(interval);
 		   		 				}
 		   		 			}	   		 				
-		   		 		
 			   		 		option.setValue(option_value);
 			   		 		
+		   		 		
 			   		 		if (set != null){
 			   		 			String[] set_array = (set.replace(" ", "")).split(",");
 			   		 			List set_list = new ArrayList();
@@ -703,6 +703,7 @@ public abstract class Agent_GUI extends Agent {
 								Iterator oitr = agent.getOptions().iterator();	 		   		 
 					   		 	while (oitr.hasNext()) {
 					   		 		Option next_option = (Option) oitr.next();
+					   		 		next_option.setValue(next_option.getDefault_value());
 					   		 		mergedOptions.add(next_option);
 					   		 	}
 								
@@ -715,10 +716,13 @@ public abstract class Agent_GUI extends Agent {
 						   		 	while (ocaitr.hasNext()) {
 						   		 		Option next_merged_option = (Option) ocaitr.next();
 						   		 		if (next_problem_option.getName().equals(next_merged_option.getName())
-						   		 				&& next_problem_option.getValue() != null ) {
+						   		 				//&& (next_problem_option.getValue() != null 
+						   		 				//	|| next_problem_option.getUser_value() != null )
+						   		 			) {
 						   		 			// copy all the parameters (problem -> merged)
 						   		 			if (next_problem_option.getMutable()){
 						   		 				next_merged_option.setMutable(true);
+						   		 				next_merged_option.setUser_value(next_problem_option.getValue());
 						   		 				if (next_problem_option.getRange() != null){
 						   		 					next_merged_option.getRange().setMin(next_problem_option.getRange().getMin());
 						   		 					next_merged_option.getRange().setMax(next_problem_option.getRange().getMax());
@@ -734,8 +738,7 @@ public abstract class Agent_GUI extends Agent {
 						   		 						next_problem_option.getName()+ " is not a BOOLEAN type option.");
 						   		 			}
 						   		 			else{
-						   		 			//if (next_problem_option.getValue() != null ){
-						   		 				next_merged_option.setValue(next_problem_option.getValue());
+					   		 					next_merged_option.setValue(next_problem_option.getValue());
 						   		 			}
 		
 						   		 			ocaitr.set(next_merged_option);

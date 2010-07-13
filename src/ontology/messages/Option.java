@@ -16,6 +16,7 @@ public class Option implements Concept{
 	private String _synopsis;
 	private String _value;
 	private String _default_value;
+	private String _user_value;
 	private int _number_of_values_to_try;
 	
 	// Methods required to use this class to represent the TASK role
@@ -84,6 +85,12 @@ public class Option implements Concept{
 	}
 	public String getDefault_value() {
 		return _default_value;
+	}
+	public void setUser_value(String user_value) {
+		_user_value=user_value;
+	}
+	public String getUser_value() {
+		return _user_value;
 	}
 	public int getNumber_of_values_to_try() {
 		return _number_of_values_to_try;

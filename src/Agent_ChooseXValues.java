@@ -36,7 +36,7 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
     	Random generator = new Random();
     	String optionName = " -"+next.getName()+" ";
     	// number of values ~ number of "?"s set by user
-    	String[] values = next.getValue().split(",");
+    	String[] values = next.getUser_value().split(",");
     	int numArgs = values.length;
     	
     	if (!next.getIs_a_set()){	    		   
@@ -107,15 +107,33 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
 	}
 	
 	@Override
-	protected String generateNewOptions(Evaluation result) {
+	protected void generateNewOptions(Evaluation result) {
 		if (n == Integer.MAX_VALUE){
 			// generate the options_vector when called for the first time
 			generateOptions_vector();
 		}
 		if (n == 0){
-			return "";
+			return;
 		}
-		return options_vector.get(ni++); 		
+		// return options_vector.get(ni++);
+		// go through a string, add the values to the Options
+		String optString = options_vector.get(ni++);
+		List newOpt = (new ontology.messages.Agent()).stringToOptions(optString);
+		
+		List newOptions = new ArrayList();
+		Iterator itr = Options.iterator();	 
+		while (itr.hasNext()) {
+	        Option next = (Option) itr.next();
+	        Iterator itrnew = newOpt.iterator();	 
+			while (itrnew.hasNext()) {
+		        Option nextnew = (Option) itrnew.next();
+		        if (nextnew.getName().equals(next.getName())){
+		        	next.setValue(nextnew.getValue());
+		        	newOptions.add(next);
+		        }
+			}		       
+		}
+		Options = newOptions;
 	}
 
 	
