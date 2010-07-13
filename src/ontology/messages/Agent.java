@@ -54,9 +54,12 @@ public class Agent implements Concept{
 		return optList;
 	}
 	
-	public String optionsToString(List optList){
+	public String optionsToString(){
 		String str = "";
-		Iterator itr = optList.iterator();	 		   		 
+		if(_options == null){
+			return str;
+		}
+		Iterator itr = _options.iterator();	 		   		 
 	 	while (itr.hasNext()) {
 	 		ontology.messages.Option next_opt = (ontology.messages.Option) itr.next();
 	 		if (next_opt.getData_type().equals("BOOLEAN")){

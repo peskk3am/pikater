@@ -66,4 +66,3 @@ public class Agent_ZeroR extends Agent_WekaCA{
 		 return eval;
 	 }  // end test	    
 }
-

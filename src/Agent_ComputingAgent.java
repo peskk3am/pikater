@@ -70,7 +70,8 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 Instances test;
 
 	 protected String[] OPTIONS;
-	 protected String[] OPTIONS_;
+	 protected ontology.messages.Task current_task = null;
+	 //protected String[] OPTIONS_;
 	 protected String[] OPTIONS_ARGS;
 	 
 	 protected Object[] args;
@@ -168,8 +169,6 @@ public abstract class Agent_ComputingAgent extends Agent{
 		 try {
 			 // Prepare the content
 			 ContentElement content = getContentManager().extractContent(request); // TODO exception block?
-			 System.out.println("kkkkkkkkkk1 "+agent_options.getName());
-			 
 			 Result result = new Result((Action)content, agent_options);
 			 // result.setValue(options);	
 
@@ -201,12 +200,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 protected ACLMessage Execute(ACLMessage request, Execute execute, AchieveREResponder behavior) throws FailureException{
 		state = states.NEW;
 					
-		ontology.messages.Agent agent = execute.getTask().getAgent();
-		String optStr =  agent.optionsToString(agent.getOptions());
-		System.out.println("Agent "+getLocalName()+" received options: "+optStr);
-		OPTIONS_ = optStr.split("[ ]+");
-		
-		setOptions(OPTIONS_);
+		setOptions(execute.getTask());
 			
 		ontology.messages.Evaluation eval = null;
 		
@@ -364,12 +358,14 @@ public abstract class Agent_ComputingAgent extends Agent{
 				for (String s : OPTIONS_ARGS) {
 					System.out.print(s+" ");
 				}
+					
 		    }
 		}
 		 
 		registerWithDF();
 
-		getParameters();		 			
+		getParameters();
+		 			
 			                
 	  		  	MessageTemplate template_inform = MessageTemplate.and(
 	  		  		MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST),
@@ -438,11 +434,12 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 
 	 
 	 
-	 public boolean setOptions(String[] CONFIGURATION){
-		  /* INPUT: weka parameters
-		   * Fills the OPTIONS array.
+	 public boolean setOptions(ontology.messages.Task task){
+		  /* INPUT: task with weka options
+		   * Fills the OPTIONS array and current_task.
 		   */
-		 OPTIONS = CONFIGURATION;
+		 current_task = task;
+		 OPTIONS = task.getAgent().optionsToString().split(" ");
 		 
 		 return true;
 	 }  // end loadConfiguration
@@ -551,5 +548,4 @@ public abstract class Agent_ComputingAgent extends Agent{
 
 	        send(msgOut);
 	    }
-	    
 }; 

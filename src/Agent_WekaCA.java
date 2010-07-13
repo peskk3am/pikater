@@ -134,7 +134,7 @@ public abstract class Agent_WekaCA extends Agent_ComputingAgent {
          return opt;
 	 }
 	 
-	 @Override	
+	 @Override
 	 protected void getParameters(){
 			// fills the global Options vector
 		 
@@ -144,7 +144,6 @@ public abstract class Agent_WekaCA extends Agent_ComputingAgent {
 			
 			agent_options = new ontology.messages.Agent();
 			agent_options.setName(getLocalName());
-			
 			 // read options from file
 			try {
 				/*  Sets up a file reader to read the options file */

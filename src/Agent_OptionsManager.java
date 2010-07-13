@@ -324,7 +324,7 @@ public abstract class Agent_OptionsManager extends Agent {
 						_finished = true;
 					}
 					System.out.println(getLocalName()+": new options for agent "+receiver+" are "
-							+new ontology.messages.Agent().optionsToString(Options) ); 
+							+new ontology.messages.Agent().optionsToString() ); 
 					 
 					msg = new ACLMessage(ACLMessage.REQUEST);
 					msg.setLanguage(codec.getName());
