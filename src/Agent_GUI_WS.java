@@ -1,3 +1,5 @@
+import java.util.Vector;
+
 import jade.content.lang.Codec;
 
 
@@ -19,6 +21,7 @@ import jade.domain.FIPAAgentManagement.NotUnderstoodException;
 import jade.domain.FIPAAgentManagement.Property;
 import jade.domain.FIPAAgentManagement.RefuseException;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.gui.GuiEvent;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.MessageTemplate.MatchExpression;
@@ -27,13 +30,16 @@ import jade.util.leap.ArrayList;
 import jade.util.leap.Iterator;
 import jade.util.leap.List;
 import ontology.messages.Agent;
+import ontology.messages.Option;
 import ontology.messages.Problem;
 import ontology.messages.Results;
+import ontology.messages.Task;
 import ontology.webservices.GetAgents;
 import ontology.webservices.GetResults;
 import ontology.webservices.GetOptions;
 import ontology.webservices.SetProblem;
 import ontology.webservices.WS_Ontology;
+import ontology.webservices.WS_Results;
 
 
 public class Agent_GUI_WS extends Agent_GUI {
@@ -46,6 +52,7 @@ public class Agent_GUI_WS extends Agent_GUI {
 
 	@Override
 	protected void displayResult(ACLMessage inform) {
+		displayPartialResult(inform);
 		System.out.println("Displaying the result ;)");
 	}
 
@@ -125,8 +132,8 @@ public class Agent_GUI_WS extends Agent_GUI {
 						try {
 							while (it.hasNext()) {
 								String[] params =  ((String)it.next()).split("[ ]+");
-								addAgentToProblemWekaStyle(problemID, params[0], null, params);
-								getAgentOptions(params[0]);
+								addAgentToProblemWekaStyle(problemID, null, params[0], params);
+								getAgentOptions(getAgentByType(params[0]).getLocalName());
 							}
 						}
 						catch (FailureException e) {
@@ -142,7 +149,8 @@ public class Agent_GUI_WS extends Agent_GUI {
 					}
 					else if (a.getAction() instanceof GetAgents) {
 						
-						String[] agents = getComputingAgents();
+						//String[] agents = getComputingAgents();
+						Vector<String> agents = offerAgentTypes();
 						
 						jade.util.leap.ArrayList agentsList = new ArrayList();
 						
@@ -162,7 +170,31 @@ public class Agent_GUI_WS extends Agent_GUI {
 						
 						ACLMessage response = request.createReply();
 						response.setPerformative(ACLMessage.INFORM);
-						Result r = new Result(a.getAction(), results);
+						
+						ArrayList res = new ArrayList();
+						
+						Iterator it = results.iterator();
+						
+						while (it.hasNext()) {
+							Results r = (Results)it.next();
+							
+							Iterator rit = r.getResults().iterator();
+							
+							while (rit.hasNext()) {
+								Task t = (Task)rit.next();
+								
+								WS_Results wres = new WS_Results();
+								wres.setOptions(t.getOptions());
+								wres.setErrorRate(t.getResult().getError_rate());
+								wres.setPctIncorrect(t.getResult().getPct_incorrect());
+								
+								res.add(wres);
+								
+							}
+							
+						}
+						
+						Result r = new Result(a.getAction(), res);
 						
 						getContentManager().fillContent(response, r);
 						
@@ -173,7 +205,7 @@ public class Agent_GUI_WS extends Agent_GUI {
 						ACLMessage response = request.createReply();
 						
 						GetOptions go = (GetOptions)a.getAction();
-						String agentName = go.getAgentName();
+						String agentName = getAgentByType(go.getAgentName()).getLocalName();
 						
 						Agent ag = onlyGetAgentOptions(agentName);
 						
@@ -269,8 +301,8 @@ public class Agent_GUI_WS extends Agent_GUI {
 	@Override
 	protected void displayPartialResult(ACLMessage inform) {
 		try {
-			Results r = (Results)getContentManager().extractContent(inform);
-			results.add(r);
+			Result r = (Result)getContentManager().extractContent(inform);
+			results.add((Results)r.getValue());
 		} catch (UngroundedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -302,4 +334,23 @@ public class Agent_GUI_WS extends Agent_GUI {
 		
 	}
 
+	private String optionsToWekaString(List options) {
+		
+		Iterator it = options.iterator();
+		String str = "";
+		
+		while (it.hasNext()) {
+			Option o = (Option)it.next();
+			str += "-" + o.getName() + " " + o.getValue() + " ";
+		}
+		
+		return str.trim();
+	}
+
+	@Override
+	protected void onGuiEvent(GuiEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+	
 }

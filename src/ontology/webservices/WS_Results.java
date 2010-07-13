@@ -3,18 +3,18 @@ package ontology.webservices;
 import jade.content.Concept;
 import jade.util.leap.List;
 
-public class Results implements Concept {
+public class WS_Results implements Concept {
 	
 	private static final long serialVersionUID = 1439064992523900962L;
 	
-	private List options;
+	private String options;
 	private float errorRate;
-	private float pctCorrect;
+	private float pctIncorrect;
 	
-	public List getOptions() {
+	public String getOptions() {
 		return options;
 	}
-	public void setOptions(List options) {
+	public void setOptions(String options) {
 		this.options = options;
 	}
 	public float getErrorRate() {
@@ -23,11 +23,11 @@ public class Results implements Concept {
 	public void setErrorRate(float errorRate) {
 		this.errorRate = errorRate;
 	}
-	public float getPctCorrect() {
-		return pctCorrect;
+	public float getPctIncorrect() {
+		return pctIncorrect;
 	}
-	public void setPctCorrect(float pctCorrect) {
-		this.pctCorrect = pctCorrect;
+	public void setPctIncorrect(float pctIncorrect) {
+		this.pctIncorrect = pctIncorrect;
 	}
 
 }

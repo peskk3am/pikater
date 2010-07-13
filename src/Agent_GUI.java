@@ -32,6 +32,7 @@ import jade.domain.FIPANames;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.FailureException;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.gui.GuiAgent;
 import jade.lang.acl.ACLMessage;
 import jade.proto.AchieveREInitiator;
 import jade.proto.AchieveREResponder;
@@ -45,7 +46,7 @@ import jade.wrapper.ControllerException;
 import jade.wrapper.PlatformController;
 
 
-public abstract class Agent_GUI extends Agent {	
+public abstract class Agent_GUI extends GuiAgent {	
 	
 	private String path = System.getProperty("user.dir")+System.getProperty("file.separator");
 	
