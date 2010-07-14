@@ -6,6 +6,12 @@ import java.util.Vector;
 
 import org.jdom.JDOMException;
 
+import jade.content.ContentElement;
+import jade.content.lang.Codec.CodecException;
+import jade.content.onto.OntologyException;
+import jade.content.onto.UngroundedException;
+import jade.content.onto.basic.Action;
+import jade.content.onto.basic.Result;
 import jade.core.Agent;
 import jade.core.AID;
 import jade.core.behaviours.CyclicBehaviour;
@@ -34,8 +40,37 @@ public class Agent_GUI_config_file extends Agent_GUI{
 
 	@Override
 	protected void displayResult(ACLMessage inform) {
-		System.out.println("Agent :"+getName()+": Displaying the results ;)");
+		System.out.println("Agent :"+getName()+": Displaying the results ;), the options were:");
+		ContentElement content;
+		try {
+			content = getContentManager().extractContent(inform);
+			if (content instanceof Result) {
+	            Result result = (Result) content;            
+	            if (result.getValue() instanceof Results) {
+	            	List tasks = ((Results)result.getValue()).getResults();
+	            	
+	            	Iterator itr = tasks.iterator();	 
+	       		 	while (itr.hasNext()) {
+	       	           Task task = (Task) itr.next();
+	       	           System.out.println("Agent "+getLocalName()+": options for agent "
+	       	        		   +task.getAgent().getName()+" were "
+	       	        		   +task.getAgent().optionsToString());
+	       		 	}	       	     
+	            }    
+			}
+	        
+		} catch (UngroundedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (CodecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (OntologyException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
 	}
+	
 	@Override
 	protected void DisplayWrongOption(int problemGuiId, String agentName, String optionName, String errorMessage){
 		System.out.println("Agent :"+getName()+" "+problemGuiId+" "+agentName+" "+optionName+" "+errorMessage);
