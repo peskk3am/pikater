@@ -4,7 +4,7 @@ import java.io.*;
 
 public class MyWekaOption implements Serializable{
 	public enum dataType {
-		    INT, FLOAT, BOOLEAN 
+		    INT, FLOAT, BOOLEAN, MIXED 
 	}
 	// list - pocet polozek, range
 	
@@ -26,7 +26,7 @@ public class MyWekaOption implements Serializable{
 	public boolean isASet = false;
 	
 	public MyWekaOption(String arg0, String arg1, int arg2, String arg3, dataType _type,
-			int _numArgsMin, int _numArgsMax, String range, String rest) {
+			int _numArgsMin, int _numArgsMax, String range, String _default_value, String rest) {
 		// super(arg0, arg1, arg2, arg3);
 		
 		description = arg0;
@@ -39,16 +39,27 @@ public class MyWekaOption implements Serializable{
         
         type = _type;
         
+        default_value = _default_value;
+        
 		String delims = "[, ]+";
         String[] params = rest.split(delims);
         
         if (range.equals("r")){
-            lower = new Float(params[0]);
-            upper = new Float(params[1]);
+ 		    int maxValue;
+	    	if (params[1].equals("MAXINT")){
+	    	   maxValue = Integer.MAX_VALUE;
+	    	}
+	    	else {
+	    	   maxValue = new Integer(params[1]).intValue();
+	    	}
+        	
+        	lower = new Float(params[0]);
+            upper = new Float(maxValue);
 		}
         if (range.equals("s")){
         	isASet = true;
-			set = params;
+        	set = new String[params.length];
+			System.arraycopy(params, 0, set, 0, params.length);
         }
         	
 	}  // end constructor

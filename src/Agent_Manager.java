@@ -383,6 +383,7 @@ public class Agent_Manager extends Agent{
 	    	        	   computation.setProblem_id(problemId);
 	    	        	   computation.setId(problemId+"_"+computation_i);
 	    	        	   computation.setTimeout(problem.getTimeout());
+	    	        	   computation.setMethod(problem.getMethod());
 	    	        	   computation_i++;
 	    	        	   
 	    	        	   msgVector.add( Compute(computation) );
@@ -415,11 +416,14 @@ public class Agent_Manager extends Agent{
 		PlatformController container = getContainerController(); // get a container controller for creating new agents
 		
 		try{	
-			AgentController agent = container.createNewAgent(option_manager_name, "Agent_Random", new String[0] );
+			// AgentController agent = container.createNewAgent(option_manager_name, "Agent_Random", new String[0] );
+			AgentController agent = container.createNewAgent(
+					option_manager_name, "Agent_"+computation.getMethod().getName(), new String[0] );
 			agent.start();
 		}
 		catch (Exception e) {
 	        System.err.println( "Exception while adding agent"+computation.getId()+": " + e );
+	        // TODO send it to GUI agent
 	        e.printStackTrace();
 	    }
 	
@@ -531,20 +535,21 @@ public class Agent_Manager extends Agent{
 	       newAlgorithm.setAttribute("libname", "weka");
 	       
 		   List Options = agent.getOptions(); 
-		   Iterator itr_o = Options.iterator();	  
-		   while (itr_o.hasNext()) {
-			   ontology.messages.Option next_o = (ontology.messages.Option) itr_o.next();
-			    
-			   	Element newParameter = new Element ("parameter");
-			    newParameter.setAttribute("name", next_o.getName());
-			    
-			    String value = "";
-			    if (next_o.getValue() != null){ value = next_o.getValue(); }
-			    newParameter.setAttribute("value", value);
-			    
-			    newAlgorithm.addContent(newParameter);
+		   if (Options != null){
+			   Iterator itr_o = Options.iterator();	  
+			   while (itr_o.hasNext()) {
+				   ontology.messages.Option next_o = (ontology.messages.Option) itr_o.next();
+				    
+				   	Element newParameter = new Element ("parameter");
+				    newParameter.setAttribute("name", next_o.getName());
+				    
+				    String value = "";
+				    if (next_o.getValue() != null){ value = next_o.getValue(); }
+				    newParameter.setAttribute("value", value);
+				    
+				    newAlgorithm.addContent(newParameter);
+			   }
 		   }
-		   
 		   Element newDataSet = new Element ("dataset");
 		   newDataSet.setAttribute("train", next_task.getData().getTrain_file_name());
 		   newDataSet.setAttribute("test", next_task.getData().getTest_file_name());

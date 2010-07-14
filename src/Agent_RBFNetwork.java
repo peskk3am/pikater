@@ -22,7 +22,7 @@ import jade.lang.acl.UnreadableException;
 
 
 
-public class Agent_RBFNetwork extends Agent_ComputingAgent{
+public class Agent_RBFNetwork extends Agent_WekaCA{
 	 private RBFNetwork cls = new RBFNetwork(); 
 	 
 	 protected RBFNetwork getModelObject(){
@@ -48,38 +48,27 @@ public class Agent_RBFNetwork extends Agent_ComputingAgent{
 		 return "RBFNetwork";
 	 }
 	
-	 
-	 protected void getParameters(){
-		 System.out.println(cls.listOptions());
-	 }
-	 
-	 
-	 protected void train(){
-		 working = true;   
-		 System.out.println("Agent "+getLocalName()+": Training...");
+	 protected void train() throws Exception{
+		working = true;   
+		System.out.println("Agent "+getLocalName()+": Training...");
 		       
 
-		 cls = new RBFNetwork();
-		 try {
-			if (OPTIONS.length > 0){
-				cls.setOptions(OPTIONS);
-			}
-			
-			cls.buildClassifier(train);
-			
-			state = states.TRAINED;  // change agent state
-			
-			OPTIONS = cls.getOptions();
-			
-			// write out net parameters
-			System.out.println(getLocalName()+" "+getOptions());
+		cls = new RBFNetwork();
 
-	 	 } catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		 }
+		if (OPTIONS.length > 0){
+			cls.setOptions(OPTIONS);
+		}
+		
+		cls.buildClassifier(train);
+		
+		state = states.TRAINED;  // change agent state
+		
+		OPTIONS = cls.getOptions();
+		
+		// write out net parameters
+		System.out.println(getLocalName()+" "+getOptions());
 		 
-		 working = false;
+		working = false;
      }  // end train
      
      

@@ -59,7 +59,7 @@ public class Agent_GUI_Java extends Agent_GUI {
 			
 			while (it.hasNext()) {
 				Task t = (Task)it.next();
-				myGUI.addResult(t.getAgent().getName(), t.getOptions(), Float.toString(t.getResult().getError_rate()));
+				myGUI.addResult(t.getAgent().getName(), t.getAgent().optionsToString(), Float.toString(t.getResult().getError_rate()));
 			}
 		} catch (UngroundedException e) {
 			// TODO Auto-generated catch block
@@ -94,20 +94,23 @@ public class Agent_GUI_Java extends Agent_GUI {
 	protected void onGuiEvent(GuiEvent ev) {
 		switch (ev.getType()) {
 		case MainWindow.ONLOAD :
-			myGUI.setAgents(getComputingAgents()); break;
+			myGUI.setAgents(offerAgentTypes()); break;
 		case MainWindow.SET_PROBLEM :
 			int probID = createNewProblem("30000");
 			for (String s: (String [])ev.getParameter(0)) {
 				addDatasetToProblem(probID, s, s);
 			}
+			//addMethodToProblem(probID, "Random", "0.2", "4");
+			
 			for (Object[] os:(Object[][])ev.getParameter(1)){
 				try {
-					addAgentToProblemWekaStyle(probID, (String)os[0], null, ((String)os[1]).split("[ ]+"));
+					addAgentToProblemWekaStyle(probID, null, (String)os[0], ((String)os[1]));
 				} catch (FailureException e) {
 					e.printStackTrace();
 				}
 				getAgentOptions((String)os[0]);
 			}
+			break;
 			
 		}
 		

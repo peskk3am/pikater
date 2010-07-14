@@ -8,6 +8,7 @@ public class Computation implements Concept{
 	private Agent _agent;
 	private Data _data;
 	private int _timeout;  // miliseconds
+	private Method _method;
 	
 	// Methods required to use this class to represent the TASK role
 	public void setAgent(Agent agent) {
@@ -40,5 +41,10 @@ public class Computation implements Concept{
 	public int getTimeout() {
 		return _timeout;
 	}
-
+	public Method getMethod() {
+		return _method;
+	}
+	public void setMethod(Method method) {
+		_method = method;
+	}
 }

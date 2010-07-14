@@ -1,0 +1,17 @@
+# name, type, number od values, parameters range / set
+# r ... range
+# s ... set  (example: s 1, 2, 3, 4, 5, 6, 7, 8)
+# 
+
+
+# -D
+# Produce debugging output.
+
+# Set the attriute selection method to use. 1 = None, 2 = Greedy (default 0 = M5' method)
+$ S int 1 1 r 0 2
+
+# Do not try to eliminate colinear attributes
+$ C boolean
+
+# The ridge parameter (default 1.0e-8)
+$ R float 1 1 r 1.0E-12 1.0E-4 

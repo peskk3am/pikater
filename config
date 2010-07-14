@@ -1,7 +1,0 @@
-# 1..N file names:
-$f iris.arff
-$f weather.arff
-
-# 1..N agents, the ? parameters are chosen randomly:
-$a rbf1 -B ?
-$a mp1 -L 0.2 -M ?

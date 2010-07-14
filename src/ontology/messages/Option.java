@@ -14,7 +14,10 @@ public class Option implements Concept{
 	private String _description;
 	private String _name;
 	private String _synopsis;
-	private String _value;  // when immutable, contains the default value
+	private String _value;
+	private String _default_value;
+	private String _user_value;
+	private int _number_of_values_to_try;
 	
 	// Methods required to use this class to represent the TASK role
 	public void setMutable(boolean mutable) {
@@ -76,6 +79,24 @@ public class Option implements Concept{
 	}
 	public String getValue() {
 		return _value;
+	}
+	public void setDefault_value(String default_value) {
+		_default_value=default_value;
+	}
+	public String getDefault_value() {
+		return _default_value;
+	}
+	public void setUser_value(String user_value) {
+		_user_value=user_value;
+	}
+	public String getUser_value() {
+		return _user_value;
+	}
+	public int getNumber_of_values_to_try() {
+		return _number_of_values_to_try;
+	}
+	public void setNumber_of_values_to_try(int number_of_values_to_try) {
+		_number_of_values_to_try = number_of_values_to_try;
 	}
 
 }

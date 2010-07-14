@@ -12,6 +12,7 @@ public class Problem implements Concept{
 	private List  _agents;
 	private List _data;
 	private int _timeout;
+	private Method _method;
 	
 	public void setAgents(List agents) {
 		_agents=agents;
@@ -50,5 +51,11 @@ public class Problem implements Concept{
 	}
 	public void setSent(boolean sent) {
 		_sent = sent;
+	}
+	public Method getMethod() {
+		return _method;
+	}
+	public void setMethod(Method method) {
+		_method = method;
 	}
 }

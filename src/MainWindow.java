@@ -10,6 +10,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.Vector;
+
 import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
@@ -95,7 +97,7 @@ public class MainWindow extends javax.swing.JFrame {
 		initGUI();
 	}
 	
-	public void setAgents(String[] agents) {
+	public void setAgents(Vector<String> agents) {
 		agentClass1.removeAllItems();
 		agentClass2.removeAllItems();
 		for (String s : agents) {

@@ -131,9 +131,8 @@ public class Agent_GUI_WS extends Agent_GUI {
 						
 						try {
 							while (it.hasNext()) {
-								String[] params =  ((String)it.next()).split("[ ]+");
-								addAgentToProblemWekaStyle(problemID, null, params[0], params);
-								getAgentOptions(getAgentByType(params[0]).getLocalName());
+								String[] params =  ((String)it.next()).split("[ ]+",2);
+								addAgentToProblemWekaStyle(problemID, null, params[0], params[1]);
 							}
 						}
 						catch (FailureException e) {
@@ -184,7 +183,7 @@ public class Agent_GUI_WS extends Agent_GUI {
 								Task t = (Task)rit.next();
 								
 								WS_Results wres = new WS_Results();
-								wres.setOptions(t.getOptions());
+								wres.setOptions(t.getAgent().optionsToString());
 								wres.setErrorRate(t.getResult().getError_rate());
 								wres.setPctIncorrect(t.getResult().getPct_incorrect());
 								
