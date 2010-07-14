@@ -54,7 +54,8 @@ public class Agent_GUI_config_file extends Agent_GUI{
 	       	           Task task = (Task) itr.next();
 	       	           System.out.println("Agent "+getLocalName()+": options for agent "
 	       	        		   +task.getAgent().getName()+" were "
-	       	        		   +task.getAgent().optionsToString());
+	       	        		   +task.getAgent().optionsToString()
+	       	        		   +" error_rate: "+task.getResult().getError_rate());
 	       		 	}	       	     
 	            }    
 			}
@@ -112,7 +113,7 @@ public class Agent_GUI_config_file extends Agent_GUI{
         // test:
         int newId = createNewProblem("1000");
         try {
-			addAgentToProblemWekaStyle(newId, null, "MultilayerPerceptron", "-L 0.2 -D -M ? -H ?,?", null);
+			addAgentToProblemWekaStyle(newId, null, "MultilayerPerceptron", "-L 0.2 -D -M ? -H ?,?");
 		} catch (FailureException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

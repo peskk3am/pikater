@@ -48,6 +48,12 @@ public class Agent implements Concept{
     			Option opt = new Option();
     			opt.setName(name);
     			opt.setValue(value);
+    		
+    			if (opt.getUser_value() == null){
+    				// first string -> options, parsing the string from user 
+    				opt.setUser_value(value);
+    				opt.setMutable(true);
+    			}
     			optList.add(opt);	
     		}
     	}
