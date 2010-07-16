@@ -9,6 +9,7 @@ $a Agent_ARFFReader Reader
 # $a Agent_Random r
 
 $a Agent_Manager manager
+$a Agent_DataManager dataManager
 
 # get a Problem from "config" file
 #$a Agent_GUI_WS very_simple_GUI

@@ -618,8 +618,8 @@ public abstract class Agent_GUI extends GuiAgent {
 				if (Integer.parseInt(next_problem.getGui_id()) == _problem_id){
 					List data = next_problem.getData();
 					Data d = new Data();
-					d.setTrain_file_name(_train);
-					d.setTest_file_name(_test);
+					d.setTrain_file_name("data" + System.getProperty("file.separator") + "files" + System.getProperty("file.separator") + DataManagerService.translateFilename(this, 1, _train));
+					d.setTest_file_name("data" + System.getProperty("file.separator") + "files" + System.getProperty("file.separator") + DataManagerService.translateFilename(this, 1, _test));
 					data.add(d);
 			        next_problem.setData(data);
 				}
@@ -872,6 +872,14 @@ public abstract class Agent_GUI extends GuiAgent {
 		    System.err.println(getLocalName()+" registration with DF unsucceeded. Reason: "+e.getMessage());
 		    doDelete();
 		}  
+		
+		String incomingFilesPath = System.getProperty("user.dir") + System.getProperty("file.separator") + "incoming/";
+		File incomingFiles = new File(incomingFilesPath);
+		
+		for (String fileName : incomingFiles.list()) {
+			DataManagerService.importFile(this, 1, fileName);
+		}
+		
 	  	System.out.println("GUI agent "+getLocalName()+" is alive and waiting...");
 	  	
 	  	
