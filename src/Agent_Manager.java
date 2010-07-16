@@ -69,6 +69,8 @@ public class Agent_Manager extends Agent{
 	private String receiver;
 	private int problem_i = 0;
 	
+	private long timeout = 10000;
+	
 	private Codec codec = new SLCodec();
 	private Ontology ontology = MessagesOntology.getInstance();
 	
@@ -76,7 +78,7 @@ public class Agent_Manager extends Agent{
 	// private Subscription subscription;
 	
 	private class SendComputation extends AchieveREInitiator{
-		
+			ACLMessage failure = null;
 			public SendComputation(Agent a, ACLMessage request) {
 				super(a, request);
 				System.out.println(a.getLocalName()+": SendComputation behavior created.");				
@@ -97,23 +99,33 @@ public class Agent_Manager extends Agent{
 				ACLMessage incomingResponse = (ACLMessage) getDataStore().get(incomingResponseKey);
 				String[] ID = incomingResponse.getContent().split(" ");
 				String problemId = ID[1];
-
-				return prepareComputations(incomingRequest, problemId); // Prepare the request to forward to the responder
+				
+			
+				return prepareComputations(incomingRequest, problemId, failure); // Prepare the request to forward to the responder
 										
 			}
 			
 			protected void handleInform(ACLMessage inform) {
 				System.out.println("Agent:"+getLocalName()+": Agent "+inform.getSender().getName()+" sent an inform.");
 				sendSubscription(inform);
-				killAgent(inform.getSender().getName());
+				// killAgent(inform.getSender().getName());
 			}
 			
 			protected void handleFailure(ACLMessage failure) {
 				System.out.println("Agent:"+getLocalName()+": Agent "+failure.getSender().getName()+" sent a failure.");
+				// if (System.currentTimeMillis() < timeout){
+					// this.reset();
+				//	this.failure = failure;
+				//	addBehaviour(this);
+				//}
+				//else{
+				//	sendSubscription(failure);
+					// killAgent(failure.getSender().getName());
+				//}
+				
 				sendSubscription(failure);
-				killAgent(failure.getSender().getName());				
+				killAgent(failure.getSender().getName());
 			}
-
 			
 			/* protected void handleAllResponses(java.util.Vector responses) {
 				Enumeration en = responses.elements();
@@ -350,8 +362,11 @@ public class Agent_Manager extends Agent{
 			
 	}  // end setup
 	
-	protected Vector<ACLMessage> prepareComputations(ACLMessage request, String problemId){
+	protected Vector<ACLMessage> prepareComputations(ACLMessage request, String problemId,
+			ACLMessage failure){
 		Vector<ACLMessage> msgVector = new Vector<ACLMessage>();		
+		
+		System.out.println("Agent "+getLocalName()+" failure :"+failure);
 		
 		ContentElement content;
 		try {
@@ -474,16 +489,23 @@ public class Agent_Manager extends Agent{
                 	
            		 	float sumError_rate = 0;
            		 	float sumPct_incorrect = 0;
-                	Iterator itr = listOfResults.iterator();
-           		 	while (itr.hasNext()) {
-           	           Task next = (Task) itr.next();
-           	           Evaluation evaluation = next.getResult();
-           	           
-           	           sumError_rate += evaluation.getError_rate();		
-           	           sumPct_incorrect += evaluation.getPct_incorrect();
-    				}
-           		 	results.setAvg_error_rate( sumError_rate / listOfResults.size() ); 
-           		 	results.setAvg_pct_incorrect( sumPct_incorrect / listOfResults.size() );
+                	if (listOfResults == null){
+                		// there were no tasks computed
+                		results.setAvg_error_rate(sumError_rate); 
+	           		 	results.setAvg_pct_incorrect(sumPct_incorrect);
+                	}
+                	else{
+	           		 	Iterator itr = listOfResults.iterator();
+	           		 	while (itr.hasNext()) {
+	           	           Task next = (Task) itr.next();
+	           	           Evaluation evaluation = next.getResult();
+	           	           
+	           	           sumError_rate += evaluation.getError_rate();		
+	           	           sumPct_incorrect += evaluation.getPct_incorrect();
+	    				}
+	           		 	results.setAvg_error_rate( sumError_rate / listOfResults.size() ); 
+	           		 	results.setAvg_pct_incorrect( sumPct_incorrect / listOfResults.size() );
+                	}
                 }
 	  		}
 		} catch (UngroundedException e) {
@@ -521,55 +543,55 @@ public class Agent_Manager extends Agent{
 	
 		
 	 	List _results = results.getResults();
-	    
-	 	Iterator itr = _results.iterator();	  
-	    while (itr.hasNext()) {
-		   Task next_task = (Task) itr.next();
-		   
-		   ontology.messages.Agent agent = next_task.getAgent();
-		   
-		   Element newExperiment = new Element("experiment");				   
-	       Element newSetting = new Element ("setting");
-	       Element newAlgorithm = new Element ("algorithm");
-	       newAlgorithm.setAttribute("name", agent.getName());
-	       newAlgorithm.setAttribute("libname", "weka");
-	       
-		   List Options = agent.getOptions(); 
-		   if (Options != null){
-			   Iterator itr_o = Options.iterator();	  
-			   while (itr_o.hasNext()) {
-				   ontology.messages.Option next_o = (ontology.messages.Option) itr_o.next();
-				    
-				   	Element newParameter = new Element ("parameter");
-				    newParameter.setAttribute("name", next_o.getName());
-				    
-				    String value = "";
-				    if (next_o.getValue() != null){ value = next_o.getValue(); }
-				    newParameter.setAttribute("value", value);
-				    
-				    newAlgorithm.addContent(newParameter);
+	    if (_results != null){
+		 	Iterator itr = _results.iterator();	  
+		    while (itr.hasNext()) {
+			   Task next_task = (Task) itr.next();
+			   
+			   ontology.messages.Agent agent = next_task.getAgent();
+			   
+			   Element newExperiment = new Element("experiment");				   
+		       Element newSetting = new Element ("setting");
+		       Element newAlgorithm = new Element ("algorithm");
+		       newAlgorithm.setAttribute("name", agent.getName());
+		       newAlgorithm.setAttribute("libname", "weka");
+		       
+			   List Options = agent.getOptions(); 
+			   if (Options != null){
+				   Iterator itr_o = Options.iterator();	  
+				   while (itr_o.hasNext()) {
+					   ontology.messages.Option next_o = (ontology.messages.Option) itr_o.next();
+					    
+					   	Element newParameter = new Element ("parameter");
+					    newParameter.setAttribute("name", next_o.getName());
+					    
+					    String value = "";
+					    if (next_o.getValue() != null){ value = next_o.getValue(); }
+					    newParameter.setAttribute("value", value);
+					    
+					    newAlgorithm.addContent(newParameter);
+				   }
 			   }
-		   }
-		   Element newDataSet = new Element ("dataset");
-		   newDataSet.setAttribute("train", next_task.getData().getTrain_file_name());
-		   newDataSet.setAttribute("test", next_task.getData().getTest_file_name());
-
-		   Element newEvaluation = new Element ("evaluation");
-		   Element newMetric1 = new Element ("metric");
-		   newMetric1.setAttribute ("mean_absolute_error", Double.toString(next_task.getResult().getError_rate()));
-		   Element newMetric2 = new Element ("metric");
-		   newMetric2.setAttribute ("root_mean_squared_error", Double.toString(next_task.getResult().getPct_incorrect()));
-		   			   
-		   newEvaluation.addContent(newMetric1);
-		   newEvaluation.addContent(newMetric2);
-		   
-	       newExperiment.addContent(newSetting);
-	       newExperiment.addContent(newEvaluation);
-	       newSetting.addContent(newAlgorithm);
-	       newSetting.addContent(newDataSet);
-
-	       root.addContent(newExperiment);
-	       
+			   Element newDataSet = new Element ("dataset");
+			   newDataSet.setAttribute("train", next_task.getData().getTrain_file_name());
+			   newDataSet.setAttribute("test", next_task.getData().getTest_file_name());
+	
+			   Element newEvaluation = new Element ("evaluation");
+			   Element newMetric1 = new Element ("metric");
+			   newMetric1.setAttribute ("mean_absolute_error", Double.toString(next_task.getResult().getError_rate()));
+			   Element newMetric2 = new Element ("metric");
+			   newMetric2.setAttribute ("root_mean_squared_error", Double.toString(next_task.getResult().getPct_incorrect()));
+			   			   
+			   newEvaluation.addContent(newMetric1);
+			   newEvaluation.addContent(newMetric2);
+			   
+		       newExperiment.addContent(newSetting);
+		       newExperiment.addContent(newEvaluation);
+		       newSetting.addContent(newAlgorithm);
+		       newSetting.addContent(newDataSet);
+	
+		       root.addContent(newExperiment);
+		    }	       
 	    }  
 
 	    Element newStatistics = new Element ("statistics");

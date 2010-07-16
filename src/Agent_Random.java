@@ -17,8 +17,12 @@ public class Agent_Random extends Agent_OptionsManager {
 	
 	 
 	 protected boolean finished(){
+		 if (number_of_tries >= maximum_tries){
+			 return true;
+		 }
+		 
 		 if (evaluation != null) {
-			 if (evaluation.getError_rate() < error_rate || number_of_tries >= maximum_tries ){
+			 if (evaluation.getError_rate() < error_rate){
 				 return true;
 			 }
 		 }

@@ -5,8 +5,8 @@ import jade.util.leap.*;
 
 public class Agent implements Concept{
 	private String _name;
-	private List _options;
-	
+	private String _type;
+	private List _options;	
 
 	// Methods required to use this class to represent the OPTIONS role
 	public void setOptions(List options) {
@@ -21,7 +21,12 @@ public class Agent implements Concept{
 	public String getName() {
 		return _name;
 	}
-    
+	public void setType(String type) {
+		_type=type;
+	}
+	public String getType() {
+		return _type;
+	}    
 	// -----------------------------
 	
 	public List stringToOptions(String optString){
@@ -51,8 +56,11 @@ public class Agent implements Concept{
     		
     			if (opt.getUser_value() == null){
     				// first string -> options, parsing the string from user 
+    				if (value.contains("?")){
+    					opt.setMutable(true);
+    				}
     				opt.setUser_value(value);
-    				opt.setMutable(true);
+    				
     			}
     			optList.add(opt);	
     		}

@@ -62,6 +62,7 @@ public abstract class Agent_GUI extends Agent {
 	
 	private int default_number_of_values_to_try = 10;
 	private float default_error_rate = (float) 0.3;
+	protected String default_method = "Random";
 	private int default_maximum_tries = 10;
 	
 	/*
@@ -118,6 +119,9 @@ public abstract class Agent_GUI extends Agent {
 		/* default_number_of_values_to_try - when ChooseXValues method is selected;
 		 *  should be set in GUI agent setup */
 		default_number_of_values_to_try = number;
+	}
+	protected void setDefault_error_rate(double value){
+		default_error_rate = (float) value;
 	}
 	
 	
@@ -407,8 +411,9 @@ public abstract class Agent_GUI extends Agent {
 		}
 		
 		Method method = new Method();
-		method.setName("Random");
+		method.setName(default_method);
 		method.setError_rate(default_error_rate);
+		method.setMaximum_tries(default_maximum_tries);
 		problem.setMethod(method);
 		
 		problem.setTimeout(_timeout);

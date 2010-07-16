@@ -77,6 +77,7 @@ public class MessagesOntology extends Ontology {
 
 	  public static final String AGENT = "AGENT";
 	  public static final String AGENT_NAME = "name";
+	  public static final String AGENT_TYPE = "type";
 	  public static final String AGENT_OPTIONS = "options";
 	  	  
 	  public static final String INTERVAL = "INTERVAL";
