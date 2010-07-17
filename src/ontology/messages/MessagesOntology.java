@@ -116,6 +116,9 @@ public class MessagesOntology extends Ontology {
 	  public static final String SOLVE_PROBLEM = "problem";
 	  
 	  public static final String GET_OPTIONS = "GET-OPTIONS";
+	  
+	  public static final String GET_DATA = "GET-DATA";
+	  public static final String GET_DATA_FILE_NAME = "file_name";
 
 	  // public static final String SEND_OPTIONS = "SEND-OPTIONS";
 	  // public static final String SEND_OPTIONS_OPTIONS = "options";
@@ -160,6 +163,7 @@ public class MessagesOntology extends Ontology {
 			add(new AgentActionSchema(GET_OPTIONS), GetOptions.class);
 			add(new AgentActionSchema(EXECUTE), Execute.class);
 			add(new AgentActionSchema(SOLVE), Solve.class);
+			add(new AgentActionSchema(GET_DATA), GetData.class);
 			
 			// add(new AgentActionSchema(SEND_OPTIONS), SendOptions.class);
 			
@@ -241,7 +245,7 @@ public class MessagesOntology extends Ontology {
 	    	cs.add(ATTRIBUTE_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 	    	cs.add(ATTRIBUTE_TYPE, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 	    	cs.add(ATTRIBUTE_VALUES, (PrimitiveSchema)getSchema(BasicOntology.STRING), 0, ObjectSchema.UNLIMITED);
-	    	cs.add(ATTRIBUTE_DATE_FORMAT, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	cs.add(ATTRIBUTE_DATE_FORMAT, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 
 	    	cs = (ConceptSchema)getSchema(INSTANCE);
 	    	cs.add(INSTANCE_VALUES, (PrimitiveSchema)getSchema(BasicOntology.FLOAT), 0, ObjectSchema.UNLIMITED);
@@ -263,7 +267,10 @@ public class MessagesOntology extends Ontology {
 			as = (AgentActionSchema)getSchema(EXECUTE);
 	    	as.add(EXECUTE_TASK, (ConceptSchema)getSchema(TASK));
 
-			//as = (AgentActionSchema)getSchema(SEND_OPTIONS);
+	    	as = (AgentActionSchema)getSchema(GET_DATA);
+	    	as.add(GET_DATA_FILE_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+
+	    	//as = (AgentActionSchema)getSchema(SEND_OPTIONS);
 			//as.add(SEND_OPTIONS_OPTIONS, (ConceptSchema)getSchema(OPTION), 1, ObjectSchema.UNLIMITED);
 			
 	    }

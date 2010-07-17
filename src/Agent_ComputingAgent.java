@@ -67,7 +67,10 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 
 	 protected Instances data; // data read from fileName file
 	 Instances train;  // TODO - divide data
+	 DataInstances onto_train;
 	 Instances test;
+	 DataInstances onto_test;
+	 int convId = 0;
 
 	 protected String[] OPTIONS;
 	 protected ontology.messages.Task current_task = null;
@@ -161,11 +164,8 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 
 	 
 	 protected ACLMessage sendOptions(ACLMessage request){
-		 ACLMessage msgOut = new ACLMessage(ACLMessage.INFORM);
-		 msgOut.setLanguage(codec.getName());
-		 msgOut.setOntology(ontology.getName());
-
-		 msgOut.addReceiver(request.getSender());
+		 ACLMessage msgOut = request.createReply();
+		 msgOut.setPerformative(ACLMessage.INFORM);
 		 try {
 			 // Prepare the content
 			 ContentElement content = getContentManager().extractContent(request); // TODO exception block?
@@ -184,13 +184,10 @@ public abstract class Agent_ComputingAgent extends Agent{
 				 oe.printStackTrace();
 			 }
 
-
-
 		 } catch (Exception e) {
 			 // TODO Auto-generated catch block
 			 e.printStackTrace();
 		 }
-
 
 		 return msgOut;
 
@@ -199,7 +196,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 
 	 protected ACLMessage Execute(ACLMessage request, Execute execute, AchieveREResponder behavior) throws FailureException{
 		state = states.NEW;
-					
+		//Set options
 		setOptions(execute.getTask());
 			
 		ontology.messages.Evaluation eval = null;
@@ -207,36 +204,37 @@ public abstract class Agent_ComputingAgent extends Agent{
 		boolean success = true;
 		
 		Data data = execute.getTask().getData();
+		//Get training data
 		if (!data.getTrain_file_name().equals(trainFileName)){
 			hasGotRightData = false;	
 			trainFileName = data.getTrain_file_name();
-			getData(trainFileName);
-				
-			train = waitForAnswer(behavior);
-			if (data == null){
+			onto_train = getData_(trainFileName);
+			if (data == null || onto_train == null){
 				throw new FailureException("No train data received from the reader agent.");
 			}
 			else{
 				hasGotRightData = true;
+				train = onto_train.toWekaInstances();
+				train.setClassIndex(train.numAttributes() - 1);
 			}
 		}
-
+		//Get testing data
 		if (!data.getTest_file_name().equals(testFileName)){
 			hasGotRightData = false;
 			testFileName = data.getTest_file_name();
-			getData(testFileName);
-				
-			test = waitForAnswer(behavior);
-			if (data == null){
+			onto_test = getData_(testFileName);
+			if (data == null || onto_test == null){
 				throw new FailureException("No test data received from the reader agent.");
 			}
 			else{
 				hasGotRightData = true;
+				test = onto_test.toWekaInstances();
+				test.setClassIndex(test.numAttributes() - 1);
 			}
 
 		}
 
-				  							
+		//Train&test		  							
 		try{
 			if (state != states.TRAINED) { train(); }
 			// saveAgent();
@@ -249,7 +247,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 			success = false;
 		}
 				   	
-	
+		//Send results
 		if (success) {
 			System.out.println("Agent "+getLocalName()+": Action successfully performed.");
 			ACLMessage inform = request.createReply();
@@ -278,54 +276,6 @@ public abstract class Agent_ComputingAgent extends Agent{
 		}
 	
 	 } 	// end Execute  					
-	 
-	 
-	 private Instances waitForAnswer(AchieveREResponder behavior) throws FailureException{
-		boolean done = false; 
-		Instances _data = null;
-		
-		Date start = new Date();
-		long start_long = start.getTime();
-		long now;
-		while(!done){ 							
-		  now = start.getTime();
-		  // give up after 10 seconds
-		  // TODO ...
-		  if (now > start_long+10000){
-			  throw new FailureException("No data received");
-		  }
-		  MessageTemplate template_msg_from_reader = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
-		  // ACLMessage reply = myAgent.receive(template_msg_from_reader);
-		  ACLMessage reply = receive(template_msg_from_reader);
-		  
-		  if (reply != null) {		  				        
-    	  // Reply received
-				try {
-					_data = (Instances) reply.getContentObject();
-		    		System.out.println("Data: "+_data);  
-	    		
-					/* 
-					 The class index indicate the target attribute used for
-					 classification. By default, in an ARFF File, it's the 
-					 last attribute, that's why it's set to numAttributes-1.
-					 You must set it if your instances are used as a parameter
-					 of a weka function (ex: weka.classifiers.Classifier.buildClassifier(data))
-					*/		  						    
-		    		_data.setClassIndex(_data.numAttributes() - 1);
-		    			    		
-				} catch (UnreadableException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-	    		done = true;
-	    		
-		  }  // end if (reply != null)
-		  else{
-			  behavior.block();
-		  }
-		}  // end while (!done)
-		return _data; 
-	 }  // end waitForAnswer
 	 
 	 
 	 protected void setup() {		 
@@ -456,44 +406,88 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 }
  
 	 
-	 protected boolean getData(String fileName){ 
-		 // send message to ARFFReader agent
-         
-		 // The list of known reader agents
+	 protected ACLMessage sendGetDataReq(String fileName){ 
 		 AID[] ARFFReaders;
 		 AID reader;
-		 
+		 ACLMessage msgOut = null;
 		 // Make the list of reader agents
 		 DFAgentDescription template = new DFAgentDescription();
-         ServiceDescription sd = new ServiceDescription();
-         sd.setType("ARFFReader");
-         template.addServices(sd);
-         try {
-         	DFAgentDescription[] result = DFService.search(this, template); 
-         	System.out.println("Found the following ARFFReader agents:");
-         	ARFFReaders = new AID[result.length];
-           
-           for (int i = 0; i < result.length; ++i) {
-        	   ARFFReaders[i] = result[i].getName();
-	          	System.out.println(ARFFReaders[i].getName());
-           }
-           // choose one
-           reader = ARFFReaders[0];
-         }
-         catch (FIPAException fe) {
-           fe.printStackTrace();
-           return false;
-         }
-		 
-		 ACLMessage msgOut = new ACLMessage(ACLMessage.REQUEST);
-		 // msgOut.addReceiver(new AID((String) "reader@klara:1099/JADE", AID.ISLOCALNAME));
-		 msgOut.addReceiver(reader);
-		 msgOut.setContent(fileName);
-		 send(msgOut);
-		 
-		 return true;
-	 } // end getData
+		 ServiceDescription sd = new ServiceDescription();
+		 sd.setType("ARFFReader");
+		 template.addServices(sd);
+		 try {
+			 DFAgentDescription[] result = DFService.search(this, template); 
+			 System.out.println("Found the following ARFFReader agents:");
+			 ARFFReaders = new AID[result.length];
+			 for (int i = 0; i < result.length; ++i) {
+				 ARFFReaders[i] = result[i].getName();
+				 System.out.println(ARFFReaders[i].getName());
+			 }
+			 // choose one
+			 reader = ARFFReaders[0];
+			 //request
+			 msgOut = new ACLMessage(ACLMessage.REQUEST);
+			 msgOut.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+			 msgOut.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
+			 msgOut.setLanguage(codec.getName());
+			 msgOut.setOntology(ontology.getName());
+			 msgOut.addReceiver(reader);
+			 msgOut.setConversationId("get-data_"+convId++);
+			 //content
+			 GetData get_data = new GetData();
+			 get_data.setFile_name(fileName);
+			 Action a = new Action();
+			 a.setAction(get_data);
+			 a.setActor(this.getAID());
+			 getContentManager().fillContent(msgOut, a);
+			 //sending
+			 send(msgOut);
+		 }
+		 catch (FIPAException fe) {
+			 fe.printStackTrace();
+			 return null;
+		 } catch (CodecException e) {
+			e.printStackTrace();
+			return null;
+		} catch (OntologyException e) {
+			e.printStackTrace();
+			return null;
+		}
+		 return msgOut;
+	 } // end sendGetDataReq
 	 
+	 /*Blocking get_data*/
+	 protected DataInstances getData_(String file_name){
+		 ACLMessage req = sendGetDataReq(file_name);
+		 if(req!=null){
+			 MessageTemplate template_msg_from_reader = MessageTemplate.and(
+					 MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+					 MessageTemplate.MatchConversationId(req.getConversationId()));
+			 //waiting for data - blocking!!!
+			 ACLMessage respond = blockingReceive(template_msg_from_reader, 10000);
+			 //content extraction
+			 ContentElement content;
+			 try {
+				 content = getContentManager().extractContent(respond);
+				 if (content instanceof Result) {
+					 Result result = (Result) content;
+					 if (result.getValue() instanceof ontology.messages.DataInstances) {
+						 return (ontology.messages.DataInstances)result.getValue();
+					 }
+				 }
+			 } catch (UngroundedException e) {
+				 e.printStackTrace();
+			 } catch (CodecException e) {
+				 e.printStackTrace();
+			 } catch (OntologyException e) {
+				 e.printStackTrace();
+			 }
+		 }
+		 //something is wrong
+		 return null;
+		 /*_data = data_instances.toWekaInstances();
+		_data.setClassIndex(_data.numAttributes() - 1); */
+	 }
 	 
 	 
 	 public static byte[] toBytes(Object object) throws Exception{

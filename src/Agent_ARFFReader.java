@@ -1,12 +1,22 @@
+import jade.content.ContentElement;
+import jade.content.lang.Codec;
+import jade.content.lang.Codec.CodecException;
+import jade.content.lang.sl.SLCodec;
+import jade.content.onto.Ontology;
+import jade.content.onto.OntologyException;
+import jade.content.onto.basic.Action;
+import jade.content.onto.basic.Result;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.FailureException;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.proto.AchieveREResponder;
 
 import weka.core.Instances;
 import java.io.BufferedReader;
@@ -14,8 +24,14 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
+import ontology.messages.DataInstances;
+import ontology.messages.GetData;
+import ontology.messages.MessagesOntology;
+
 
 public class Agent_ARFFReader extends Agent {
+	private Codec codec = new SLCodec();
+	private Ontology ontology = MessagesOntology.getInstance();
 	// File name
 	private String fileName;
 	// data read from file
@@ -38,17 +54,22 @@ public class Agent_ARFFReader extends Agent {
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			System.out.println("Reading of data from file "+fileName+" failed.");
 			return false;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			System.out.println("Reading of data from file "+fileName+" failed.");
 			return false;
 		}
-				
+		System.out.println("Reading of data from file "+fileName+" succesful.");
 		return true;
 	}
 	
 	protected void setup() {
+		getContentManager().registerLanguage(codec);
+		getContentManager().registerOntology(ontology);
+
 		// register with DF		  
 		DFAgentDescription dfd = new DFAgentDescription();
 		ServiceDescription sd = new ServiceDescription();   
@@ -65,51 +86,76 @@ public class Agent_ARFFReader extends Agent {
 		    doDelete();
 		}
 		
-		// Add the CyclicBehaviour
-	    addBehaviour(new CyclicBehaviour(this) {
-	    	public void action(){
-	    		ACLMessage msg = myAgent.receive();
-	    		if (msg != null) {
-		    		// Message received. Process it
-		    		Read(msg.getContent());
-		    		
-		    		// System.out.println("Message content:"+msg.getContent());
-		    		ACLMessage msgOut = new ACLMessage(ACLMessage.INFORM);
-		    		msgOut.addReceiver(msg.getSender());
-		    		try {
-						msgOut.setContentObject(data);
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-		    		
-		    		send(msgOut);
-	    		}
-	    		else {
-	    			block();
-	    		}
-	    	}
-	    });
-	    
+	    MessageTemplate template=MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+	    addBehaviour(new GetDataResponder(this, template));
 		System.out.println("Agent "+getLocalName()+" is ready!");
 		
 
 	}  // end Setup
-	
-	private void Read(String fileName) {
-		working = true;
+	protected ACLMessage sendData(ACLMessage request){
+		//responding message
+		ACLMessage msgOut = request.createReply();
+		msgOut.setPerformative(ACLMessage.INFORM);
+		try {
+			ContentElement content = getContentManager().extractContent(request);
+			String file_name = ((GetData) ((Action)content).getAction()).getFile_name();
+			DataInstances instances = new DataInstances();
+			// Read the file
+			working = true;
+			boolean file_read = ReadFromFile(file_name);
+			working = false;
+			if(!file_read)
+				throw new FailureException("File haven't been read. Wrong file-name?");
 
-	    // System.out.println("File name: "+path+fileName);
-	    
-	    if (ReadFromFile(fileName)){
-		    System.out.println("Reading of data from file "+fileName+" succesful.");		    
-		    // System.out.println(data);
-	    }
-	    else{
-		    System.out.println("Reading of data from file "+fileName+" failed.");
-	    }
-		    
-	  	working = false;
-	  } // end Read
-	
+			instances.fillWekaInstances(data);
+			// Prepare the content
+			Result result = new Result((Action)content, instances);
+			try {
+				getContentManager().fillContent(msgOut, result);
+			}
+			catch (CodecException ce) {
+				ce.printStackTrace();
+			}
+			catch (OntologyException oe) {
+				oe.printStackTrace();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return msgOut;
+	}  // end SendData
+
+	private class GetDataResponder extends AchieveREResponder{
+		public GetDataResponder(Agent a, MessageTemplate mt) {
+			super(a, mt);
+		}
+
+		protected ACLMessage prepareResponse(ACLMessage request) {
+			ACLMessage agree = request.createReply();
+			agree.setPerformative(ACLMessage.AGREE);
+			return agree;
+			//return null;
+		}  // end prepareResponse
+
+		protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) {
+			try{
+				ContentElement content = getContentManager().extractContent(request);
+				//GetData
+				if (((Action)content).getAction() instanceof GetData){
+					return sendData(request);
+				}
+			}
+			catch (CodecException ce) {
+				ce.printStackTrace();
+			}
+			catch (OntologyException oe) {
+				oe.printStackTrace();
+			}
+
+			ACLMessage notUnderstood = request.createReply();
+			notUnderstood.setPerformative(ACLMessage.NOT_UNDERSTOOD);
+			return notUnderstood;
+		}  //  end prepareResultNotification
+
+	}
 }
