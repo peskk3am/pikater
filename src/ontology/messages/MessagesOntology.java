@@ -78,6 +78,7 @@ public class MessagesOntology extends Ontology {
 	  public static final String AGENT = "AGENT";
 	  public static final String AGENT_NAME = "name";
 	  public static final String AGENT_TYPE = "type";
+	  public static final String AGENT_GUI_ID = "gui_id";
 	  public static final String AGENT_OPTIONS = "options";
 	  	  
 	  public static final String INTERVAL = "INTERVAL";
@@ -230,7 +231,9 @@ public class MessagesOntology extends Ontology {
 	    	cs.add(RESULTS_RESULTS, (ConceptSchema)getSchema(TASK), 0, ObjectSchema.UNLIMITED);
 
 	    	cs = (ConceptSchema)getSchema(AGENT);
-	    	cs.add(AGENT_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	cs.add(AGENT_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+	    	cs.add(AGENT_TYPE, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	cs.add(AGENT_GUI_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 	    	cs.add(AGENT_OPTIONS, (ConceptSchema)getSchema(OPTION), 0, ObjectSchema.UNLIMITED);
 
 	    	cs = (ConceptSchema)getSchema(DATA_INSTANCES);

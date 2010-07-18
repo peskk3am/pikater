@@ -7,7 +7,8 @@ public class Agent implements Concept{
 	private String _name;
 	private String _type;
 	private List _options;	
-
+	private String _gui_id;
+	
 	// Methods required to use this class to represent the OPTIONS role
 	public void setOptions(List options) {
 		_options=options;
@@ -26,7 +27,13 @@ public class Agent implements Concept{
 	}
 	public String getType() {
 		return _type;
-	}    
+	} 
+	public void setGui_id(String gui_id) {
+		_gui_id=gui_id;
+	}
+	public String getGui_id() {
+		return _gui_id;
+	}
 	// -----------------------------
 	
 	public List stringToOptions(String optString){

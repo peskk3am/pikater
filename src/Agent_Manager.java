@@ -1,25 +1,18 @@
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Vector;
-
-import org.jdom.Document;
-import org.jdom.Element;
-import org.jdom.output.Format;
-import org.jdom.output.XMLOutputter;
-
+import jade.content.ContentElement;
+import jade.content.lang.Codec;
+import jade.content.lang.Codec.CodecException;
+import jade.content.lang.sl.SLCodec;
+import jade.content.onto.Ontology;
+import jade.content.onto.OntologyException;
+import jade.content.onto.UngroundedException;
+import jade.content.onto.basic.Action;
+import jade.content.onto.basic.Result;
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPANames;
+import jade.domain.FIPAService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.FailureException;
 import jade.domain.FIPAAgentManagement.NotUnderstoodException;
@@ -27,46 +20,50 @@ import jade.domain.FIPAAgentManagement.RefuseException;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import jade.lang.acl.UnreadableException;
 import jade.proto.AchieveREInitiator;
 import jade.proto.AchieveREResponder;
-import jade.proto.ContractNetInitiator;
-import jade.proto.IteratedAchieveREInitiator;
 import jade.proto.SubscriptionResponder;
 import jade.proto.SubscriptionResponder.Subscription;
 import jade.proto.SubscriptionResponder.SubscriptionManager;
-import jade.util.leap.ArrayList;
 import jade.util.leap.Iterator;
 import jade.util.leap.List;
-import jade.util.*;
 import jade.wrapper.AgentController;
 import jade.wrapper.ControllerException;
 import jade.wrapper.PlatformController;
 import jade.wrapper.StaleProxyException;
-import jade.domain.JADEAgentManagement.*;
 
-import ontology.messages.*;
-import weka.core.Option;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Random;
+import java.util.Set;
+import java.util.Vector;
 
-import jade.content.*;
-import jade.content.abs.*;
-import jade.content.onto.*;
-import jade.content.onto.basic.*;
-import jade.content.lang.Codec;
-import jade.content.lang.Codec.CodecException;
-import jade.content.lang.sl.*;
+import ontology.messages.Computation;
+import ontology.messages.Compute;
+import ontology.messages.Data;
+import ontology.messages.Evaluation;
+import ontology.messages.MessagesOntology;
+import ontology.messages.Problem;
+import ontology.messages.Results;
+import ontology.messages.Solve;
+import ontology.messages.Task;
 
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.output.Format;
 import org.jdom.output.XMLOutputter;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 
 public class Agent_Manager extends Agent{
+	private String path = System.getProperty("user.dir")+System.getProperty("file.separator");
 	
-	private String receiver;
 	private int problem_i = 0;
 	
 	private long timeout = 10000;
@@ -78,10 +75,17 @@ public class Agent_Manager extends Agent{
 	// private Subscription subscription;
 	
 	private class SendComputation extends AchieveREInitiator{
-			ACLMessage failure = null;
-			public SendComputation(Agent a, ACLMessage request) {
+			private ACLMessage failure = null;
+			private ACLMessage incomingRequest = null;
+			private ACLMessage incomingResponse = null;
+			private String parentConversationID;
+			
+			public SendComputation(Agent a, ACLMessage request, ACLMessage response) {
 				super(a, request);
-				System.out.println(a.getLocalName()+": SendComputation behavior created.");				
+				incomingRequest = request;
+				incomingResponse = response;
+				parentConversationID = incomingRequest.getConversationId();
+				System.out.println(a.getLocalName()+": SendComputation behavior created. "+request);				
 			}
 			
 			// Since we don't know what message to send to the responder
@@ -89,26 +93,19 @@ public class Agent_Manager extends Agent{
 			// method to build the request on the fly
 			protected Vector prepareRequests(ACLMessage request) {
 				// Klara's note: this method is called just once at the beginning of the behaviour
-				// Retrieve the incoming request from the DataStore
-				String incomingRequestKey = (String) ((AchieveREResponder) parent).REQUEST_KEY;
-				ACLMessage incomingRequest = (ACLMessage) getDataStore().get(incomingRequestKey);
 				System.out.println("Agent "+getLocalName()+": Received action: "+incomingRequest.getContent()+". Preparing response.");
 				
 				// get generated problem id from agree message (it contains a string: "gui_id and id" of a problem 
-				String incomingResponseKey = (String) ((AchieveREResponder) parent).RESPONSE_KEY;
-				ACLMessage incomingResponse = (ACLMessage) getDataStore().get(incomingResponseKey);
 				String[] ID = incomingResponse.getContent().split(" ");
 				String problemId = ID[1];
-				
 			
-				return prepareComputations(incomingRequest, problemId, failure); // Prepare the request to forward to the responder
-										
+				return prepareComputations(incomingRequest, problemId, failure); // Prepare the request to forward to the responder										
 			}
 			
 			protected void handleInform(ACLMessage inform) {
 				System.out.println("Agent:"+getLocalName()+": Agent "+inform.getSender().getName()+" sent an inform.");
 				sendSubscription(inform);
-				// killAgent(inform.getSender().getName());
+				killAgent(inform.getSender().getName());
 			}
 			
 			protected void handleFailure(ACLMessage failure) {
@@ -127,37 +124,25 @@ public class Agent_Manager extends Agent{
 				killAgent(failure.getSender().getName());
 			}
 			
-			/* protected void handleAllResponses(java.util.Vector responses) {
-				Enumeration en = responses.elements();
-				while(en.hasMoreElements()){
-					ACLMessage msgNext = (ACLMessage)en.nextElement();			
-				}		
-			} */
-			
-			
-			
 			protected void handleAllResultNotifications(java.util.Vector resultNotifications) {
 			/*  JADE documentation: 
 			 * Known bugs: The handler handleAllResponses is not called if the 
 			 * agree message is skipped and the inform message is received instead.
 			 * One message for every receiver is sent instead of a single message for all the receivers.
-			 */		 
+			 */	
+			
 				if (resultNotifications.size() == 0){
 					storeNotification( ACLMessage.FAILURE );
 				}
 				else{
 					storeNotification( ACLMessage.INFORM );
 				}
+				
 			}
 			
 			private void sendSubscription(ACLMessage result) {
 				System.out.println("Agent: "+getLocalName()+": result: "+result+" "+result.getPerformative());
-				
-				// Retrieve the incoming request from the DataStore
-				String incomingRequestkey = (String) ((AchieveREResponder) parent).REQUEST_KEY;
-				ACLMessage incomingRequest = (ACLMessage) getDataStore().get(incomingRequestkey);
-				System.out.println("Agent: "+getLocalName()+": incomingRequest: "+incomingRequest);
-				
+								
 				// Prepare the msgOut to the request originator				
 				ACLMessage msgOut = incomingRequest.createReply();
 				msgOut.setPerformative(result.getPerformative());
@@ -169,8 +154,7 @@ public class Agent_Manager extends Agent{
 					Results results = prepareComputationResults(result);
 					if (results != null){
 						
-						writeXMLResults(results);
-						
+						writeXMLResults(results);						
 						
 						msgOut.setPerformative(ACLMessage.INFORM);
 						ContentElement content;
@@ -198,26 +182,20 @@ public class Agent_Manager extends Agent{
 						msgOut.setPerformative(ACLMessage.FAILURE);
 					}
 				}  // end if				
-			
-	            // go through every subscription
+		
+				// go through every subscription				
 				java.util.Iterator it = subscriptions.iterator();
 				while(it.hasNext()){
 					Subscription subscription = (Subscription)it.next();
-				
+					
 					if (subscription.getMessage().getConversationId().equals("subscription"+incomingRequest.getConversationId())){
 						subscription.notify(msgOut);
 					}
-				}	            	
-				
+				}
+				//*/					            					
 			}
 			
-			
-			private void storeNotification(int performative) {
-				// Retrieve the incoming request from the DataStore
-				String incomingRequestkey = (String) ((AchieveREResponder) parent).REQUEST_KEY;
-				ACLMessage incomingRequest = (ACLMessage) getDataStore().get(incomingRequestkey);
-				// System.out.println("Agent: "+getLocalName()+": incomingRequest: "+incomingRequest);
-				
+			private void storeNotification(int performative) {				
 				// Create an outgoing message
 				ACLMessage msgOut = incomingRequest.createReply();
 				msgOut.setPerformative(performative);
@@ -229,11 +207,9 @@ public class Agent_Manager extends Agent{
 				else{
 					System.out.println("Agent: "+getLocalName()+": all results sent.");	
 					msgOut.setContent("Finished");
-				}		        
-					
-				// and store it in the DataStore
-				String notificationkey = (String) ((AchieveREResponder) parent).RESULT_NOTIFICATION_KEY;
-				getDataStore().put(notificationkey, msgOut );
+				}
+								
+				send(msgOut);
 						
 			}   // end storeNotification
 
@@ -254,8 +230,7 @@ public class Agent_Manager extends Agent{
 			}
 
 	} // end SendComputaion behavior
-	
-	
+		
 	protected void setup(){
 		
 			// doWait(1500);  // 1.5 seconds
@@ -282,12 +257,10 @@ public class Agent_Manager extends Agent{
 	  	
 		  	SubscriptionManager subscriptionManager = new SubscriptionManager() {
 		        public boolean register(Subscription s) {
-		        	// subscription = s;
 		        	subscriptions.add(s);
 		        	return true;
 		        }
 		        public boolean deregister(Subscription s) {
-		        	// subscription = s;
 		        	subscriptions.remove(s);
 		        	return true;
 		        }
@@ -300,21 +273,21 @@ public class Agent_Manager extends Agent{
 
 
 		  	SubscriptionResponder send_results = new SubscriptionResponder(this, mt, subscriptionManager) {
-				  		
+		  		// protected ACLMessage handleSubscription(ACLMessage subscription_msg) {
+		  		//	createSubscription(subscription_msg);
+		  		//	return null;
+		  		// }
 		  	};
 		  	addBehaviour(send_results);
 	
-		  	
-		  	
-		  	MessageTemplate template_inform = MessageTemplate.and(
+			MessageTemplate template_inform = MessageTemplate.and(
 	  		  		MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST),
 	  		  		MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
 	  		  				MessageTemplate.and(MessageTemplate.MatchLanguage(codec.getName()), MessageTemplate.MatchOntology(ontology.getName()))
 	  		  				)
-	  		  	);
-			  	
+	  		);
 		  	
-		  	 AchieveREResponder receive_problem = new AchieveREResponder(this, template_inform) {
+		  	AchieveREResponder receive_problem = new AchieveREResponder(this, template_inform) {
 		  		protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException, RefuseException {
 		  		System.out.println("Agent "+getLocalName()+": REQUEST received from "+request.getSender().getName()+". Action is "+request.getContent());
 
@@ -333,6 +306,7 @@ public class Agent_Manager extends Agent{
 			                Solve solve = (Solve)action.getAction();
 			                Problem problem = (Problem)solve.getProblem();
 			                agree.setContent(problem.getGui_id() + " " + generateProblemID());
+			               			                
 			                return agree;
 			    		}
 					} catch (UngroundedException e) {
@@ -346,15 +320,20 @@ public class Agent_Manager extends Agent{
 						e.printStackTrace();
 					}
 					
-					agree.setPerformative(ACLMessage.REFUSE);
-			  		return agree;			  		
+					agree.setPerformative(ACLMessage.REFUSE);				
+													
+					return agree;			  		
 			  		
 			  	} // end prepareResponse
-
-
+		  		
+		  		protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException {
+		  			// addSolveProblemBehaviour(myAgent, request);
+		  			addBehaviour(new SendComputation(myAgent, request, response));
+		  			return null; // we don't want to send it now, but after the result is received from an option manager
+		  		}
 	  		};
 
-	  		receive_problem.registerPrepareResultNotification( new SendComputation(this, null) );
+	  		// receive_problem.registerPrepareResultNotification( new SendComputation(this, null) );
 
 	  		addBehaviour(receive_problem);
 
@@ -391,6 +370,41 @@ public class Agent_Manager extends Agent{
 	    	           while (d_itr.hasNext()) {
 	    	        	   Data next_data = (Data) d_itr.next();
 	    	        	   
+	    	        	   if (a_next.getName() == null){
+	    	        		   String agentType = a_next.getType();	
+	    	        		   boolean unknownAgentType = false;
+	    	        		   if (a_next.getType().contains("?")){
+	    	        			   unknownAgentType = true;
+	    	        			   agentType = _test_recommendRBFAgentType(next_data, offerAgentTypes());
+	    	        			   a_next.setType(agentType);	    	        			   
+	    	        		   }
+	    	        		   AID aid = null;
+	    	        		   String agentName = null;		    	      
+	    	        		  	    	        		   
+	    	        		   while (aid == null) { // TODO && System.currentTimeMillis() < timeout){
+		    	    				// try until you find agent of the given type or you manage to create it	    	        			    
+	    	        			    aid = getAgentByType(agentType);
+		    	    				if (aid == null){
+		    	    					// agent of given type doesn't exist
+		    	    					agentName = generateName(agentType);
+		    	    					aid = createAgent("Agent_"+agentType, agentName);
+		    	    					doWait(100);
+		    	    				}
+		    	    			}
+	    	        		   if (aid == null){
+	    	        			   // TODO ! this computation failed
+	    	        		   }
+	    	        		   agentName = aid.getLocalName();
+	    	        		   a_next.setName(agentName);
+	    	        		   
+	    	        		   if (unknownAgentType){
+	    	        			   ontology.messages.Agent agent_options = onlyGetAgentOptions(agentName);
+	    	        			   a_next.setOptions(agent_options.getOptions());
+	    	        		   }
+	    	        		   
+	    	        		   System.out.println("********** Agent "+a_next.getName()+" recommended. **********");
+	    	        	   }
+	    	        	   
 	    	        	   Computation computation = new Computation();
 	    	        	   computation.setAgent(a_next);
 	    	        	   computation.setData(next_data);
@@ -421,6 +435,185 @@ public class Agent_Manager extends Agent{
 			return msgVector;
 			
 	} // end prepareComputations
+	
+	private String recommendRandomAgentType(Data dataset, Vector<String> agents){
+		Random generator = new Random();
+		int rnd = generator.nextInt(agents.size());
+		return agents.elementAt(rnd);
+	}
+
+	private String _test_recommendRBFAgentType(Data dataset, Vector<String> agents){
+		return "RBFNetwork";
+	}
+	
+	public AID getAgentByType(String agentType){
+		AID[] Agents;
+		
+		System.out.println(agentType);
+		// Make the list of agents of given type
+		DFAgentDescription template = new DFAgentDescription();
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType(agentType);
+        template.addServices(sd);
+        try {
+        	DFAgentDescription[] result = DFService.search(this, template); 
+        	System.out.println("Found the following "+agentType+" agents:");
+        	Agents = new AID[result.length];
+          
+          for (int i = 0; i < result.length; ++i) {
+       	   Agents[i] = result[i].getName();
+	          	System.out.println(Agents[i].getName());
+          }
+
+          if (Agents.length > 0){
+              // choose one
+              Random generator = new Random();
+       	   int rnd = generator.nextInt(Agents.length);
+	           return Agents[rnd];
+          }
+          else {
+       	   return null;
+          }
+        }
+        catch (FIPAException fe) {
+            fe.printStackTrace();
+            return null;
+        }
+	}  // end getAgentByType
+
+	public Vector<String> offerAgentTypes(){
+		// read agent types from file 	
+			Vector<String> AgentTypes = new Vector<String>();
+			
+			//  Sets up a file reader to read the agent_types file 
+			FileReader input;
+			try {
+				input = new FileReader(path+"agent_types");
+	            // Filter FileReader through a Buffered read to read a line at a time
+	            BufferedReader bufRead = new BufferedReader(input);
+	            String line = bufRead.readLine();
+	         
+	            // Read through file one line at time
+	            while (line != null){
+	            	AgentTypes.add(line);
+	                line = bufRead.readLine();
+	            }
+	            
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            return AgentTypes;            
+	}  // end offerAgentTypes
+	
+	private ontology.messages.Agent onlyGetAgentOptions(String agent) {
+		
+		ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
+		request.addReceiver(new AID(agent, AID.ISLOCALNAME));
+		
+		request.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+		
+		request.setLanguage(codec.getName());
+		request.setOntology(ontology.getName());
+		
+		ontology.messages.GetOptions get = new ontology.messages.GetOptions();
+		Action a = new Action();
+		a.setAction(get);
+		a.setActor(this.getAID());
+		
+		try {
+			// Let JADE convert from Java objects to string
+			getContentManager().fillContent(request, a);
+			
+			ACLMessage inform = FIPAService.doFipaRequestClient(this, request);
+			
+			if (inform == null) {
+				return null;
+			}
+			
+			Result r = (Result)getContentManager().extractContent(inform);
+			
+			return (ontology.messages.Agent)r.getItems().get(0);
+			
+		}
+		catch (CodecException ce) {
+			ce.printStackTrace();
+		}
+		catch (OntologyException oe) {
+			oe.printStackTrace();
+		}
+		catch (FIPAException fe) {
+			fe.printStackTrace();
+		}
+		
+		return null;
+		
+	}
+	
+	public String generateName(String agentType){
+		int number = 0;
+		String name = agentType + number;
+		boolean success = false;
+		while (!success){
+			// try to find an agent with "name"
+			DFAgentDescription template = new DFAgentDescription();
+	        ServiceDescription sd = new ServiceDescription();
+	        sd.setName(name);
+	        template.addServices(sd);
+	        try {
+	        	DFAgentDescription[] result = DFService.search(this, template);
+	        	// if the agent with this name already exists, increase number
+	        	if (result.length > 0){
+	        		number++;
+	        		name = agentType + number;
+	        	}          
+	        	else {
+	        		success = true;
+	        		return name;
+	        	}
+	        }
+	        catch (FIPAException fe) {
+	          fe.printStackTrace();
+	        }
+		}
+		return null;		
+	}
+
+	public boolean exists(String name){
+		DFAgentDescription template = new DFAgentDescription();
+        ServiceDescription sd = new ServiceDescription();
+        sd.setName(name);
+        template.addServices(sd);
+        try {
+        	DFAgentDescription[] result = DFService.search(this, template);
+        	if (result.length > 0){
+        		return true;
+        	}          
+        }
+        catch (FIPAException fe) {
+          fe.printStackTrace();
+        }
+        return false;
+	}
+	
+	public AID createAgent(String type, String name){
+		// get a container controller for creating new agents
+		PlatformController container = getContainerController();
+		
+		try{	
+			AgentController agent = container.createNewAgent(name, type, new Object[0]);
+			agent.start();
+			return new AID((String) name, AID.ISLOCALNAME);
+		}
+		catch (ControllerException e) {
+	        // System.err.println( "Exception while adding agent: " + e );
+	        // e.printStackTrace();
+	        return null;
+	    }	
+	}
 	
 	protected ACLMessage Compute(Computation computation){
 	// creates an Option Manager agent and returns a message for this agent
@@ -487,8 +680,8 @@ public class Agent_Manager extends Agent{
                 	results = (Results) _result.getValue(); 
                 	List listOfResults = results.getResults();
                 	
-           		 	float sumError_rate = 0;
-           		 	float sumPct_incorrect = 0;
+           		 	float sumError_rate = Integer.MAX_VALUE;
+           		 	float sumPct_incorrect = 100;
                 	if (listOfResults == null){
                 		// there were no tasks computed
                 		results.setAvg_error_rate(sumError_rate); 

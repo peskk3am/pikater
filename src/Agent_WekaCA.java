@@ -131,6 +131,7 @@ public abstract class Agent_WekaCA extends Agent_ComputingAgent {
          opt.setName(_weka_opt.name);
          opt.setSynopsis(_weka_opt.synopsis);
          opt.setDefault_value(_weka_opt.default_value);
+         opt.setValue(_weka_opt.default_value);
          return opt;
 	 }
 	 
@@ -144,7 +145,8 @@ public abstract class Agent_WekaCA extends Agent_ComputingAgent {
 			
 			agent_options = new ontology.messages.Agent();
 			agent_options.setName(getLocalName());
-			 // read options from file
+			agent_options.setType(getAgentType());
+			// read options from file
 			try {
 				/*  Sets up a file reader to read the options file */
 				FileReader input = new FileReader(optPath);

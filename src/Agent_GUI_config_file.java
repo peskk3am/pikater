@@ -96,6 +96,20 @@ public class Agent_GUI_config_file extends Agent_GUI{
 		
 		doWait(1000);
 		
+		
+		/*
+        // test:
+        int newId = createNewProblem("1000");
+        try {
+			addAgentToProblem(newId, null, "MultilayerPerceptron", "-L 0.4 -D -M ? -H ?,?");
+		} catch (FailureException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+         addDatasetToProblem(newId, "iris.arff", "iris.arff");
+ 		// getAgentOptions("mp1"); 
+        // */
+		
 		System.out.println("Agent types: "+offerAgentTypes());
 		
 		configFileName = getConfigFileName();
@@ -112,19 +126,6 @@ public class Agent_GUI_config_file extends Agent_GUI{
         }
 		// */        
         
-		/*
-        // test:
-        int newId = createNewProblem("1000");
-        try {
-			addAgentToProblemWekaStyle(newId, null, "MultilayerPerceptron", "-L 0.4 -D -M ? -H ?,?");
-		} catch (FailureException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-         addDatasetToProblem(newId, "iris.arff", "iris.arff");
- 		// getAgentOptions("mp1"); 
-        // */
-	
 		
 	}	// end mySetup
 
