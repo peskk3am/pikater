@@ -1,5 +1,5 @@
 $a Agent_ARFFReader Reader
-$a Agent_RBFNetwork rbf1
+# $a Agent_RBFNetwork rbf1
 # $a Agent_RBFNetwork rbf2 -B 1
 
 # load rbf3 from file (rbf3.model) 
@@ -9,9 +9,11 @@ $a Agent_RBFNetwork rbf1
 # $a Agent_Random r
 
 $a Agent_Manager manager
+$a Agent_DataManager dataManager
 
-# get a Problem from a xml file
-$a Agent_GUI_config_file very_simple_GUI1 xml_config
-# $a Agent_GUI_config_file very_simple_GUI2 xml_config
+# get a Problem from "config" file
+#$a Agent_GUI_WS very_simple_GUI
+$a Agent_GUI_Java very_simple_GUI
+#$a Agent_GUI_config_file very_simple_GUI xml_config
 
-$a jade.tools.sniffer.Sniffer sniffer01 very_simple_GUI1
+$a  jade.tools.sniffer.Sniffer sniffer01 very_simple_GUI

@@ -29,7 +29,7 @@ public class WS_Ontology extends Ontology {
 	public static final String RESULTS = "results";
 	public static final String RESULT_OPTIONS = "options";
 	public static final String RESULT_ERROR_RATE = "errorRate";
-	public static final String RESULT_PCT_CORRECT = "pctCorrect";
+	public static final String RESULT_PCT_INCORRECT = "pctIncorrect";
 	
 	private static Ontology theInstance = new WS_Ontology();
 	
@@ -45,7 +45,7 @@ public class WS_Ontology extends Ontology {
 			//add(MessagesOntology.getInstance().getSchema(ontology.messages.Results.class));
 			//add(MessagesOntology.getInstance().getSchema(ontology.messages.Agent.class));
 			add(new ConceptSchema(OPTION), Option.class);
-			add(new ConceptSchema(RESULTS), Results.class);
+			add(new ConceptSchema(RESULTS), WS_Results.class);
 			add(new AgentActionSchema(SET_PROBLEM), SetProblem.class);
 			add(new AgentActionSchema(GET_AGENTS), GetAgents.class);
 			add(new AgentActionSchema(GET_RESULTS), GetResults.class);
@@ -58,9 +58,9 @@ public class WS_Ontology extends Ontology {
 			cs.add(OPTION_VALUE, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 			
 			cs = (ConceptSchema)getSchema(RESULTS);
-			cs.add(RESULT_OPTIONS, (ConceptSchema)getSchema(OPTION), 0, ObjectSchema.UNLIMITED);
+			cs.add(RESULT_OPTIONS, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 			cs.add(RESULT_ERROR_RATE, (PrimitiveSchema)getSchema(BasicOntology.FLOAT));
-			cs.add(RESULT_PCT_CORRECT, (PrimitiveSchema)getSchema(BasicOntology.FLOAT));
+			cs.add(RESULT_PCT_INCORRECT, (PrimitiveSchema)getSchema(BasicOntology.FLOAT));
 			
 			AgentActionSchema as = (AgentActionSchema)getSchema(SET_PROBLEM);
 			as.add(AGENT_DESCRIPTIONS, (PrimitiveSchema)getSchema(BasicOntology.STRING), 1, ObjectSchema.UNLIMITED);

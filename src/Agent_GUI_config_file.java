@@ -16,6 +16,7 @@ import jade.core.Agent;
 import jade.core.AID;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.FIPAAgentManagement.FailureException;
+import jade.gui.GuiEvent;
 import jade.lang.acl.ACLMessage;
 import jade.util.leap.ArrayList;
 import jade.util.leap.Iterator;
@@ -136,6 +137,12 @@ public class Agent_GUI_config_file extends Agent_GUI{
 
 	private String getConfigFileName(){
 		return (String)getArguments()[0];
+	}
+
+	@Override
+	protected void onGuiEvent(GuiEvent arg0) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 }

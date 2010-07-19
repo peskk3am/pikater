@@ -97,5 +97,5 @@ public class Agent_Initiator extends Agent{
 		
 		return 1;
 	}
-	
+
 }

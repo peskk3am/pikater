@@ -112,7 +112,13 @@ public class MessagesOntology extends Ontology {
 	  public static final String EXECUTE = "EXECUTE";
 	  public static final String EXECUTE_TASK = "task";
 
+	  public static final String IMPORT_FILE = "IMPORT_FILE";
+	  public static final String IMPORT_USER = "userID";
+	  public static final String IMPORT_FILENAME = "externalFilename";
 	  
+	  public static final String TRANSLATE = "TRANSLATE";
+	  public static final String TRANSLATE_USER = "userID";
+	  public static final String TRANSLATE_FILENAME = "externalFilename";
 	  
 	  public static final String SOLVE = "SOLVE";
 	  public static final String SOLVE_PROBLEM = "problem";
@@ -162,7 +168,8 @@ public class MessagesOntology extends Ontology {
 			add(new AgentActionSchema(GET_OPTIONS), GetOptions.class);
 			add(new AgentActionSchema(EXECUTE), Execute.class);
 			add(new AgentActionSchema(SOLVE), Solve.class);
-			
+			add(new AgentActionSchema(IMPORT_FILE), ImportFile.class);
+			add(new AgentActionSchema(TRANSLATE), TranslateFilename.class);
 			// add(new AgentActionSchema(SEND_OPTIONS), SendOptions.class);
 			
 			
@@ -267,6 +274,16 @@ public class MessagesOntology extends Ontology {
 			as = (AgentActionSchema)getSchema(EXECUTE);
 	    	as.add(EXECUTE_TASK, (ConceptSchema)getSchema(TASK));
 
+	    	as = (AgentActionSchema)getSchema(IMPORT_FILE);
+	    	as.add(IMPORT_USER, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));
+	    	as.add(IMPORT_FILENAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	as.setResult((PrimitiveSchema)getSchema(BasicOntology.STRING)); //the internal filename 
+	    	
+	    	as = (AgentActionSchema)getSchema(TRANSLATE);
+	    	as.add(TRANSLATE_USER, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));
+	    	as.add(TRANSLATE_FILENAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	as.setResult((PrimitiveSchema)getSchema(BasicOntology.STRING)); //the internal filename
+	    	
 			//as = (AgentActionSchema)getSchema(SEND_OPTIONS);
 			//as.add(SEND_OPTIONS_OPTIONS, (ConceptSchema)getSchema(OPTION), 1, ObjectSchema.UNLIMITED);
 			
