@@ -1,4 +1,5 @@
 import jade.core.Agent;
+
 import jade.util.leap.ArrayList;
 import jade.util.leap.List;
 import jade.wrapper.AgentController;
@@ -97,5 +98,4 @@ public class Agent_Initiator extends Agent{
 		return 1;
 	}
 	
-		
 }

@@ -7,6 +7,24 @@ import jade.content.onto.OntologyException;
 import jade.content.onto.UngroundedException;
 import jade.content.onto.basic.Action;
 import jade.content.onto.basic.Result;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+
+import java.io.Serializable;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Vector;
+
+import org.jdom.Document;
+import org.jdom.Element;
+import org.jdom.output.Format;
+import org.jdom.output.XMLOutputter;
+
 import jade.core.AID;
 import jade.core.Agent;
 import jade.domain.DFService;
@@ -638,7 +656,6 @@ public class Agent_Manager extends Agent{
 		ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
 		msg.setLanguage(codec.getName());
 		msg.setOntology(ontology.getName());
-
 
   		try {
   			Compute compute = new Compute();

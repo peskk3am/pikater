@@ -88,5 +88,4 @@ public class Agent_MultilayerPerceptron extends Agent_WekaCA {
 		 return result;
 	 }  // end test
 	 
-
 }
