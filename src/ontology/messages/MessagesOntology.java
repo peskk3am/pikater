@@ -4,6 +4,8 @@ import jade.content.onto.*;
 import jade.content.schema.*;
 import java.util.*;
 
+import javax.print.attribute.SupportedValuesAttribute;
+
 
 public class MessagesOntology extends Ontology {
 
@@ -125,6 +127,9 @@ public class MessagesOntology extends Ontology {
 	  
 	  public static final String GET_OPTIONS = "GET-OPTIONS";
 
+	  public static final String SAVE_RESULTS = "SAVE-RESULTS";
+	  public static final String SAVE_RESULTS_TASK = "task";
+	  
 	  // public static final String SEND_OPTIONS = "SEND-OPTIONS";
 	  // public static final String SEND_OPTIONS_OPTIONS = "options";
 	  
@@ -170,6 +175,7 @@ public class MessagesOntology extends Ontology {
 			add(new AgentActionSchema(SOLVE), Solve.class);
 			add(new AgentActionSchema(IMPORT_FILE), ImportFile.class);
 			add(new AgentActionSchema(TRANSLATE), TranslateFilename.class);
+			add(new AgentActionSchema(SAVE_RESULTS), SaveResults.class);
 			// add(new AgentActionSchema(SEND_OPTIONS), SendOptions.class);
 			
 			
@@ -283,6 +289,9 @@ public class MessagesOntology extends Ontology {
 	    	as.add(TRANSLATE_USER, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));
 	    	as.add(TRANSLATE_FILENAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 	    	as.setResult((PrimitiveSchema)getSchema(BasicOntology.STRING)); //the internal filename
+	    	
+	    	as = (AgentActionSchema)getSchema(SAVE_RESULTS);
+	    	as.add(SAVE_RESULTS_TASK, (ConceptSchema)getSchema(Task.class));
 	    	
 			//as = (AgentActionSchema)getSchema(SEND_OPTIONS);
 			//as.add(SEND_OPTIONS_OPTIONS, (ConceptSchema)getSchema(OPTION), 1, ObjectSchema.UNLIMITED);

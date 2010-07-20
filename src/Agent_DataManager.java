@@ -1,4 +1,3 @@
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -8,6 +7,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.LinkedList;
 
 import jade.content.ContentElement;
 import jade.content.lang.Codec;
@@ -26,6 +26,8 @@ import jade.proto.AchieveREResponder;
 
 import ontology.messages.ImportFile;
 import ontology.messages.MessagesOntology;
+import ontology.messages.SaveResults;
+import ontology.messages.Task;
 import ontology.messages.TranslateFilename;
 
 import org.apache.commons.codec.digest.DigestUtils;
@@ -60,9 +62,55 @@ public class Agent_DataManager extends Agent {
 	@Override
 	protected void setup() {
 		super.setup();
-		
+				
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
+		
+		LinkedList<String> tableNames = new LinkedList<String>();
+		try {
+			String[] types = {"TABLE"};
+			ResultSet tables = db.getMetaData().getTables(null, null, "%", types);
+			while (tables.next()) {
+				tableNames.add(tables.getString(3));
+			}
+		} catch (SQLException e) {
+			log.error("Error getting tables list: " + e.getMessage());
+			e.printStackTrace();
+		}
+		
+		log.info("Found the following tables: ");
+		for (String s : tableNames) {
+			log.info(s);
+		}
+		
+		File data = new File("data/files");
+		if (!data.exists()) {
+			log.info("Creating directory data/files");
+			if (data.mkdirs()) {
+				log.info("Succesfully created directory data/files");
+			} else {
+				log.error("Error creating directory data/files");
+			}
+		}
+		
+		try {
+			if (!tableNames.contains("FILEMAPPING")) {
+				log.info("Creating table FILEMAPPING");
+				db.createStatement().executeUpdate("CREATE TABLE fileMapping (userID INTEGER NOT NULL, externalFilename VARCHAR(256) NOT NULL, internalFilename CHAR(32) NOT NULL, PRIMARY KEY (userID, externalFilename))");
+			}
+		} catch (SQLException e) {
+			log.fatal("Error creating table FILEMAPPING: " + e.getMessage());
+			e.printStackTrace();
+		}
+		
+		try {
+			if (!tableNames.contains("RESULTS")) {
+				log.info("Creating table RESULTS");
+				db.createStatement().executeUpdate("CREATE TABLE results (agentName VARCHAR (256), agentType VARCHAR (256), options VARCHAR (256), dataFile VARCHAR (50), testFile VARCHAR (50), errorRate DOUBLE)");
+			}
+		} catch (SQLException e) {
+			log.fatal("Error creating table RESULTS: " + e.getMessage());
+		}
 		
 		MessageTemplate mt = MessageTemplate.and(
 				MessageTemplate.MatchOntology(ontology.getName()),
@@ -149,8 +197,31 @@ public class Agent_DataManager extends Agent {
 							getContentManager().fillContent(reply, r);
 							
 							return reply;
-						}
+						}	
 						
+					}
+					if (a.getAction() instanceof SaveResults) {
+						
+						SaveResults sr = (SaveResults)a.getAction();
+						Task res = sr.getTask();
+						
+						Statement stmt = db.createStatement();
+						
+						String query = "INSERT INTO results (agentName, agentType, options, dataFile, testFile, errorRate) VALUES (";
+						query += "\'" + res.getAgent().getName() + "\',";
+						query += "\'" + res.getAgent().getType() + "\',";
+						query += "\'" + res.getAgent().optionsToString() + "\',";
+						query += "\'" + res.getData().getTrain_file_name() + "\',";
+						query += "\'" + res.getData().getTest_file_name() + "\',";
+						query += res.getResult().getError_rate() + ")";
+						
+						log.info("Executing query: " + query);
+					
+						stmt.executeUpdate(query);
+						
+						ACLMessage reply = request.createReply();
+						reply.setPerformative(ACLMessage.INFORM);
+						return reply;
 					}
 				
 				} catch (OntologyException e) {
