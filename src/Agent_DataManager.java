@@ -26,6 +26,8 @@ import jade.proto.AchieveREResponder;
 
 import ontology.messages.ImportFile;
 import ontology.messages.MessagesOntology;
+import ontology.messages.SaveResults;
+import ontology.messages.Task;
 import ontology.messages.TranslateFilename;
 
 import org.apache.commons.codec.digest.DigestUtils;
@@ -149,8 +151,31 @@ public class Agent_DataManager extends Agent {
 							getContentManager().fillContent(reply, r);
 							
 							return reply;
-						}
+						}	
 						
+					}
+					if (a.getAction() instanceof SaveResults) {
+						
+						SaveResults sr = (SaveResults)a.getAction();
+						Task res = sr.getTask();
+						
+						Statement stmt = db.createStatement();
+						
+						String query = "INSERT INTO results (agentName, agentType, options, dataFile, testFile, errorRate) VALUES (";
+						query += "\'" + res.getAgent().getName() + "\',";
+						query += "\'" + res.getAgent().getType() + "\',";
+						query += "\'" + res.getAgent().optionsToString() + "\',";
+						query += "\'" + res.getData().getTrain_file_name() + "\',";
+						query += "\'" + res.getData().getTest_file_name() + "\',";
+						query += res.getResult().getError_rate() + ")";
+						
+						log.info("Executing query: " + query);
+					
+						stmt.executeUpdate(query);
+						
+						ACLMessage reply = request.createReply();
+						reply.setPerformative(ACLMessage.INFORM);
+						return reply;
 					}
 				
 				} catch (OntologyException e) {

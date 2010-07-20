@@ -2,6 +2,8 @@ import java.security.MessageDigest;
 
 import ontology.messages.ImportFile;
 import ontology.messages.MessagesOntology;
+import ontology.messages.SaveResults;
+import ontology.messages.Task;
 import ontology.messages.TranslateFilename;
 import jade.content.lang.Codec;
 import jade.content.lang.Codec.CodecException;
@@ -91,6 +93,36 @@ public class DataManagerService extends FIPAService {
 		}
 		
 		return null;
+	}
+	
+	public static void saveResult (Agent agent, Task t) {
+		
+		SaveResults sr = new SaveResults();
+		sr.setTask(t);
+		
+		ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
+		request.addReceiver(new AID("dataManager", false));
+		request.setOntology(MessagesOntology.getInstance().getName());
+		request.setLanguage(codec.getName());
+		request.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+		
+		Action a = new Action();
+		a.setActor(agent.getAID());
+		a.setAction(sr);
+		
+		try {
+			agent.getContentManager().fillContent(request, a);
+			
+			FIPAService.doFipaRequestClient(agent, request); 
+			
+		} catch (CodecException e) {
+			e.printStackTrace();
+		} catch (OntologyException e) {
+			e.printStackTrace();
+		} catch (FIPAException e) {
+			e.printStackTrace();
+		}
+		
 	}
 	
 }

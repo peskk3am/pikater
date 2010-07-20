@@ -736,7 +736,13 @@ public class Agent_Manager extends Agent{
 	
 	 protected boolean writeXMLResults(Results results){
 	 	String file_name = "xml"+System.getProperty("file.separator")+results.getComputation_id()+".xml"; 
-	    
+	 	
+	 	Iterator resIterator = results.getResults().iterator();
+	 	
+	 	while (resIterator.hasNext()) {
+	 		DataManagerService.saveResult(this, (Task)resIterator.next());
+	 	}
+	 	
 		// create the "xml" directory, if it doesn't exist
 		boolean exists = (new File("xml")).exists();
 		if (!exists) {	
