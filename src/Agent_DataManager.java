@@ -84,6 +84,16 @@ public class Agent_DataManager extends Agent {
 			log.info(s);
 		}
 		
+		File data = new File("data/files");
+		if (!data.exists()) {
+			log.info("Creating directory data/files");
+			if (data.mkdirs()) {
+				log.info("Succesfully created directory data/files");
+			} else {
+				log.error("Error creating directory data/files");
+			}
+		}
+		
 		try {
 			if (!tableNames.contains("FILEMAPPING")) {
 				log.info("Creating table FILEMAPPING");
