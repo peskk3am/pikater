@@ -8,6 +8,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.LinkedList;
 
 import jade.content.ContentElement;
 import jade.content.lang.Codec;
@@ -62,9 +63,45 @@ public class Agent_DataManager extends Agent {
 	@Override
 	protected void setup() {
 		super.setup();
-		
+				
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
+		
+		LinkedList<String> tableNames = new LinkedList<String>();
+		try {
+			String[] types = {"TABLE"};
+			ResultSet tables = db.getMetaData().getTables(null, null, "%", types);
+			while (tables.next()) {
+				tableNames.add(tables.getString(3));
+			}
+		} catch (SQLException e) {
+			log.error("Error getting tables list: " + e.getMessage());
+			e.printStackTrace();
+		}
+		
+		log.info("Found the following tables: ");
+		for (String s : tableNames) {
+			log.info(s);
+		}
+		
+		try {
+			if (!tableNames.contains("FILEMAPPING")) {
+				log.info("Creating table FILEMAPPING");
+				db.createStatement().executeUpdate("CREATE TABLE fileMapping (userID INTEGER NOT NULL, externalFilename VARCHAR(256) NOT NULL, internalFilename CHAR(32) NOT NULL, PRIMARY KEY (userID, externalFilename))");
+			}
+		} catch (SQLException e) {
+			log.fatal("Error creating table FILEMAPPING: " + e.getMessage());
+			e.printStackTrace();
+		}
+		
+		try {
+			if (!tableNames.contains("RESULTS")) {
+				log.info("Creating table RESULTS");
+				db.createStatement().executeUpdate("CREATE TABLE results (agentName VARCHAR (256), agentType VARCHAR (256), options VARCHAR (256), dataFile VARCHAR (50), testFile VARCHAR (50), errorRate DOUBLE)");
+			}
+		} catch (SQLException e) {
+			log.fatal("Error creating table RESULTS: " + e.getMessage());
+		}
 		
 		MessageTemplate mt = MessageTemplate.and(
 				MessageTemplate.MatchOntology(ontology.getName()),
