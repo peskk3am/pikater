@@ -7,8 +7,6 @@ import jade.content.onto.OntologyException;
 import jade.content.onto.basic.Action;
 import jade.content.onto.basic.Result;
 import jade.core.Agent;
-import jade.core.behaviours.Behaviour;
-import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -43,7 +41,8 @@ public class Agent_ARFFReader extends Agent {
 
 	
 	boolean ReadFromFile(String fileName){
-
+		if(fileName == null || fileName.length()==0)
+			return false;
 		try {
 			BufferedReader reader = new BufferedReader(
 	        		  new FileReader(fileName)
@@ -52,12 +51,10 @@ public class Agent_ARFFReader extends Agent {
 		    reader.close();
 
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			System.out.println("Reading of data from file "+fileName+" failed.");
 			return false;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			System.out.println("Reading of data from file "+fileName+" failed.");
 			return false;

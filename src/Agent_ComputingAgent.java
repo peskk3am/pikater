@@ -1,24 +1,8 @@
 //import java.io.BufferedReader;
-//import java.io.FileNotFoundException;
-//import java.io.FileReader;
-//import java.io.IOException;
-import java.io.*;
-
 import java.util.*;
 
-import org.jdom.JDOMException;
-
 import jade.util.leap.List;
-import jade.util.leap.ArrayList;
-
 import weka.core.Instances;
-import weka.core.Option;
-import weka.classifiers.Classifier;
-import weka.classifiers.Evaluation;
-import weka.classifiers.functions.MultilayerPerceptron;
-import weka.classifiers.functions.RBFNetwork;
-
-
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.*;
@@ -26,21 +10,18 @@ import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPANames;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
-import jade.domain.FIPAAgentManagement.FailureException;
 import jade.domain.FIPAAgentManagement.NotUnderstoodException;
 import jade.domain.FIPAAgentManagement.RefuseException;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import jade.lang.acl.UnreadableException;
-import jade.proto.ContractNetResponder;
+import jade.proto.AchieveREInitiator;
 import jade.proto.AchieveREResponder;
 
 import ontology.messages.*;
 
 import jade.content.lang.Codec;
 import jade.content.*;
-import jade.content.abs.*;
 import jade.content.onto.*;
 import jade.content.onto.basic.*;
 import jade.content.lang.Codec.CodecException;
@@ -194,90 +175,6 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 }  // end SendOptions
 	 
 	 
-	 protected ACLMessage Execute(ACLMessage request, Execute execute, AchieveREResponder behavior) throws FailureException{
-		state = states.NEW;
-		//Set options
-		setOptions(execute.getTask());
-			
-		ontology.messages.Evaluation eval = null;
-		
-		boolean success = true;
-		
-		Data data = execute.getTask().getData();
-		//Get training data
-		if (!data.getTrain_file_name().equals(trainFileName)){
-			hasGotRightData = false;	
-			trainFileName = data.getTrain_file_name();
-			onto_train = getData_(trainFileName);
-			if (data == null || onto_train == null){
-				throw new FailureException("No train data received from the reader agent.");
-			}
-			else{
-				hasGotRightData = true;
-				train = onto_train.toWekaInstances();
-				train.setClassIndex(train.numAttributes() - 1);
-			}
-		}
-		//Get testing data
-		if (!data.getTest_file_name().equals(testFileName)){
-			hasGotRightData = false;
-			testFileName = data.getTest_file_name();
-			onto_test = getData_(testFileName);
-			if (data == null || onto_test == null){
-				throw new FailureException("No test data received from the reader agent.");
-			}
-			else{
-				hasGotRightData = true;
-				test = onto_test.toWekaInstances();
-				test.setClassIndex(test.numAttributes() - 1);
-			}
-
-		}
-
-		//Train&test		  							
-		try{
-			if (state != states.TRAINED) { train(); }
-			// saveAgent();
-			// loadAgent(getLocalName());
-			
-			//testing...
-			eval = evaluateCA();			
-		}
-		catch (Exception e){
-			success = false;
-		}
-				   	
-		//Send results
-		if (success) {
-			System.out.println("Agent "+getLocalName()+": Action successfully performed.");
-			ACLMessage inform = request.createReply();
-			inform.setPerformative(ACLMessage.INFORM);
-			try {
-				// Prepare the content - Result with Evaluation instead of MyWekaEvaluation is sended!!!
-				ContentElement content = getContentManager().extractContent(request); // TODO exception block?
-				Result result = new Result((Action)content, eval);
-				getContentManager().fillContent(inform, result);
-			} catch (UngroundedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (CodecException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (OntologyException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			return inform;
-		}
-		else {
-			System.out.println("Agent "+getLocalName()+": Action failed");
-			throw new FailureException("unexpected-error");
-		}
-	
-	 } 	// end Execute  					
-	 
-	 
 	 protected void setup() {		 
    
 		 
@@ -326,7 +223,8 @@ public abstract class Agent_ComputingAgent extends Agent{
 
 
 	  		  		
-	  				addBehaviour(new AchieveREResponder(this, template_inform) {
+	  			AchieveREResponder resp =	
+	  		  	new AchieveREResponder(this, template_inform) {
 	  					protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException, RefuseException {
 	  						System.out.println("Agent "+getLocalName()+": REQUEST received from "+request.getSender().getName()+". Action is "+request.getContent());
 	  						if (!working) {
@@ -345,40 +243,10 @@ public abstract class Agent_ComputingAgent extends Agent{
 	  							throw new RefuseException("check-failed");
 	  						}
 	  					}  // end prepareResponse
-	  					
-	  					protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException {
-	  						
-	  						
-	  						try{
-	  							ContentElement content = getContentManager().extractContent(request);
-	  							// System.out.println(((Action)content).getAction());
-	  							
-	  							if (((Action)content).getAction() instanceof GetOptions){
-	  								return sendOptions(request);
-	  							}
-	  							
-	  							if (((Action)content).getAction() instanceof Execute){
-	  								Execute execute = (Execute) ((Action)content).getAction();
-	  								return Execute(request, execute, this);
-	  							}
-	  						}
-  							catch (CodecException ce) {
-  								ce.printStackTrace();
-  								}
-							catch (OntologyException oe) {
-  								oe.printStackTrace();
-  							}
-							
-							ACLMessage notUnderstood = request.createReply();
-							notUnderstood.setPerformative(ACLMessage.NOT_UNDERSTOOD);
-  							return notUnderstood;
-  							
-							
-							// return 
-	  						
-	  					}  //  end prepareResultNotification
-	  					
-	  				} );
+	  				} ;
+	  			addBehaviour(resp);
+	  			resp.registerPrepareResultNotification( new ProcessAction(this) );
+
 	 
 	 } // end setup
 	 
@@ -440,8 +308,6 @@ public abstract class Agent_ComputingAgent extends Agent{
 			 a.setAction(get_data);
 			 a.setActor(this.getAID());
 			 getContentManager().fillContent(msgOut, a);
-			 //sending
-			 send(msgOut);
 		 }
 		 catch (FIPAException fe) {
 			 fe.printStackTrace();
@@ -455,40 +321,6 @@ public abstract class Agent_ComputingAgent extends Agent{
 		}
 		 return msgOut;
 	 } // end sendGetDataReq
-	 
-	 /*Blocking get_data*/
-	 protected DataInstances getData_(String file_name){
-		 ACLMessage req = sendGetDataReq(file_name);
-		 if(req!=null){
-			 MessageTemplate template_msg_from_reader = MessageTemplate.and(
-					 MessageTemplate.MatchPerformative(ACLMessage.INFORM),
-					 MessageTemplate.MatchConversationId(req.getConversationId()));
-			 //waiting for data - blocking!!!
-			 ACLMessage respond = blockingReceive(template_msg_from_reader, 10000);
-			 //content extraction
-			 ContentElement content;
-			 try {
-				 content = getContentManager().extractContent(respond);
-				 if (content instanceof Result) {
-					 Result result = (Result) content;
-					 if (result.getValue() instanceof ontology.messages.DataInstances) {
-						 return (ontology.messages.DataInstances)result.getValue();
-					 }
-				 }
-			 } catch (UngroundedException e) {
-				 e.printStackTrace();
-			 } catch (CodecException e) {
-				 e.printStackTrace();
-			 } catch (OntologyException e) {
-				 e.printStackTrace();
-			 }
-		 }
-		 //something is wrong
-		 return null;
-		 /*_data = data_instances.toWekaInstances();
-		_data.setClassIndex(_data.numAttributes() - 1); */
-	 }
-	 
 	 
 	 public static byte[] toBytes(Object object) throws Exception{
 		 java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
@@ -541,5 +373,247 @@ public abstract class Agent_ComputingAgent extends Agent{
 			}
 
 	        send(msgOut);
+	    }
+	    private class ProcessAction extends FSMBehaviour{
+	    	private static final String INIT_STATE = "Init";
+	    	private static final String GETTRAINDATA_STATE = "GetTrainingData";
+	    	private static final String GETTESTDATA_STATE = "GetTestData";
+	    	private static final String TRAINTEST_STATE = "TrainTest";
+	    	private static final String SENDRESULTS_STATE = "SendResults";
+	    	private static final int NEXT_JMP = 0;
+	    	private static final int LAST_JMP = 1;
+	    	ACLMessage incoming_request;
+	    	ACLMessage result_msg;
+	    	Execute execute_action;
+	    	boolean success;
+	    	ontology.messages.Evaluation eval;
+	    	String train_fn;
+	    	String test_fn;
+	    	void failureMsg(String desc){
+	    		result_msg = incoming_request.createReply();
+	    		result_msg.setPerformative(ACLMessage.FAILURE);
+	    		//TODO: add the description
+	    	}
+
+	    	void notUnderstoodMsg(){
+	    		result_msg = incoming_request.createReply();
+	    		result_msg.setPerformative(ACLMessage.NOT_UNDERSTOOD);
+	    		//TODO: add the description
+	    	}
+	    	
+	    	void getRequest(){
+	    		String incomingRequestKey = (String) ((AchieveREResponder) parent).REQUEST_KEY;
+				incoming_request = (ACLMessage) getDataStore().get(incomingRequestKey);
+	    	}
+	    	
+	    	void setResultMsg(){
+	    		String notificationkey = (String) ((AchieveREResponder) parent).RESULT_NOTIFICATION_KEY;
+				getDataStore().put(notificationkey, result_msg );
+	    	}
+	    	
+	    	boolean processNonExecute(){
+	    		try{
+	    			ContentElement content = getContentManager().extractContent(incoming_request);
+	    			if (((Action)content).getAction() instanceof GetOptions){
+	    				result_msg = sendOptions(incoming_request);
+	    				return true;
+	    			}
+	    			if (((Action)content).getAction() instanceof Execute){
+	    				execute_action = (Execute) ((Action)content).getAction();
+	    				return false;
+	    			}
+	    		}
+	    		catch (CodecException ce) {
+	    			ce.printStackTrace();
+	    		}
+	    		catch (OntologyException oe) {
+	    			oe.printStackTrace();
+	    		}
+	    		notUnderstoodMsg();
+	    		return true;
+
+	    	}
+	    	
+	    	ontology.messages.DataInstances processGetData(ACLMessage inform){
+	    		ContentElement content;
+					try {
+						content = getContentManager().extractContent(inform);
+						if (content instanceof Result) {
+							Result result = (Result) content;
+							if (result.getValue() instanceof ontology.messages.DataInstances) {
+								return (ontology.messages.DataInstances)result.getValue();
+							}
+						}
+					} catch (UngroundedException e) {
+						e.printStackTrace();
+					} catch (CodecException e) {
+						e.printStackTrace();
+					} catch (OntologyException e) {
+						e.printStackTrace();
+					}
+					return null;
+	    	}
+	    	
+	    	ProcessAction(Agent a){
+	    		super(a);
+	    		registerFirstState(new OneShotBehaviour(a){
+  					int next;
+  					public void action(){
+  						result_msg = null;
+  						execute_action = null;
+  						getRequest();
+  						if(processNonExecute()){
+  							next = LAST_JMP;
+  							return;
+  						}
+  						state = states.NEW;
+  						//Set options
+  						setOptions(execute_action.getTask());
+  						eval = null;
+  						success = true;
+  						Data data = execute_action.getTask().getData();
+  						//Get training data
+  						train_fn = data.getTrain_file_name();
+						AchieveREInitiator get_train_behaviour = (AchieveREInitiator) ((ProcessAction)parent).getState(GETTRAINDATA_STATE);
+  						if (!train_fn.equals(trainFileName)){
+  							get_train_behaviour.reset(sendGetDataReq(train_fn));
+  						}else{
+  							get_train_behaviour.reset(null);
+  						}
+  						//Get testing data
+						test_fn = data.getTest_file_name();
+						AchieveREInitiator get_test_behaviour = (AchieveREInitiator) ((ProcessAction)parent).getState(GETTESTDATA_STATE);
+  						if (!test_fn.equals(testFileName)){
+  							get_test_behaviour.reset(sendGetDataReq(test_fn));
+  						}else{
+  							get_test_behaviour.reset(null); 					
+  						}
+  						next = NEXT_JMP;
+  					}
+  					public int onEnd(){
+  						return next;
+  					}
+  				}, INIT_STATE);
+  				
+	    		registerState(new AchieveREInitiator(a, null){
+  					public int next = NEXT_JMP;
+  					
+  					protected void handleInform(ACLMessage inform) {
+  						ontology.messages.DataInstances _train = processGetData(inform);
+  						if(_train!=null){
+  							trainFileName = train_fn;
+  							onto_train= _train;
+  							train = onto_train.toWekaInstances();
+  							train.setClassIndex(train.numAttributes() - 1);
+  							next = NEXT_JMP;
+  							return;
+  						}else{
+  							next = LAST_JMP;
+  							failureMsg("No train data received from the reader agent: Wrong content.");
+  							return;
+  						}
+  					}
+  					
+  					protected void handleFailure(ACLMessage failure) {
+  						failureMsg("No train data received from the reader agent: Reader Failed.");
+  						next = LAST_JMP;
+  					}
+  					
+  					public int onEnd(){
+  						int next_val = next;
+  						next = NEXT_JMP;
+  						return next;
+  					}
+  				}, GETTRAINDATA_STATE);
+  				registerState(new AchieveREInitiator(a, null){
+  					public int next = NEXT_JMP;
+  					
+  					protected void handleInform(ACLMessage inform) {
+  						ontology.messages.DataInstances _test = processGetData(inform);
+  						if(_test!=null){
+  							testFileName = test_fn;
+  							onto_test= _test;
+  							test = onto_test.toWekaInstances();
+  							test.setClassIndex(test.numAttributes() - 1);
+  							next = NEXT_JMP;
+  							return;
+  						}else{
+  							next = LAST_JMP;
+  							failureMsg("No test data received from the reader agent: Wrong content.");
+  							return;
+  						}
+  						 
+  					}
+  					
+  					protected void handleFailure(ACLMessage failure) {
+  						failureMsg("No test data received from the reader agent: Reader Failed.");
+  						next = LAST_JMP;
+  					}
+  					
+  					public int onEnd(){
+  						int next_val = next;
+  						next = NEXT_JMP;
+  						return next;
+  					}
+  				}, GETTESTDATA_STATE);
+  				
+  				registerState(new Behaviour(a){
+  					
+  					public void action(){
+  						//Train&test		  							
+  						try{
+  							if(state != states.TRAINED) { 
+  								train(); 
+  								if(state == states.TRAINED){
+  									eval = evaluateCA();
+  								}
+  							}			
+  						}
+  						catch (Exception e){
+  							success = false;
+  							failureMsg("unexpected-error");
+  						}
+  					}
+ 					
+  					@Override
+					public boolean done() {
+						return (state == states.TRAINED) || !success;
+					}
+  				}, TRAINTEST_STATE);
+  				
+  				registerLastState(new OneShotBehaviour(a){
+  					
+  					public void action(){
+  						if (success && (result_msg == null)) {
+   							result_msg = incoming_request.createReply();
+  							result_msg.setPerformative(ACLMessage.INFORM);
+  							try {
+  								// Prepare the content - Result with Evaluation instead of MyWekaEvaluation is sended!!!
+  								ContentElement content = getContentManager().extractContent(incoming_request); // TODO exception block?
+  								Result result = new Result((Action)content, eval);
+  								getContentManager().fillContent(result_msg, result);
+  							} catch (UngroundedException e) {
+  								e.printStackTrace();
+  							} catch (CodecException e) {
+  								e.printStackTrace();
+  							} catch (OntologyException e) {
+  								e.printStackTrace();
+  							}
+  						}
+  						setResultMsg();
+  					}
+  				}, SENDRESULTS_STATE);
+  				
+  				registerTransition(INIT_STATE,GETTRAINDATA_STATE,NEXT_JMP);
+  				registerTransition(INIT_STATE,SENDRESULTS_STATE,LAST_JMP);
+  				
+  				registerTransition(GETTRAINDATA_STATE,GETTESTDATA_STATE,NEXT_JMP);
+  				registerTransition(GETTRAINDATA_STATE,SENDRESULTS_STATE,LAST_JMP);
+  				
+  				registerTransition(GETTESTDATA_STATE,TRAINTEST_STATE,NEXT_JMP);
+  				registerTransition(GETTESTDATA_STATE,SENDRESULTS_STATE,LAST_JMP);
+  				
+  				registerDefaultTransition(TRAINTEST_STATE,SENDRESULTS_STATE);  				
+	    	}
 	    }
 }; 
