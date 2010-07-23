@@ -61,7 +61,7 @@ public class Attribute implements Concept {
 	}
 	//=======================================
 	public weka.core.Attribute toWekaAttribute(){
-		if(values.size()>0){
+		if(values!= null && values.size()>0){
 			FastVector my_nominal_values = new FastVector();
 			Iterator itr = values.iterator();
 			while(itr.hasNext()){

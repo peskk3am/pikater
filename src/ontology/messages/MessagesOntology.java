@@ -139,6 +139,9 @@ public class MessagesOntology extends Ontology {
 	  public static final String SAVE_RESULTS = "SAVE-RESULTS";
 	  public static final String SAVE_RESULTS_TASK = "task";
 	  
+	  public static final String GET_DATA = "GET-DATA";
+	  public static final String GET_DATA_FILE_NAME = "file_name";
+	  
 	  // public static final String SEND_OPTIONS = "SEND-OPTIONS";
 	  // public static final String SEND_OPTIONS_OPTIONS = "options";
 	  
@@ -185,6 +188,7 @@ public class MessagesOntology extends Ontology {
 			add(new AgentActionSchema(IMPORT_FILE), ImportFile.class);
 			add(new AgentActionSchema(TRANSLATE), TranslateFilename.class);
 			add(new AgentActionSchema(SAVE_RESULTS), SaveResults.class);
+			add(new AgentActionSchema(GET_DATA), GetData.class);
 			// add(new AgentActionSchema(SEND_OPTIONS), SendOptions.class);
 			
 			
@@ -311,6 +315,9 @@ public class MessagesOntology extends Ontology {
 	    	as = (AgentActionSchema)getSchema(SAVE_RESULTS);
 	    	as.add(SAVE_RESULTS_TASK, (ConceptSchema)getSchema(TASK));
 	    	
+	    	as = (AgentActionSchema)getSchema(GET_DATA);
+	    	as.add(GET_DATA_FILE_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+	    	
 			//as = (AgentActionSchema)getSchema(SEND_OPTIONS);
 			//as.add(SEND_OPTIONS_OPTIONS, (ConceptSchema)getSchema(OPTION), 1, ObjectSchema.UNLIMITED);
 			
@@ -318,9 +325,6 @@ public class MessagesOntology extends Ontology {
 	    catch(OntologyException oe) {
 	      oe.printStackTrace();
 	    }
-	  }
-	  
+	  }	  
 
-}
-
-	  
+}	  
