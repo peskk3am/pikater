@@ -98,11 +98,14 @@ public class Agent_GUI_config_file extends Agent_GUI{
 		doWait(1000);
 		
 		
-		/*
+		
         // test:
         int newId = createNewProblem("1000");
         try {
-			addAgentToProblem(newId, null, "MultilayerPerceptron", "-L 0.4 -D -M ? -H ?,?");
+			//addAgentToProblem(newId, null, "MultilayerPerceptron", "-L 0.4 -D -M ? -H ?,?");
+        	addAgentToProblem(newId, null, "RBFNetwork", "-B 4");
+        	addAgentToProblem(newId, null, "RBFNetwork", "-B ?");
+
 		} catch (FailureException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

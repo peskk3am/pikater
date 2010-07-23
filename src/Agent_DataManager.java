@@ -1,15 +1,3 @@
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.LinkedList;
-
-import jade.content.ContentElement;
 import jade.content.lang.Codec;
 import jade.content.lang.Codec.CodecException;
 import jade.content.lang.sl.SLCodec;
@@ -24,6 +12,21 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREResponder;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.LinkedList;
+import java.util.regex.Pattern;
+
 import ontology.messages.ImportFile;
 import ontology.messages.MessagesOntology;
 import ontology.messages.SaveResults;
@@ -31,7 +34,10 @@ import ontology.messages.Task;
 import ontology.messages.TranslateFilename;
 
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.log4j.*;
+import org.apache.log4j.FileAppender;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
 
 public class Agent_DataManager extends Agent {
 	
@@ -83,7 +89,7 @@ public class Agent_DataManager extends Agent {
 			log.info(s);
 		}
 		
-		File data = new File("data/files");
+		File data = new File("data"+System.getProperty("file.separator")+"files");
 		if (!data.exists()) {
 			log.info("Creating directory data/files");
 			if (data.mkdirs()) {
@@ -103,10 +109,31 @@ public class Agent_DataManager extends Agent {
 			e.printStackTrace();
 		}
 		
+		/* try {
+			if (!tableNames.contains("METADATA")) {
+				log.info("Creating table METADATA");
+				db.createStatement().executeUpdate("CREATE TABLE metadata (internalFilename CHAR(32) NOT NULL, defaultTask VARCHAR(256), attributeType VARCHAR(256), numberOfInstances INTEGER NOT NULL, numberOfAttributes INTEGER NOT NULL, missingValues BOOLEAN, PRIMARY KEY (externalFilename))");
+			}
+		} catch (SQLException e) {
+			log.fatal("Error creating table METADATA: " + e.getMessage());
+			e.printStackTrace();
+		}
+		*/
 		try {
 			if (!tableNames.contains("RESULTS")) {
 				log.info("Creating table RESULTS");
-				db.createStatement().executeUpdate("CREATE TABLE results (agentName VARCHAR (256), agentType VARCHAR (256), options VARCHAR (256), dataFile VARCHAR (50), testFile VARCHAR (50), errorRate DOUBLE)");
+				db.createStatement().executeUpdate("CREATE TABLE results (" +
+						"agentName VARCHAR (256), " +
+						"agentType VARCHAR (256), " +
+						"options VARCHAR (256), " +
+						"dataFile VARCHAR (50), " +
+						"testFile VARCHAR (50), " +
+						"errorRate DOUBLE, " +
+						"kappaStatistic DOUBLE, " +
+						"meanAbsoluteError DOUBLE, " +
+						"rootMeanSquaredError DOUBLE, " +
+						"relativeAbsoluteError DOUBLE, " +
+						"rootRelativeSquaredError DOUBLE)" );
 			}
 		} catch (SQLException e) {
 			log.fatal("Error creating table RESULTS: " + e.getMessage());
@@ -130,15 +157,14 @@ public class Agent_DataManager extends Agent {
 					Action a = (Action)getContentManager().extractContent(request);
 					
 					if (a.getAction() instanceof ImportFile) {
-						
 						ImportFile im = (ImportFile)a.getAction();
 						
 						String path = System.getProperty("user.dir") + System.getProperty("file.separator");
 						path += "incoming" + System.getProperty("file.separator") + im.getExternalFilename();
-						
-						File f = new File(path);
-						
+
 						String internalFilename = md5(path);
+						
+						File f = new File(path);		
 						
 						Statement stmt = db.createStatement();
 						String query = "SELECT COUNT(*) AS num FROM fileMapping WHERE internalFilename = \'" + internalFilename + "\'";
@@ -151,11 +177,14 @@ public class Agent_DataManager extends Agent {
 			
 						stmt.close();
 						
+																		
 						if (count > 0) {
 							f.delete();
 							log.info("File " +  internalFilename + " already present in the database");
 						} 
 						else {
+							
+							
 							stmt = db.createStatement();
 							
 							log.info("Executing query: " + query);
@@ -163,9 +192,14 @@ public class Agent_DataManager extends Agent {
 							
 							stmt.executeUpdate(query);
 							stmt.close();
+	
+							String newName = System.getProperty("user.dir")+System.getProperty("file.separator")+"data"+System.getProperty("file.separator")+"files"+System.getProperty("file.separator")+internalFilename;
+							// Boolean res = f.renameTo(new File(newName));
+													
+							move(f, new File(newName));								
 							
-							f.renameTo(new File("data" + System.getProperty("file.separator") + "files" + System.getProperty("file.separator") + internalFilename));
 						}
+						
 						
 						ACLMessage reply = request.createReply();
 						reply.setPerformative(ACLMessage.INFORM);
@@ -207,13 +241,22 @@ public class Agent_DataManager extends Agent {
 						
 						Statement stmt = db.createStatement();
 						
-						String query = "INSERT INTO results (agentName, agentType, options, dataFile, testFile, errorRate) VALUES (";
+						String query = "INSERT INTO results (agentName, agentType, options, dataFile, testFile," +
+								"errorRate, kappaStatistic, meanAbsoluteError, rootMeanSquaredError, relativeAbsoluteError," +
+								"rootRelativeSquaredError) VALUES (";
+						
 						query += "\'" + res.getAgent().getName() + "\',";
 						query += "\'" + res.getAgent().getType() + "\',";
-						query += "\'" + res.getAgent().optionsToString() + "\',";
-						query += "\'" + res.getData().getTrain_file_name() + "\',";
-						query += "\'" + res.getData().getTest_file_name() + "\',";
-						query += res.getResult().getError_rate() + ")";
+						query += "\'" + res.getAgent().optionsToString() + "\',";						
+						query += "\'" + (res.getData().getTrain_file_name().split(Pattern.quote(System.getProperty("file.separator"))))[2] + "\',";
+						query += "\'" + (res.getData().getTest_file_name().split(Pattern.quote(System.getProperty("file.separator"))))[2] + "\',";
+						
+						query += res.getResult().getError_rate() + ",";
+						query += res.getResult().getKappa_statistic() + ",";
+						query += res.getResult().getMean_absolute_error() + ",";
+						query += res.getResult().getRoot_mean_squared_error() + ",";
+						query += res.getResult().getRelative_absolute_error() + ",";
+						query += res.getResult().getRoot_relative_squared_error() + ")";						
 						
 						log.info("Executing query: " + query);
 					
@@ -233,6 +276,12 @@ public class Agent_DataManager extends Agent {
 				} catch (SQLException e) {
 					e.printStackTrace();
 					log.error("SQL error: " + e.getMessage());
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
 				
 				
@@ -275,5 +324,25 @@ public class Agent_DataManager extends Agent {
 		return md5;
 	}
 	
+	// Move file (src) to File/directory dest.
+	public static synchronized void move(File src, File dest) throws FileNotFoundException, IOException {
+		copy(src, dest);
+		src.delete();
+	}
+
+	// Copy file (src) to File/directory dest.
+	public static synchronized void copy(File src, File dest) throws IOException {
+		InputStream in = new FileInputStream(src);
+		OutputStream out = new FileOutputStream(dest);
+
+		// Transfer bytes from in to out
+		byte[] buf = new byte[1024];
+		int len;
+		while ((len = in.read(buf)) > 0) {
+			out.write(buf, 0, len);
+		}
+		in.close();
+		out.close();
+	}
+	
 }
->>>>>>> 7fbc4c6e99f888297ba99da8418760db4050ac1a

@@ -123,7 +123,7 @@ public class Agent_Manager extends Agent{
 			protected void handleInform(ACLMessage inform) {
 				System.out.println("Agent:"+getLocalName()+": Agent "+inform.getSender().getName()+" sent an inform.");
 				sendSubscription(inform);
-				killAgent(inform.getSender().getName());
+				// killAgent(inform.getSender().getName());
 			}
 			
 			protected void handleFailure(ACLMessage failure) {
@@ -139,7 +139,7 @@ public class Agent_Manager extends Agent{
 				//}
 				
 				sendSubscription(failure);
-				killAgent(failure.getSender().getName());
+				// killAgent(failure.getSender().getName());
 			}
 			
 			protected void handleAllResultNotifications(java.util.Vector resultNotifications) {
@@ -697,24 +697,50 @@ public class Agent_Manager extends Agent{
                 	results = (Results) _result.getValue(); 
                 	List listOfResults = results.getResults();
                 	
-           		 	float sumError_rate = Integer.MAX_VALUE;
-           		 	float sumPct_incorrect = 100;
+           		 	float sumError_rate = 0;
+           			float sumKappa_statistic = 0;  
+           			float sumMean_absolute_error = 0;
+           			float sumRoot_mean_squared_error = 0;
+           			float sumRelative_absolute_error = 0; // percent
+           			float sumRoot_relative_squared_error = 0; // percent
+           		 	
                 	if (listOfResults == null){
                 		// there were no tasks computed
-                		results.setAvg_error_rate(sumError_rate); 
-	           		 	results.setAvg_pct_incorrect(sumPct_incorrect);
+                		// leave the default values                		
                 	}
                 	else{
 	           		 	Iterator itr = listOfResults.iterator();
 	           		 	while (itr.hasNext()) {
-	           	           Task next = (Task) itr.next();
-	           	           Evaluation evaluation = next.getResult();
-	           	           
-	           	           sumError_rate += evaluation.getError_rate();		
-	           	           sumPct_incorrect += evaluation.getPct_incorrect();
+	           	            Task next = (Task) itr.next();
+	           	            Evaluation evaluation = next.getResult();	           	         
+	           	            
+	           	            sumError_rate += evaluation.getError_rate();  // error rate is a manadatory slot		
+	           	            
+	           	            // if the value has not been set by the CA, the sum will < 0
+	           	            sumKappa_statistic += evaluation.getKappa_statistic();
+							sumMean_absolute_error += evaluation.getMean_absolute_error();		
+							sumRoot_mean_squared_error += evaluation.getRoot_mean_squared_error();		
+							sumRelative_absolute_error += evaluation.getRelative_absolute_error();		
+							sumRoot_relative_squared_error += evaluation.getRoot_relative_squared_error();		
 	    				}
-	           		 	results.setAvg_error_rate( sumError_rate / listOfResults.size() ); 
-	           		 	results.setAvg_pct_incorrect( sumPct_incorrect / listOfResults.size() );
+	           		 	if (sumError_rate > -1){
+	           		 		results.setAvg_error_rate( sumError_rate / listOfResults.size() );
+	           		 	}
+	           		 	if (sumKappa_statistic > -1){
+	           		 		results.setAvg_kappa_statistic( sumKappa_statistic / listOfResults.size() );
+	           		 	}
+	           		 	if (sumMean_absolute_error > -1){
+	           		 		results.setAvg_mean_absolute_error( sumMean_absolute_error / listOfResults.size() );
+	           		 	}
+	           		 	if (sumRoot_mean_squared_error > -1){
+	           		 		results.setAvg_root_mean_squared_error( sumRoot_mean_squared_error / listOfResults.size() );
+	           		 	}
+	           		 	if (sumRelative_absolute_error > -1){
+	           		 		results.setAvg_relative_absolute_error( sumRelative_absolute_error / listOfResults.size() );
+	           		 	}
+	           		 	if (sumRoot_relative_squared_error > -1){
+	           		 		results.setAvg_root_relative_squared_error( sumRoot_relative_squared_error / listOfResults.size() );      		 	
+	           		 	}
                 	}
                 }
 	  		}
@@ -794,12 +820,24 @@ public class Agent_Manager extends Agent{
 	
 			   Element newEvaluation = new Element ("evaluation");
 			   Element newMetric1 = new Element ("metric");
-			   newMetric1.setAttribute ("mean_absolute_error", Double.toString(next_task.getResult().getError_rate()));
+			   newMetric1.setAttribute ("error_rate", getXMLValue(next_task.getResult().getError_rate()));
 			   Element newMetric2 = new Element ("metric");
-			   newMetric2.setAttribute ("root_mean_squared_error", Double.toString(next_task.getResult().getPct_incorrect()));
+			   newMetric2.setAttribute ("kappa_statistic", getXMLValue(next_task.getResult().getKappa_statistic()));
+			   Element newMetric3 = new Element ("metric");
+			   newMetric3.setAttribute ("mean_absolute_error", getXMLValue(next_task.getResult().getMean_absolute_error()));
+			   Element newMetric4 = new Element ("metric");
+			   newMetric4.setAttribute ("root_mean_squared_error", getXMLValue(next_task.getResult().getRoot_mean_squared_error()));
+			   Element newMetric5 = new Element ("metric");
+			   newMetric5.setAttribute ("relative_absolute_error", getXMLValue(next_task.getResult().getRelative_absolute_error()));
+			   Element newMetric6 = new Element ("metric");
+			   newMetric6.setAttribute ("root_relative_squared_error", getXMLValue(next_task.getResult().getRoot_relative_squared_error()));
 			   			   
 			   newEvaluation.addContent(newMetric1);
 			   newEvaluation.addContent(newMetric2);
+			   newEvaluation.addContent(newMetric3);
+			   newEvaluation.addContent(newMetric4);
+			   newEvaluation.addContent(newMetric5);
+			   newEvaluation.addContent(newMetric6);
 			   
 		       newExperiment.addContent(newSetting);
 		       newExperiment.addContent(newEvaluation);
@@ -812,12 +850,24 @@ public class Agent_Manager extends Agent{
 
 	    Element newStatistics = new Element ("statistics");
  	    Element newMetric1 = new Element ("metric");
-	    newMetric1.setAttribute ("average_error_rate", Double.toString(results.getAvg_error_rate()));
+	    newMetric1.setAttribute ("average_error_rate", getXMLValue(results.getAvg_error_rate()));
 	    Element newMetric2 = new Element ("metric");
-	    newMetric2.setAttribute ("average_pct_incorrect", Double.toString(results.getAvg_pct_incorrect()));
-		
+	    newMetric2.setAttribute ("average_kappa_statistic", getXMLValue(results.getAvg_kappa_statistic()));
+	    Element newMetric3 = new Element ("metric");
+	    newMetric3.setAttribute ("average_mean_absolute_error", getXMLValue(results.getAvg_mean_absolute_error()));
+	    Element newMetric4 = new Element ("metric");
+	    newMetric4.setAttribute ("average_root_mean_squared_error", getXMLValue(results.getAvg_root_mean_squared_error()));
+	    Element newMetric5 = new Element ("metric");
+	    newMetric5.setAttribute ("average_relative_absolute_error", getXMLValue(results.getAvg_relative_absolute_error()));
+	    Element newMetric6 = new Element ("metric");
+	    newMetric6.setAttribute ("average_root_relative_squared_error", getXMLValue(results.getAvg_root_relative_squared_error()));
+			    
 	    newStatistics.addContent(newMetric1);
 	    newStatistics.addContent(newMetric2);
+	    newStatistics.addContent(newMetric3);
+	    newStatistics.addContent(newMetric4);
+	    newStatistics.addContent(newMetric5);
+	    newStatistics.addContent(newMetric6);
 	    
 	    root.addContent(newStatistics);
 	    
@@ -835,13 +885,17 @@ public class Agent_Manager extends Agent{
     	   e.printStackTrace();
     	   return false;
        	}
-	    		
-		
-		 
+	    			 
        return true;
 	}  // end writeXMLResults
 	 
-	
+	private String getXMLValue(float value){
+		if (value < 0){
+			return "NA"; 
+		}
+		return Double.toString(value);
+	}
+	 
 	protected String generateProblemID(){
 		Date date = new Date();
 		String problem_id = Long.toString(date.getTime())+"_"+problem_i;

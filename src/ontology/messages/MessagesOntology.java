@@ -53,14 +53,23 @@ public class MessagesOntology extends Ontology {
 
 	  public static final String EVALUATION = "EVALUATION";
 	  public static final String EVALUATION_ERROR_RATE = "error_rate";
-	  public static final String EVALUATION_PCT_INCORRECT = "pct_incorrect";
+	  public static final String EVALUATION_KAPPA_STATISTIC = "kappa_statistic";
+	  public static final String EVALUATION_MEAN_ABSOLUTE_ERROR = "mean_absolute_error";
+	  public static final String EVALUATION_MEAN_SQUARED_ERROR = "root_mean_squared_error";
+	  public static final String EVALUATION_RELATIVE_ABSOLUTE_ERROR = "relative_absolute_error";
+	  public static final String EVALUATION_RELATIVE_SQUARED_ERROR = "root_relative_squared_error";
 	  public static final String EVALUATION_DATA_TABLE = "data_table";
 	  
 	  public static final String RESULTS = "RESULTS";
 	  public static final String RESULTS_COMPUTATION_ID = "computation_id";
-	  public static final String RESULTS_AVG_ERROR_RATE = "avg_error_rate";
 	  public static final String RESULTS_PROBLEM_ID = "problem_id";
 	  public static final String RESULTS_RESULTS = "results";
+	  public static final String RESULTS_AVG_ERROR_RATE = "avg_error_rate";
+	  public static final String RESULTS_AVG_KAPPA_STATISTIC = "avg_kappa_statistic";
+	  public static final String RESULTS_AVG_MEAN_ABSOLUTE_ERROR = "avg_mean_absolute_error";
+	  public static final String RESULTS_AVG_MEAN_SQUARED_ERROR = "avg_root_mean_squared_error";
+	  public static final String RESULTS_AVG_RELATIVE_ABSOLUTE_ERROR = "avg_relative_absolute_error";
+	  public static final String RESULTS_AVG_RELATIVE_SQUARED_ERROR = "avg_root_relative_squared_error";
 	  
 	  public static final String OPTION = "OPTION";
 	  public static final String OPTION_MUTABLE = "mutable";
@@ -234,13 +243,22 @@ public class MessagesOntology extends Ontology {
   	
 	    	cs = (ConceptSchema)getSchema(EVALUATION);
 	    	cs.add(EVALUATION_ERROR_RATE, (PrimitiveSchema)getSchema(BasicOntology.FLOAT));
-	    	cs.add(EVALUATION_PCT_INCORRECT, (PrimitiveSchema)getSchema(BasicOntology.FLOAT));
+	    	cs.add(EVALUATION_KAPPA_STATISTIC, (PrimitiveSchema)getSchema(BasicOntology.FLOAT), ObjectSchema.OPTIONAL);
+	    	cs.add(EVALUATION_MEAN_ABSOLUTE_ERROR, (PrimitiveSchema)getSchema(BasicOntology.FLOAT), ObjectSchema.OPTIONAL);
+	    	cs.add(EVALUATION_MEAN_SQUARED_ERROR, (PrimitiveSchema)getSchema(BasicOntology.FLOAT), ObjectSchema.OPTIONAL);
+	    	cs.add(EVALUATION_RELATIVE_ABSOLUTE_ERROR, (PrimitiveSchema)getSchema(BasicOntology.FLOAT), ObjectSchema.OPTIONAL);
+	    	cs.add(EVALUATION_RELATIVE_SQUARED_ERROR, (PrimitiveSchema)getSchema(BasicOntology.FLOAT), ObjectSchema.OPTIONAL);   	
 	    	cs.add(EVALUATION_DATA_TABLE, (ConceptSchema)getSchema(DATA_INSTANCES), ObjectSchema.OPTIONAL);
     	
 	    	cs = (ConceptSchema)getSchema(RESULTS);
 	    	cs.add(RESULTS_COMPUTATION_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 	    	cs.add(RESULTS_PROBLEM_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 	    	cs.add(RESULTS_AVG_ERROR_RATE, (PrimitiveSchema)getSchema(BasicOntology.FLOAT));
+	    	cs.add(RESULTS_AVG_KAPPA_STATISTIC, (PrimitiveSchema)getSchema(BasicOntology.FLOAT), ObjectSchema.OPTIONAL);
+	    	cs.add(RESULTS_AVG_MEAN_ABSOLUTE_ERROR, (PrimitiveSchema)getSchema(BasicOntology.FLOAT), ObjectSchema.OPTIONAL);
+	    	cs.add(RESULTS_AVG_MEAN_SQUARED_ERROR, (PrimitiveSchema)getSchema(BasicOntology.FLOAT), ObjectSchema.OPTIONAL);
+	    	cs.add(RESULTS_AVG_RELATIVE_ABSOLUTE_ERROR, (PrimitiveSchema)getSchema(BasicOntology.FLOAT), ObjectSchema.OPTIONAL);
+	    	cs.add(RESULTS_AVG_RELATIVE_SQUARED_ERROR, (PrimitiveSchema)getSchema(BasicOntology.FLOAT), ObjectSchema.OPTIONAL);   	
 	    	cs.add(RESULTS_RESULTS, (ConceptSchema)getSchema(TASK), 0, ObjectSchema.UNLIMITED);
 
 	    	cs = (ConceptSchema)getSchema(AGENT);
@@ -291,7 +309,7 @@ public class MessagesOntology extends Ontology {
 	    	as.setResult((PrimitiveSchema)getSchema(BasicOntology.STRING)); //the internal filename
 	    	
 	    	as = (AgentActionSchema)getSchema(SAVE_RESULTS);
-	    	as.add(SAVE_RESULTS_TASK, (ConceptSchema)getSchema(Task.class));
+	    	as.add(SAVE_RESULTS_TASK, (ConceptSchema)getSchema(TASK));
 	    	
 			//as = (AgentActionSchema)getSchema(SEND_OPTIONS);
 			//as.add(SEND_OPTIONS_OPTIONS, (ConceptSchema)getSchema(OPTION), 1, ObjectSchema.UNLIMITED);

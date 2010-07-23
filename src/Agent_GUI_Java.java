@@ -108,7 +108,7 @@ public class Agent_GUI_Java extends Agent_GUI {
 				} catch (FailureException e) {
 					e.printStackTrace();
 				}
-				getAgentOptions((String)os[0]);
+				// getAgentOptions((String)os[0]);
 			}
 			break;
 			

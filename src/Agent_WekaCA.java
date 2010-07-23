@@ -31,7 +31,16 @@ public abstract class Agent_WekaCA extends Agent_ComputingAgent {
 		 
 		 ontology.messages.Evaluation result = new ontology.messages.Evaluation();
 		 result.setError_rate((float) eval.errorRate());
-		 result.setPct_incorrect((float) eval.pctIncorrect());
+		 // result.setKappa_statistic((float)eval.kappa());
+		 result.setMean_absolute_error((float) eval.meanAbsoluteError());
+		 try {
+			result.setRelative_absolute_error((float) eval.relativeAbsoluteError());
+		 } catch (Exception e) {
+			result.setRelative_absolute_error(-1);
+		 }
+		 result.setRoot_mean_squared_error((float) eval.rootMeanSquaredError());
+		 result.setRoot_relative_squared_error((float) eval.rootRelativeSquaredError());
+		 
 		 return result;
 	 }
 	 

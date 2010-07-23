@@ -258,10 +258,10 @@ public abstract class Agent_GUI extends GuiAgent {
 				if (failure.getSender().equals(myAgent.getAMS())) {
 					// FAILURE notification from the JADE runtime: the receiver
 					// does not exist
-					System.out.println("Responder "+agentName+" does not exist.");
+					System.out.println("Agent "+myAgent.getLocalName()+"Responder "+agentName+" does not exist.");
 				}
 				else {
-					System.out.println("Agent "+agentName+" failed to perform the requested action");
+					System.out.println("Agent "+myAgent.getLocalName()+": Agent "+agentName+" failed to perform the requested action");
 				}
 				
 				refreshOptions(agent, failure.getPerformative());
@@ -479,6 +479,7 @@ public abstract class Agent_GUI extends GuiAgent {
 		}
 		
 		addAgent(_problem_id, agent_id, name, type, optString);
+
 		getAgentOptions(newName);
 		
 		return agent_id++;
@@ -741,6 +742,7 @@ public abstract class Agent_GUI extends GuiAgent {
 
 	 			else{
 	 				// TODO remove the agent from the problem and let the user know
+	 				System.out.println("mjjjjjjj "+agent.getName());
 	 				removeAgentFromAllProblems(Integer.parseInt(agent.getGui_id()));
 	 			}
 				// display the options for a selected problem
@@ -921,7 +923,7 @@ public abstract class Agent_GUI extends GuiAgent {
 		    doDelete();
 		}
   	
-		String incomingFilesPath = System.getProperty("user.dir") + System.getProperty("file.separator") + "incoming/";
+		String incomingFilesPath = System.getProperty("user.dir") + System.getProperty("file.separator") + "incoming" +System.getProperty("file.separator");
 		File incomingFiles = new File(incomingFilesPath);
 		
 		for (String fileName : incomingFiles.list()) {
