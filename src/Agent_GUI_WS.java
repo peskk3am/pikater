@@ -185,7 +185,7 @@ public class Agent_GUI_WS extends Agent_GUI {
 								WS_Results wres = new WS_Results();
 								wres.setOptions(t.getAgent().optionsToString());
 								wres.setErrorRate(t.getResult().getError_rate());
-								wres.setPctIncorrect(t.getResult().getPct_incorrect());
+								// wres.setPctIncorrect(t.getResult().getPct_incorrect());
 								
 								res.add(wres);
 								

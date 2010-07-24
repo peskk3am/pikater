@@ -2,6 +2,8 @@ import java.security.MessageDigest;
 
 import ontology.messages.ImportFile;
 import ontology.messages.MessagesOntology;
+import ontology.messages.Metadata;
+import ontology.messages.SaveMetadata;
 import ontology.messages.SaveResults;
 import ontology.messages.Task;
 import ontology.messages.TranslateFilename;
@@ -109,6 +111,36 @@ public class DataManagerService extends FIPAService {
 		Action a = new Action();
 		a.setActor(agent.getAID());
 		a.setAction(sr);
+		
+		try {
+			agent.getContentManager().fillContent(request, a);
+			
+			FIPAService.doFipaRequestClient(agent, request); 
+			
+		} catch (CodecException e) {
+			e.printStackTrace();
+		} catch (OntologyException e) {
+			e.printStackTrace();
+		} catch (FIPAException e) {
+			e.printStackTrace();
+		}
+		
+	}
+
+	public static void saveMetadata (Agent agent, Metadata m, String filename) {
+		SaveMetadata saveMetadata = new SaveMetadata();
+		saveMetadata.setMetadata(m);
+		saveMetadata.setFile_name(filename);				
+		
+		ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
+		request.addReceiver(new AID("dataManager", false));
+		request.setOntology(MessagesOntology.getInstance().getName());
+		request.setLanguage(codec.getName());
+		request.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+		
+		Action a = new Action();
+		a.setActor(agent.getAID());
+		a.setAction(saveMetadata);
 		
 		try {
 			agent.getContentManager().fillContent(request, a);

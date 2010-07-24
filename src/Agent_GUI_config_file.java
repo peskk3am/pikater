@@ -98,7 +98,7 @@ public class Agent_GUI_config_file extends Agent_GUI{
 		doWait(1000);
 		
 		
-		
+		/*
         // test:
         int newId = createNewProblem("1000");
         try {

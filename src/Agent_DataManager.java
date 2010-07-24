@@ -29,6 +29,8 @@ import java.util.regex.Pattern;
 
 import ontology.messages.ImportFile;
 import ontology.messages.MessagesOntology;
+import ontology.messages.Metadata;
+import ontology.messages.SaveMetadata;
 import ontology.messages.SaveResults;
 import ontology.messages.Task;
 import ontology.messages.TranslateFilename;
@@ -109,16 +111,16 @@ public class Agent_DataManager extends Agent {
 			e.printStackTrace();
 		}
 		
-		/* try {
+		try {
 			if (!tableNames.contains("METADATA")) {
 				log.info("Creating table METADATA");
-				db.createStatement().executeUpdate("CREATE TABLE metadata (internalFilename CHAR(32) NOT NULL, defaultTask VARCHAR(256), attributeType VARCHAR(256), numberOfInstances INTEGER NOT NULL, numberOfAttributes INTEGER NOT NULL, missingValues BOOLEAN, PRIMARY KEY (externalFilename))");
+				db.createStatement().executeUpdate("CREATE TABLE metadata (externalFilename VARCHAR(256) NOT NULL, internalFilename CHAR(32) NOT NULL, defaultTask VARCHAR(256), attributeType VARCHAR(256), numberOfInstances INTEGER, numberOfAttributes INTEGER, missingValues BOOLEAN, PRIMARY KEY (internalFilename))");
 			}
 		} catch (SQLException e) {
 			log.fatal("Error creating table METADATA: " + e.getMessage());
 			e.printStackTrace();
 		}
-		*/
+		
 		try {
 			if (!tableNames.contains("RESULTS")) {
 				log.info("Creating table RESULTS");
@@ -192,7 +194,21 @@ public class Agent_DataManager extends Agent {
 							
 							stmt.executeUpdate(query);
 							stmt.close();
-	
+
+							
+							// insert the same file into the metadata table, 
+							// other values will be filled in when the file is read by a reader agent
+							stmt = db.createStatement();
+							
+							query = "INSERT INTO metadata (externalFilename, internalFilename" +
+									// ", defaultTask, attributeType, missingValues
+									") VALUES (\'" + im.getExternalFilename() + "\', \'" + internalFilename + "\')";
+													 													
+							log.info("Executing query: " + query);						
+							stmt.executeUpdate(query);
+							
+							
+							// move the file to db\files directory
 							String newName = System.getProperty("user.dir")+System.getProperty("file.separator")+"data"+System.getProperty("file.separator")+"files"+System.getProperty("file.separator")+internalFilename;
 							// Boolean res = f.renameTo(new File(newName));
 													
@@ -266,7 +282,27 @@ public class Agent_DataManager extends Agent {
 						reply.setPerformative(ACLMessage.INFORM);
 						return reply;
 					}
-				
+					if (a.getAction() instanceof SaveMetadata) {
+						
+						SaveMetadata saveMetadata = (SaveMetadata)a.getAction();
+						Metadata metadata = saveMetadata.getMetadata();
+						
+						Statement stmt = db.createStatement();
+
+						String query = "UPDATE metadata SET "; 												 						
+						query += "numberOfInstances=" + metadata.getNumber_of_instances()+ ", ";
+						query += "numberOfAttributes=" + metadata.getNumber_of_attributes();
+						// the external file name contains part o the path (db/files/name) -> split and use only the [2] part
+						query += " WHERE internalFilename =\'"+saveMetadata.getFile_name().split(Pattern.quote(System.getProperty("file.separator")))[2]+"\'"; 						
+						
+						log.info("Executing query: " + query);
+					
+						stmt.executeUpdate(query);
+						
+						ACLMessage reply = request.createReply();
+						reply.setPerformative(ACLMessage.INFORM);
+						return reply;
+					}
 				} catch (OntologyException e) {
 					e.printStackTrace();
 					log.error("Problem extracting content: " + e.getMessage());
