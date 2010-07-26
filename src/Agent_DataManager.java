@@ -11,6 +11,8 @@ import jade.domain.FIPAAgentManagement.RefuseException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREResponder;
+import jade.util.leap.ArrayList;
+import jade.util.leap.List;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,6 +29,7 @@ import java.sql.Statement;
 import java.util.LinkedList;
 import java.util.regex.Pattern;
 
+import ontology.messages.GetAllMetadata;
 import ontology.messages.ImportFile;
 import ontology.messages.MessagesOntology;
 import ontology.messages.Metadata;
@@ -114,7 +117,15 @@ public class Agent_DataManager extends Agent {
 		try {
 			if (!tableNames.contains("METADATA")) {
 				log.info("Creating table METADATA");
-				db.createStatement().executeUpdate("CREATE TABLE metadata (externalFilename VARCHAR(256) NOT NULL, internalFilename CHAR(32) NOT NULL, defaultTask VARCHAR(256), attributeType VARCHAR(256), numberOfInstances INTEGER, numberOfAttributes INTEGER, missingValues BOOLEAN, PRIMARY KEY (internalFilename))");
+				db.createStatement().executeUpdate("CREATE TABLE metadata (" +
+						"externalFilename VARCHAR(256) NOT NULL, " +
+						"internalFilename CHAR(32) NOT NULL, " +
+						"defaultTask VARCHAR(256), " +
+						"attributeType VARCHAR(256), " +
+						"numberOfInstances INTEGER, " +
+						"numberOfAttributes INTEGER, " +
+						"missingValues BOOLEAN, " +
+						"PRIMARY KEY (internalFilename))");
 			}
 		} catch (SQLException e) {
 			log.fatal("Error creating table METADATA: " + e.getMessage());
@@ -205,14 +216,14 @@ public class Agent_DataManager extends Agent {
 									") VALUES (\'" + im.getExternalFilename() + "\', \'" + internalFilename + "\')";
 													 													
 							log.info("Executing query: " + query);						
-							stmt.executeUpdate(query);
+							stmt.executeQuery(query);
 							
 							
 							// move the file to db\files directory
 							String newName = System.getProperty("user.dir")+System.getProperty("file.separator")+"data"+System.getProperty("file.separator")+"files"+System.getProperty("file.separator")+internalFilename;
 							// Boolean res = f.renameTo(new File(newName));
-													
-							move(f, new File(newName));								
+							f.renameTo(new File(newName));						
+							// move(f, new File(newName));								
 							
 						}
 						
@@ -293,7 +304,7 @@ public class Agent_DataManager extends Agent {
 						query += "numberOfInstances=" + metadata.getNumber_of_instances()+ ", ";
 						query += "numberOfAttributes=" + metadata.getNumber_of_attributes();
 						// the external file name contains part o the path (db/files/name) -> split and use only the [2] part
-						query += " WHERE internalFilename =\'"+saveMetadata.getFile_name().split(Pattern.quote(System.getProperty("file.separator")))[2]+"\'"; 						
+						query += " WHERE internalFilename =\'"+metadata.getInternal_name().split(Pattern.quote(System.getProperty("file.separator")))[2]+"\'"; 						
 						
 						log.info("Executing query: " + query);
 					
@@ -303,6 +314,38 @@ public class Agent_DataManager extends Agent {
 						reply.setPerformative(ACLMessage.INFORM);
 						return reply;
 					}
+					if (a.getAction() instanceof GetAllMetadata) {
+						Statement stmt = db.createStatement();
+
+						String query = "SELECT * FROM metadata";	
+						
+						List allMetadata = new ArrayList();
+						
+						ResultSet rs = stmt.executeQuery(query);
+						while(rs.next()){
+							Metadata m = new Metadata();
+							m.setAttribute_type(rs.getString("attributeType"));
+							m.setDefault_task(rs.getString("defaultTask"));
+							m.setExternal_name(rs.getString("externalFilename"));
+							m.setInternal_name(rs.getString("internalFilename"));
+							m.setMissing_values(rs.getBoolean("missingValues"));
+							m.setNumber_of_attributes(rs.getInt("numberOfAttributes"));
+							m.setNumber_of_instances(rs.getInt("numberOfInstances"));
+							allMetadata.add(m);
+						}
+						
+						log.info("Executing query: " + query);
+																			
+						
+						ACLMessage reply = request.createReply();
+						reply.setPerformative(ACLMessage.INFORM);
+						
+						Result _result = new Result(a.getAction(), allMetadata);
+						getContentManager().fillContent(reply, _result);
+						
+						return reply;						
+					}
+
 				} catch (OntologyException e) {
 					e.printStackTrace();
 					log.error("Problem extracting content: " + e.getMessage());
@@ -311,13 +354,7 @@ public class Agent_DataManager extends Agent {
 					log.error("Codec problem: " + e.getMessage());
 				} catch (SQLException e) {
 					e.printStackTrace();
-					log.error("SQL error: " + e.getMessage());
-				} catch (FileNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					log.error("SQL error: " + e.getMessage());			
 				}
 				
 				
@@ -336,7 +373,6 @@ public class Agent_DataManager extends Agent {
 		StringBuffer sb = null;
 		
 		try {
-			
 			FileInputStream fs = new FileInputStream(path);
 			sb = new StringBuffer();
 			
@@ -344,6 +380,7 @@ public class Agent_DataManager extends Agent {
 			while ((ch = fs.read()) != -1) {
 				sb.append((char)ch);
 			}
+			fs.close();
 			
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -359,26 +396,5 @@ public class Agent_DataManager extends Agent {
 		
 		return md5;
 	}
-	
-	// Move file (src) to File/directory dest.
-	public static synchronized void move(File src, File dest) throws FileNotFoundException, IOException {
-		copy(src, dest);
-		src.delete();
-	}
-
-	// Copy file (src) to File/directory dest.
-	public static synchronized void copy(File src, File dest) throws IOException {
-		InputStream in = new FileInputStream(src);
-		OutputStream out = new FileOutputStream(dest);
-
-		// Transfer bytes from in to out
-		byte[] buf = new byte[1024];
-		int len;
-		while ((len = in.read(buf)) > 0) {
-			out.write(buf, 0, len);
-		}
-		in.close();
-		out.close();
-	}
-	
+		
 }

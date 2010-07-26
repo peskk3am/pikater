@@ -111,6 +111,8 @@ public class MessagesOntology extends Ontology {
 	  public static final String INSTANCE_VALUES = "values";
 	  
 	  public static final String METADATA = "METADATA";
+	  public static final String METADATA_INTERNAL_NAME = "internal_name";
+	  public static final String METADATA_EXTERNAL_NAME = "external_name";
 	  public static final String METADATA_NUMBER_OF_INSTANCES = "number_of_instances";
 	  public static final String METADATA_NUMBER_OF_ATTRIBUTES = "number_of_attributes";
 	  public static final String METADATA_MISSING_VALUES = "missing_values";
@@ -149,10 +151,11 @@ public class MessagesOntology extends Ontology {
 	  public static final String GET_DATA = "GET-DATA";
 	  public static final String GET_DATA_FILE_NAME = "file_name";
 
-	  public static final String SAVE_METADATA = "SAVE_METADATA";
-	  public static final String SAVE_METADATA_FILE_NAME = "file_name";
+	  public static final String SAVE_METADATA = "SAVE-METADATA";
 	  public static final String SAVE_METADATA_METADATA = "metadata";
 	  
+	  public static final String GET_ALL_METADATA = "GET-ALL-METADATA";
+	  	  
 	  // public static final String SEND_OPTIONS = "SEND-OPTIONS";
 	  // public static final String SEND_OPTIONS_OPTIONS = "options";
 	  
@@ -202,6 +205,8 @@ public class MessagesOntology extends Ontology {
 			add(new AgentActionSchema(SAVE_RESULTS), SaveResults.class);
 			add(new AgentActionSchema(SAVE_METADATA), SaveMetadata.class);
 			add(new AgentActionSchema(GET_DATA), GetData.class);
+			add(new AgentActionSchema(GET_ALL_METADATA), GetAllMetadata.class);
+			
 			// add(new AgentActionSchema(SEND_OPTIONS), SendOptions.class);
 			
 			
@@ -299,6 +304,8 @@ public class MessagesOntology extends Ontology {
 	    	cs.add(INSTANCE_VALUES, (PrimitiveSchema)getSchema(BasicOntology.FLOAT), 0, ObjectSchema.UNLIMITED);
 
 	    	cs = (ConceptSchema)getSchema(METADATA);
+	    	cs.add(METADATA_INTERNAL_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	cs.add(METADATA_EXTERNAL_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 	    	cs.add(METADATA_NUMBER_OF_INSTANCES, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));
 	    	cs.add(METADATA_NUMBER_OF_ATTRIBUTES, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));
 	    	cs.add(METADATA_MISSING_VALUES, (PrimitiveSchema)getSchema(BasicOntology.BOOLEAN), ObjectSchema.OPTIONAL);
@@ -311,6 +318,7 @@ public class MessagesOntology extends Ontology {
 			ps.add(PARTIALRESULTS_TASK_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 			ps.add(PARTIALRESULTS_RESULTS, (ConceptSchema)getSchema(EVALUATION), 0, ObjectSchema.UNLIMITED);
 			
+	    	
 	    	AgentActionSchema as = (AgentActionSchema)getSchema(COMPUTE);
 			as.add(COMPUTE_COMPUTATION, (ConceptSchema)getSchema(COMPUTATION));
 
@@ -335,13 +343,14 @@ public class MessagesOntology extends Ontology {
 	    	as = (AgentActionSchema)getSchema(SAVE_RESULTS);
 	    	as.add(SAVE_RESULTS_TASK, (ConceptSchema)getSchema(TASK));
 	    	
-	    	as = (AgentActionSchema)getSchema(SAVE_METADATA);
-	    	as.add(SAVE_METADATA_FILE_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));	    	
+	    	as = (AgentActionSchema)getSchema(SAVE_METADATA);	    	
 	    	as.add(SAVE_METADATA_METADATA, (ConceptSchema)getSchema(METADATA));
 	    	
 	    	as = (AgentActionSchema)getSchema(GET_DATA);
 	    	as.add(GET_DATA_FILE_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
-	    	
+
+	    	as = (AgentActionSchema)getSchema(GET_ALL_METADATA);
+			
 			//as = (AgentActionSchema)getSchema(SEND_OPTIONS);
 			//as.add(SEND_OPTIONS_OPTIONS, (ConceptSchema)getSchema(OPTION), 1, ObjectSchema.UNLIMITED);
 			

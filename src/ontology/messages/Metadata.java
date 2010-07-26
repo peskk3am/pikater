@@ -3,7 +3,9 @@ package ontology.messages;
 import jade.content.Concept;
 
 public class Metadata implements Concept{
-
+	
+	private String _internal_name;
+	private String _external_name;
 	private int _number_of_instances;
 	private int _number_of_attributes;
 	private boolean _missing_values;
@@ -40,5 +42,18 @@ public class Metadata implements Concept{
 	public void setAttribute_type(String _attribute_type) {
 		this._attribute_type = _attribute_type;
 	}
+	public void setInternal_name(String _internal_name) {
+		this._internal_name = _internal_name;
+	}
+	public String getInternal_name() {
+		return _internal_name;
+	}
+	public void setExternal_name(String _external_name) {
+		this._external_name = _external_name;
+	}
+	public String getExternal_name() {
+		return _external_name;
+	}
+
 
 }

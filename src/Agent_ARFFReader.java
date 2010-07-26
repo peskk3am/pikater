@@ -109,12 +109,13 @@ public class Agent_ARFFReader extends Agent {
 			instances.fillWekaInstances(data);
 			
 			Metadata m = new Metadata();
+			m.setInternal_name(file_name);
 			int ninst = instances.getInstances().size();
 			if (ninst > 0){
 				m.setNumber_of_attributes(((Instance)instances.getInstances().iterator().next()).getValues().size());
 			}
 			m.setNumber_of_instances(instances.getInstances().size());
-			DataManagerService.saveMetadata(this, m, file_name);
+			DataManagerService.saveMetadata(this, m);
 			
 			// Prepare the content
 			Result result = new Result((Action)content, instances);

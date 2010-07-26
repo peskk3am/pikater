@@ -1,5 +1,6 @@
 import java.security.MessageDigest;
 
+import ontology.messages.GetAllMetadata;
 import ontology.messages.ImportFile;
 import ontology.messages.MessagesOntology;
 import ontology.messages.Metadata;
@@ -19,6 +20,7 @@ import jade.domain.FIPAException;
 import jade.domain.FIPANames;
 import jade.domain.FIPAService;
 import jade.lang.acl.ACLMessage;
+import jade.util.leap.List;
 
 
 public class DataManagerService extends FIPAService {
@@ -127,10 +129,9 @@ public class DataManagerService extends FIPAService {
 		
 	}
 
-	public static void saveMetadata (Agent agent, Metadata m, String filename) {
+	public static void saveMetadata (Agent agent, Metadata m) {
 		SaveMetadata saveMetadata = new SaveMetadata();
-		saveMetadata.setMetadata(m);
-		saveMetadata.setFile_name(filename);				
+		saveMetadata.setMetadata(m);				
 		
 		ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
 		request.addReceiver(new AID("dataManager", false));
@@ -153,8 +154,37 @@ public class DataManagerService extends FIPAService {
 			e.printStackTrace();
 		} catch (FIPAException e) {
 			e.printStackTrace();
-		}
-		
+		}	
 	}
-	
+
+	public static List getAllMetadata (Agent agent) {
+		
+		ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
+		request.addReceiver(new AID("dataManager", false));
+		request.setOntology(MessagesOntology.getInstance().getName());
+		request.setLanguage(codec.getName());
+		request.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+		
+		Action a = new Action();
+		a.setActor(agent.getAID());
+		a.setAction(new GetAllMetadata());
+		
+		try {
+			agent.getContentManager().fillContent(request, a);
+			ACLMessage inform = FIPAService.doFipaRequestClient(agent, request); 
+			
+			Result r = (Result)agent.getContentManager().extractContent(inform);
+			List allMetadata = (List) r.getValue();
+			return allMetadata;
+			
+		} catch (CodecException e) {
+			e.printStackTrace();
+		} catch (OntologyException e) {
+			e.printStackTrace();
+		} catch (FIPAException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
 }

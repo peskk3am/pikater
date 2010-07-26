@@ -87,7 +87,7 @@ public class Agent_Initiator extends Agent{
 			AgentController agent = container.createNewAgent(name, type, args);
 			agent.start();
 			// provide agent time to register with DF etc.
-			// doWait(100);  
+			doWait(300);  
 		}
 		catch (ControllerException e) {
 	        System.err.println( "Exception while adding agent: " + e );

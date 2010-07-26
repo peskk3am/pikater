@@ -68,6 +68,7 @@ import ontology.messages.Compute;
 import ontology.messages.Data;
 import ontology.messages.Evaluation;
 import ontology.messages.MessagesOntology;
+import ontology.messages.Metadata;
 import ontology.messages.Problem;
 import ontology.messages.Results;
 import ontology.messages.Solve;
@@ -91,6 +92,11 @@ public class Agent_Manager extends Agent{
 	
 	private Set subscriptions = new HashSet();
 	// private Subscription subscription;
+
+	double minAttributes = Integer.MAX_VALUE;
+	double maxAttributes = Integer.MIN_VALUE;
+	double minInstances = Integer.MAX_VALUE;
+	double maxInstances = Integer.MIN_VALUE;
 	
 	private class SendComputation extends AchieveREInitiator{
 			private ACLMessage failure = null;
@@ -420,7 +426,17 @@ public class Agent_Manager extends Agent{
 	    	        			   a_next.setOptions(agent_options.getOptions());
 	    	        		   }
 	    	        		   
+	    	        		   Metadata metadata = new Metadata();
+	    	        		   metadata.setNumber_of_attributes(5);
+	    	        		   metadata.setNumber_of_instances(150);
+	    	        		   metadata.setAttribute_type("float");	    	        		   
+	    	        		   metadata.setMissing_values(false);	    	        		   	    	        		   
+	    	        		   
+	    	        		   chooseTheBestAgent(metadata);
+	    	        		   
 	    	        		   System.out.println("********** Agent "+a_next.getName()+" recommended. **********");
+	    	        		   
+	    	        		   
 	    	        	   }
 	    	        	   
 	    	        	   Computation computation = new Computation();
@@ -895,7 +911,113 @@ public class Agent_Manager extends Agent{
 		}
 		return Double.toString(value);
 	}
-	 
+	
+	
+	private void chooseTheBestAgent(Metadata metadata){
+		// choose the nearest training data
+		List allMetadata = DataManagerService.getAllMetadata(this);
+		
+		// set the min, max instances and attributes first
+		Iterator itr = allMetadata.iterator();	 		
+		while (itr.hasNext()) {
+	 		Metadata next_md = (Metadata) itr.next();
+	 		int na = next_md.getNumber_of_attributes();
+	 		if (na < minAttributes){ minAttributes = na; }
+	 		if (na > maxAttributes){ maxAttributes = na; }
+	 		
+	 		int ni = next_md.getNumber_of_instances();	
+	 		if (ni < minInstances){
+	 			minInstances = ni;
+	 		}
+	 		if (ni > maxInstances){
+	 			maxInstances = ni;
+	 		}	
+		}
+		
+			
+		System.out.println("*********** files from the table: ");
+		System.out.println("*********** "+ maxInstances+" "+minInstances+" "+minAttributes+" "+maxAttributes);
+	 	// find the 
+		double d_best = Integer.MAX_VALUE;
+		Metadata m_best = null;
+		
+		double d_new;
+		itr = allMetadata.iterator();	 		
+		while (itr.hasNext()) {
+	 		Metadata next_md = (Metadata) itr.next();
+	 		d_new = distance(metadata, next_md);
+	 		if (d_new < d_best){
+	 			d_best = d_new;
+	 			m_best = next_md;
+	 		}
+	 		System.out.println("    "+ next_md.getExternal_name()+
+	 				" " + next_md.getDefault_task()+ 
+	 				" d: "+d_new);
+	 	}
+		
+		System.out.println("Nearest file: "+m_best.getExternal_name());
+		String nearestInternalName = m_best.getInternal_name();
+		
+		// what about testing data?
+	}
+	
+	/*
+	 * Compute distance between two datasets (use metadata)
+	 */
+	private double distance(Metadata m1, Metadata m2){
+		
+		double wAttribute_type 			= 1;
+		double wDefault_task 			= 1;
+		double wMissing_values 			= 1;
+		double wNumber_of_attributes 	= 1;
+		double wNumber_of_instances		= 1;
+		
+		// can be null
+		double dAttribute_type = dCategory(m1.getAttribute_type(), m2.getAttribute_type());
+		double dDefault_task = dCategory(m1.getDefault_task(), m2.getDefault_task());
+		// default false - always set
+		double dMissing_values = dBoolean(m1.getMissing_values(), m2.getMissing_values());
+		// mandatory attributes - always set
+		double dNumber_of_attributes = d(m1.getNumber_of_attributes(), m2.getNumber_of_attributes(), minAttributes, maxAttributes);
+		double dNumber_of_instances = d(m1.getNumber_of_instances(), m2.getNumber_of_instances(), minInstances, maxInstances);
+		
+		System.out.println("   dNumber_of_attributes: "+dNumber_of_attributes);
+		System.out.println("   dNumber_of_instances : "+dNumber_of_instances);
+		
+		double distance =  
+			wAttribute_type * dAttribute_type 
+			+ wDefault_task * dDefault_task 
+			+ wMissing_values * dMissing_values 
+			+ wNumber_of_attributes * dNumber_of_attributes 
+			+ wNumber_of_instances * dNumber_of_instances;
+		
+		return distance;
+	}
+	
+	private double d(double v1, double v2, double min, double max){
+		// map the value to the 0,1 interval; 0 - the same, 1 - the most different
+		System.out.println("      v1, v2, max, min: "+v1+" "+v2+" "+min+" "+max);
+		
+		return Math.abs(v1 - v2) / (max - min); 
+	}
+	private int dCategory(String v1, String v2){
+		// null considered another value
+		if (v1 == null) {v1 = "null";}
+		if (v2 == null) {v2 = "null";}
+		
+		if (v1.equals(v2)){
+			return 0;
+		}
+		return 1;
+	}
+	private int dBoolean(Boolean v1, Boolean v2){
+		if (v1 == v2){
+			return 0;
+		}
+		return 1;
+	}
+	
+	
 	protected String generateProblemID(){
 		Date date = new Date();
 		String problem_id = Long.toString(date.getTime())+"_"+problem_i;
