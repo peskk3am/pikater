@@ -17,6 +17,7 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.ListIterator;
 import java.util.Set;
 import java.util.Vector;
 
@@ -43,6 +44,7 @@ import jade.proto.AchieveREResponder;
 import jade.proto.SubscriptionResponder;
 import jade.proto.SubscriptionResponder.Subscription;
 import jade.proto.SubscriptionResponder.SubscriptionManager;
+import jade.util.leap.ArrayList;
 import jade.util.leap.Iterator;
 import jade.util.leap.List;
 import jade.wrapper.AgentController;
@@ -69,6 +71,7 @@ import ontology.messages.Data;
 import ontology.messages.Evaluation;
 import ontology.messages.MessagesOntology;
 import ontology.messages.Metadata;
+import ontology.messages.Option;
 import ontology.messages.Problem;
 import ontology.messages.Results;
 import ontology.messages.Solve;
@@ -396,47 +399,42 @@ public class Agent_Manager extends Agent{
 	    	        	   
 	    	        	   if (a_next.getName() == null){
 	    	        		   String agentType = a_next.getType();	
-	    	        		   boolean unknownAgentType = false;
-	    	        		   if (a_next.getType().contains("?")){
-	    	        			   unknownAgentType = true;
-	    	        			   agentType = _test_recommendRBFAgentType(next_data, offerAgentTypes());
-	    	        			   a_next.setType(agentType);	    	        			   
+	    	        		   
+	    	        		   if (agentType.contains("?")){
+	    	        			   // TODO set metadata
+	    	        			   Metadata metadata = new Metadata();
+		    	        		   metadata.setNumber_of_attributes(5);
+		    	        		   metadata.setNumber_of_instances(150);
+		    	        		   metadata.setAttribute_type("float");	    	        		   
+		    	        		   metadata.setMissing_values(false);	    	        		   	    	        		   
+		    	        		   
+		    	        		   a_next = chooseTheBestAgent(metadata);
+		    	        		   ontology.messages.Agent agent_options = onlyGetAgentOptions(a_next.getName());
+	    	        			   
+		    	        		   a_next.setOptions(mergeOptions(agent_options.getOptions(), a_next.getOptions()));
+	    	        			   
+		    	        		   System.out.println("********** Agent "+a_next.getName()+
+		    	        				   " recommended. Options: "+a_next.optionsToString()+"**********");	   	    	        		   
 	    	        		   }
-	    	        		   AID aid = null;
-	    	        		   String agentName = null;		    	      
-	    	        		  	    	        		   
-	    	        		   while (aid == null) { // TODO && System.currentTimeMillis() < timeout){
-		    	    				// try until you find agent of the given type or you manage to create it	    	        			    
-	    	        			    aid = getAgentByType(agentType);
-		    	    				if (aid == null){
-		    	    					// agent of given type doesn't exist
-		    	    					agentName = generateName(agentType);
-		    	    					aid = createAgent("Agent_"+agentType, agentName);
-		    	    					doWait(100);
-		    	    				}
-		    	    			}
-	    	        		   if (aid == null){
-	    	        			   // TODO ! this computation failed
-	    	        		   }
-	    	        		   agentName = aid.getLocalName();
-	    	        		   a_next.setName(agentName);
-	    	        		   
-	    	        		   if (unknownAgentType){
-	    	        			   ontology.messages.Agent agent_options = onlyGetAgentOptions(agentName);
-	    	        			   a_next.setOptions(agent_options.getOptions());
-	    	        		   }
-	    	        		   
-	    	        		   Metadata metadata = new Metadata();
-	    	        		   metadata.setNumber_of_attributes(5);
-	    	        		   metadata.setNumber_of_instances(150);
-	    	        		   metadata.setAttribute_type("float");	    	        		   
-	    	        		   metadata.setMissing_values(false);	    	        		   	    	        		   
-	    	        		   
-	    	        		   chooseTheBestAgent(metadata);
-	    	        		   
-	    	        		   System.out.println("********** Agent "+a_next.getName()+" recommended. **********");
-	    	        		   
-	    	        		   
+	    	        		   else{
+		    	        		   AID aid = null;
+		    	        		   String agentName = null;		    	      	    	        		  	    	        		   
+		    	        		   while (aid == null) { // TODO && System.currentTimeMillis() < timeout){
+			    	    				// try until you find agent of the given type or you manage to create it	    	        			    
+		    	        			    aid = getAgentByType(agentType);
+			    	    				if (aid == null){
+			    	    					// agent of given type doesn't exist
+			    	    					agentName = generateName(agentType);
+			    	    					aid = createAgent("Agent_"+agentType, agentName);
+			    	    					doWait(100);
+			    	    				}
+			    	    			}
+		    	        		   if (aid == null){
+		    	        			   // TODO ! this computation failed
+		    	        		   }
+		    	        		   agentName = aid.getLocalName();
+		    	        		   a_next.setName(agentName);
+	    	        		   }	    	        		   	    	        		   	    	        		   
 	    	        	   }
 	    	        	   
 	    	        	   Computation computation = new Computation();
@@ -470,14 +468,30 @@ public class Agent_Manager extends Agent{
 			
 	} // end prepareComputations
 	
-	private String recommendRandomAgentType(Data dataset, Vector<String> agents){
-		Random generator = new Random();
-		int rnd = generator.nextInt(agents.size());
-		return agents.elementAt(rnd);
-	}
-
-	private String _test_recommendRBFAgentType(Data dataset, Vector<String> agents){
-		return "RBFNetwork";
+	private List mergeOptions(List o1_CA, List o2){
+			
+			if (o1_CA != null) {
+				// if this type of agent has got some options
+				// update the options (merge them)
+		 			
+				// go through the options 
+	   		 	// and replace the options send by an computing agent
+				Iterator o1itr = o1_CA.iterator();	 		   		 
+	   		 	while (o1itr.hasNext()) {
+	   		 		Option next_CA_option = (Option) o1itr.next();
+		   		 	
+	   		 		Iterator o2itr = o2.iterator();		   		 	
+		   		 	while (o2itr.hasNext()) {
+		   		 		Option next_option = (Option) o2itr.next();
+		   		 		if (next_option.getName().equals(next_CA_option.getName())){
+		   		 			// copy the value
+		   		 			next_CA_option.setValue(next_CA_option.getValue());
+		   		 			next_CA_option.setMutable(false);
+		   		 		}
+	   		 		}
+	   		 	}
+			}
+			return o1_CA;
 	}
 	
 	public AID getAgentByType(String agentType){
@@ -913,7 +927,7 @@ public class Agent_Manager extends Agent{
 	}
 	
 	
-	private void chooseTheBestAgent(Metadata metadata){
+	private ontology.messages.Agent chooseTheBestAgent(Metadata metadata){
 		// choose the nearest training data
 		List allMetadata = DataManagerService.getAllMetadata(this);
 		
@@ -934,10 +948,8 @@ public class Agent_Manager extends Agent{
 	 		}	
 		}
 		
-			
 		System.out.println("*********** files from the table: ");
-		System.out.println("*********** "+ maxInstances+" "+minInstances+" "+minAttributes+" "+maxAttributes);
-	 	// find the 
+ 
 		double d_best = Integer.MAX_VALUE;
 		Metadata m_best = null;
 		
@@ -950,15 +962,19 @@ public class Agent_Manager extends Agent{
 	 			d_best = d_new;
 	 			m_best = next_md;
 	 		}
-	 		System.out.println("    "+ next_md.getExternal_name()+
-	 				" " + next_md.getDefault_task()+ 
+	 		System.out.println("    "+ next_md.getExternal_name()+	 				
 	 				" d: "+d_new);
 	 	}
 		
 		System.out.println("Nearest file: "+m_best.getExternal_name());
 		String nearestInternalName = m_best.getInternal_name();
+
+		// find the agent with the lowest error_rate
+		ontology.messages.Agent agent = DataManagerService.getTheBestAgent(this, nearestInternalName);
 		
-		// what about testing data?
+		return agent;		
+		
+		// TODO - testing data?
 	}
 	
 	/*
@@ -981,8 +997,8 @@ public class Agent_Manager extends Agent{
 		double dNumber_of_attributes = d(m1.getNumber_of_attributes(), m2.getNumber_of_attributes(), minAttributes, maxAttributes);
 		double dNumber_of_instances = d(m1.getNumber_of_instances(), m2.getNumber_of_instances(), minInstances, maxInstances);
 		
-		System.out.println("   dNumber_of_attributes: "+dNumber_of_attributes);
-		System.out.println("   dNumber_of_instances : "+dNumber_of_instances);
+		// System.out.println("   dNumber_of_attributes: "+dNumber_of_attributes);
+		// System.out.println("   dNumber_of_instances : "+dNumber_of_instances);
 		
 		double distance =  
 			wAttribute_type * dAttribute_type 
@@ -996,7 +1012,6 @@ public class Agent_Manager extends Agent{
 	
 	private double d(double v1, double v2, double min, double max){
 		// map the value to the 0,1 interval; 0 - the same, 1 - the most different
-		System.out.println("      v1, v2, max, min: "+v1+" "+v2+" "+min+" "+max);
 		
 		return Math.abs(v1 - v2) / (max - min); 
 	}

@@ -67,7 +67,7 @@ public abstract class Agent_OptionsManager extends Agent {
 	 	 private long timeout = -1; 
 
 	 	 boolean working = false;
-	 	 	 	 
+	 	 boolean finished = false;	 
 		 protected ontology.messages.Evaluation evaluation;
 	 	 protected List Options;
 	 	 protected ontology.messages.Agent Agent;
@@ -196,7 +196,7 @@ public abstract class Agent_OptionsManager extends Agent {
 				}
 				
 				
-				if (finished()){
+				if (finished() || finished){
 					storeNotification(ACLMessage.INFORM);
 				}
 				
@@ -264,7 +264,7 @@ public abstract class Agent_OptionsManager extends Agent {
 				msgOut.setPerformative(performative);
 				
 				
-				if (finished()){
+				if (finished() || finished){
 					String incomingReplykey = (String) this.REPLY_KEY;
 					ACLMessage incomingReply = (ACLMessage) getDataStore().get(incomingReplykey);   // TODO incomingReply ~ MyWekaEvaluation -> change to ontology Evaluation
 
@@ -333,7 +333,8 @@ public abstract class Agent_OptionsManager extends Agent {
 				 
 				 System.out.println(getLocalName()+": error_rate "+error_rate+" maximum tries "+maximum_tries);
 				 
-				 if (!finished() && Options != null){
+				 if (!(finished || finished())){
+					 
 					generateNewOptions(evaluation);
 					
 					System.out.println(getLocalName()+": new options for agent "+receiver+" are "
@@ -381,7 +382,10 @@ public abstract class Agent_OptionsManager extends Agent {
 						e.printStackTrace();
 					}
 
-					// msg.setContent(fileName+" "+opt);
+					
+					if (Options == null || noMutableOptions()){
+						finished = true;
+					}
 					
 				 }
 				 else{
@@ -488,13 +492,20 @@ public abstract class Agent_OptionsManager extends Agent {
 			
 			addBehaviour(receive_computation);
 			
-			
-	 
-
-		 
 		 } // end setup
 
-		 String getImmutableOptions(){
+		 private boolean noMutableOptions(){
+			Iterator itr = Options.iterator();	 		   		 
+   		 	while (itr.hasNext()) {
+   		 		Option next_option = (Option) itr.next();
+   		 		if (next_option.getMutable()){
+   		 			return false;
+   		 		}
+   		 	}
+   		 	return true;
+		 }
+		 
+		 private String getImmutableOptions(){
 			String str = ""; 
 			Iterator itr = Options.iterator();	 		   		 
    		 	while (itr.hasNext()) {

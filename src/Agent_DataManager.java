@@ -30,6 +30,7 @@ import java.util.LinkedList;
 import java.util.regex.Pattern;
 
 import ontology.messages.GetAllMetadata;
+import ontology.messages.GetTheBestAgent;
 import ontology.messages.ImportFile;
 import ontology.messages.MessagesOntology;
 import ontology.messages.Metadata;
@@ -345,7 +346,37 @@ public class Agent_DataManager extends Agent {
 						
 						return reply;						
 					}
+					
+					if (a.getAction() instanceof GetTheBestAgent) {
+						GetTheBestAgent g = (GetTheBestAgent)a.getAction();
+						String name = g.getNearest_file_name();
 
+						Statement stmt = db.createStatement();
+
+						String query = "SELECT * FROM results " +
+								"WHERE dataFile =\'"+name+"\'" +
+										"AND errorRate = (SELECT MIN(errorRate) FROM results " +
+															"WHERE dataFile =\'"+name+"\')";									
+						
+						ResultSet rs = stmt.executeQuery(query);
+						rs.next();
+						
+						ontology.messages.Agent agent = new ontology.messages.Agent(); 
+						agent.setName(rs.getString("agentName"));
+						agent.setType(rs.getString("agentType"));
+						System.out.println("**** options: "+rs.getString("options"));
+						agent.setOptions(agent.stringToOptions(rs.getString("options")));
+						
+						log.info("Executing query: " + query);																			
+						
+						ACLMessage reply = request.createReply();
+						reply.setPerformative(ACLMessage.INFORM);
+						
+						Result _result = new Result(a.getAction(), agent);
+						getContentManager().fillContent(reply, _result);
+						
+						return reply;						
+					}
 				} catch (OntologyException e) {
 					e.printStackTrace();
 					log.error("Problem extracting content: " + e.getMessage());

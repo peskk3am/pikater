@@ -1,6 +1,7 @@
 import java.security.MessageDigest;
 
 import ontology.messages.GetAllMetadata;
+import ontology.messages.GetTheBestAgent;
 import ontology.messages.ImportFile;
 import ontology.messages.MessagesOntology;
 import ontology.messages.Metadata;
@@ -176,6 +177,38 @@ public class DataManagerService extends FIPAService {
 			Result r = (Result)agent.getContentManager().extractContent(inform);
 			List allMetadata = (List) r.getValue();
 			return allMetadata;
+			
+		} catch (CodecException e) {
+			e.printStackTrace();
+		} catch (OntologyException e) {
+			e.printStackTrace();
+		} catch (FIPAException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	public static ontology.messages.Agent getTheBestAgent(Agent agent, String fileName) {
+		GetTheBestAgent g = new GetTheBestAgent();
+		g.setNearest_file_name(fileName);
+		
+		ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
+		request.addReceiver(new AID("dataManager", false));
+		request.setOntology(MessagesOntology.getInstance().getName());
+		request.setLanguage(codec.getName());
+		request.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+		
+		Action a = new Action();
+		a.setActor(agent.getAID());
+		a.setAction(g);
+		
+		try {
+			agent.getContentManager().fillContent(request, a);
+			ACLMessage inform = FIPAService.doFipaRequestClient(agent, request); 
+			
+			Result r = (Result)agent.getContentManager().extractContent(inform);
+			ontology.messages.Agent bestAgent = (ontology.messages.Agent) r.getValue();
+			return bestAgent;
 			
 		} catch (CodecException e) {
 			e.printStackTrace();
