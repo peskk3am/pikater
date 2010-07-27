@@ -6,10 +6,17 @@ import java.util.Vector;
 
 import org.jdom.JDOMException;
 
+import jade.content.ContentElement;
+import jade.content.lang.Codec.CodecException;
+import jade.content.onto.OntologyException;
+import jade.content.onto.UngroundedException;
+import jade.content.onto.basic.Action;
+import jade.content.onto.basic.Result;
 import jade.core.Agent;
 import jade.core.AID;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.FIPAAgentManagement.FailureException;
+import jade.gui.GuiEvent;
 import jade.lang.acl.ACLMessage;
 import jade.util.leap.ArrayList;
 import jade.util.leap.Iterator;
@@ -22,7 +29,6 @@ public class Agent_GUI_config_file extends Agent_GUI{
 	private String path = System.getProperty("user.dir")+System.getProperty("file.separator");
 	private String configFileName;
 	
-	
 	@Override
 	protected void displayOptions(Problem problem, int performative) {
 		String msg = "Failed";
@@ -34,8 +40,41 @@ public class Agent_GUI_config_file extends Agent_GUI{
 
 	@Override
 	protected void displayResult(ACLMessage inform) {
-		System.out.println("Agent :"+getName()+": Displaying the results ;)");
+		ContentElement content;
+		try {
+			content = getContentManager().extractContent(inform);
+			if (content instanceof Result) {
+	            Result result = (Result) content;            
+	            if (result.getValue() instanceof Results) {
+	            	List tasks = ((Results)result.getValue()).getResults();
+	            	if (tasks != null){
+		            	Iterator itr = tasks.iterator();	 
+		       		 	while (itr.hasNext()) {
+		       	           Task task = (Task) itr.next();
+		       	           System.out.println("Agent "+getLocalName()+": options for agent "
+		       	        		   +task.getAgent().getName()+" were "
+		       	        		   +task.getAgent().optionsToString()
+		       	        		   +" error_rate: "+task.getResult().getError_rate());
+		       		 	}	       	     
+	            	}
+	            	else{
+	            		System.out.println("Agent "+getLocalName()+": there were no tasks in this computation.");
+	            	}
+	            }    
+			}
+	        
+		} catch (UngroundedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (CodecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (OntologyException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
 	}
+	
 	@Override
 	protected void DisplayWrongOption(int problemGuiId, String agentName, String optionName, String errorMessage){
 		System.out.println("Agent :"+getName()+" "+problemGuiId+" "+agentName+" "+optionName+" "+errorMessage);
@@ -54,8 +93,26 @@ public class Agent_GUI_config_file extends Agent_GUI{
 	@Override
 	protected void mySetup() {
 		setDefault_number_of_values_to_try(4);
+		setDefault_error_rate(0.01);
 		
 		doWait(1000);
+		
+		
+		/*
+        // test:
+        int newId = createNewProblem("1000");
+        try {
+			//addAgentToProblem(newId, null, "MultilayerPerceptron", "-L 0.4 -D -M ? -H ?,?");
+        	addAgentToProblem(newId, null, "RBFNetwork", "-B 4");
+        	addAgentToProblem(newId, null, "RBFNetwork", "-B ?");
+
+		} catch (FailureException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+         addDatasetToProblem(newId, "iris.arff", "iris.arff");
+ 		// getAgentOptions("mp1"); 
+        // */
 		
 		System.out.println("Agent types: "+offerAgentTypes());
 		
@@ -73,19 +130,6 @@ public class Agent_GUI_config_file extends Agent_GUI{
         }
 		// */        
         
-		/*
-        // test:
-        int newId = createNewProblem("1000");
-        try {
-			addAgentToProblemWekaStyle(newId, null, "MultilayerPerceptron", "-L 0.2 -D -M ? -H ?,?", null);
-		} catch (FailureException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-         addDatasetToProblem(newId, "iris.arff", "iris.arff");
- 		// getAgentOptions("mp1"); 
-        // */
-	
 		
 	}	// end mySetup
 
@@ -96,6 +140,12 @@ public class Agent_GUI_config_file extends Agent_GUI{
 
 	private String getConfigFileName(){
 		return (String)getArguments()[0];
+	}
+
+	@Override
+	protected void onGuiEvent(GuiEvent arg0) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 }

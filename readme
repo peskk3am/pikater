@@ -1,8 +1,0 @@
-20.5.2010
-Agent_Manager receives a Problem to solve (the Problem contains names of files and agents,
-each agent from the list makes computations using data from all data files on the list)
-from a GUI agent, it divides it to single tasks (agent - data),
-which are afterwards sent to an Agent_OptionsManager (Agent_Random),
-who chooses random values of (some of) the agents options, sends them to a Computing_Agent,
-receives the reply (result of the computation with given options),
-and keeps iterating until the errorRate is smaller than 0.3.

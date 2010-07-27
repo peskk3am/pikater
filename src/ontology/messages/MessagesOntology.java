@@ -4,6 +4,8 @@ import jade.content.onto.*;
 import jade.content.schema.*;
 import java.util.*;
 
+import javax.print.attribute.SupportedValuesAttribute;
+
 
 public class MessagesOntology extends Ontology {
 
@@ -51,14 +53,23 @@ public class MessagesOntology extends Ontology {
 
 	  public static final String EVALUATION = "EVALUATION";
 	  public static final String EVALUATION_ERROR_RATE = "error_rate";
-	  public static final String EVALUATION_PCT_INCORRECT = "pct_incorrect";
+	  public static final String EVALUATION_KAPPA_STATISTIC = "kappa_statistic";
+	  public static final String EVALUATION_MEAN_ABSOLUTE_ERROR = "mean_absolute_error";
+	  public static final String EVALUATION_MEAN_SQUARED_ERROR = "root_mean_squared_error";
+	  public static final String EVALUATION_RELATIVE_ABSOLUTE_ERROR = "relative_absolute_error";
+	  public static final String EVALUATION_RELATIVE_SQUARED_ERROR = "root_relative_squared_error";
 	  public static final String EVALUATION_DATA_TABLE = "data_table";
 	  
 	  public static final String RESULTS = "RESULTS";
 	  public static final String RESULTS_COMPUTATION_ID = "computation_id";
-	  public static final String RESULTS_AVG_ERROR_RATE = "avg_error_rate";
 	  public static final String RESULTS_PROBLEM_ID = "problem_id";
 	  public static final String RESULTS_RESULTS = "results";
+	  public static final String RESULTS_AVG_ERROR_RATE = "avg_error_rate";
+	  public static final String RESULTS_AVG_KAPPA_STATISTIC = "avg_kappa_statistic";
+	  public static final String RESULTS_AVG_MEAN_ABSOLUTE_ERROR = "avg_mean_absolute_error";
+	  public static final String RESULTS_AVG_MEAN_SQUARED_ERROR = "avg_root_mean_squared_error";
+	  public static final String RESULTS_AVG_RELATIVE_ABSOLUTE_ERROR = "avg_relative_absolute_error";
+	  public static final String RESULTS_AVG_RELATIVE_SQUARED_ERROR = "avg_root_relative_squared_error";
 	  
 	  public static final String OPTION = "OPTION";
 	  public static final String OPTION_MUTABLE = "mutable";
@@ -77,6 +88,8 @@ public class MessagesOntology extends Ontology {
 
 	  public static final String AGENT = "AGENT";
 	  public static final String AGENT_NAME = "name";
+	  public static final String AGENT_TYPE = "type";
+	  public static final String AGENT_GUI_ID = "gui_id";
 	  public static final String AGENT_OPTIONS = "options";
 	  	  
 	  public static final String INTERVAL = "INTERVAL";
@@ -97,6 +110,15 @@ public class MessagesOntology extends Ontology {
 	  public static final String INSTANCE = "INSTANCE";
 	  public static final String INSTANCE_VALUES = "values";
 	  
+	  public static final String METADATA = "METADATA";
+	  public static final String METADATA_INTERNAL_NAME = "internal_name";
+	  public static final String METADATA_EXTERNAL_NAME = "external_name";
+	  public static final String METADATA_NUMBER_OF_INSTANCES = "number_of_instances";
+	  public static final String METADATA_NUMBER_OF_ATTRIBUTES = "number_of_attributes";
+	  public static final String METADATA_MISSING_VALUES = "missing_values";
+	  public static final String METADATA_DEFAULT_TASK = "default_task";
+	  public static final String METADATA_ATTRIBUTE_TYPE = "attribute_type";		
+		
 	  // Predicates
 	  public static final String PARTIALRESULTS = "PARTIALRESULTS";
 	  public static final String PARTIALRESULTS_TASK = "task";
@@ -110,16 +132,33 @@ public class MessagesOntology extends Ontology {
 	  public static final String EXECUTE = "EXECUTE";
 	  public static final String EXECUTE_TASK = "task";
 
+	  public static final String IMPORT_FILE = "IMPORT_FILE";
+	  public static final String IMPORT_USER = "userID";
+	  public static final String IMPORT_FILENAME = "externalFilename";
 	  
+	  public static final String TRANSLATE = "TRANSLATE";
+	  public static final String TRANSLATE_USER = "userID";
+	  public static final String TRANSLATE_FILENAME = "externalFilename";
 	  
 	  public static final String SOLVE = "SOLVE";
 	  public static final String SOLVE_PROBLEM = "problem";
 	  
 	  public static final String GET_OPTIONS = "GET-OPTIONS";
+
+	  public static final String SAVE_RESULTS = "SAVE-RESULTS";
+	  public static final String SAVE_RESULTS_TASK = "task";
 	  
 	  public static final String GET_DATA = "GET-DATA";
 	  public static final String GET_DATA_FILE_NAME = "file_name";
 
+	  public static final String SAVE_METADATA = "SAVE-METADATA";
+	  public static final String SAVE_METADATA_METADATA = "metadata";
+	  
+	  public static final String GET_ALL_METADATA = "GET-ALL-METADATA";
+	  	  
+	  public static final String GET_THE_BEST_AGENT = "GET-THE-BEST-AGENT";
+	  public static final String GET_THE_BEST_AGENT_NEAREST_FILE_NAME = "nearest_file_name";
+	  
 	  // public static final String SEND_OPTIONS = "SEND-OPTIONS";
 	  // public static final String SEND_OPTIONS_OPTIONS = "options";
 	  
@@ -158,12 +197,19 @@ public class MessagesOntology extends Ontology {
 			add(new ConceptSchema(DATA_INSTANCES), DataInstances.class);
 			add(new ConceptSchema(ATTRIBUTE), Attribute.class);
 			add(new ConceptSchema(INSTANCE), Instance.class);
+			add(new ConceptSchema(METADATA), Metadata.class);
 			add(new PredicateSchema(PARTIALRESULTS),PartialResults.class);
 			add(new AgentActionSchema(COMPUTE), Compute.class);
 			add(new AgentActionSchema(GET_OPTIONS), GetOptions.class);
 			add(new AgentActionSchema(EXECUTE), Execute.class);
 			add(new AgentActionSchema(SOLVE), Solve.class);
+			add(new AgentActionSchema(IMPORT_FILE), ImportFile.class);
+			add(new AgentActionSchema(TRANSLATE), TranslateFilename.class);
+			add(new AgentActionSchema(SAVE_RESULTS), SaveResults.class);
+			add(new AgentActionSchema(SAVE_METADATA), SaveMetadata.class);
 			add(new AgentActionSchema(GET_DATA), GetData.class);
+			add(new AgentActionSchema(GET_ALL_METADATA), GetAllMetadata.class);
+			add(new AgentActionSchema(GET_THE_BEST_AGENT), GetTheBestAgent.class);			
 			
 			// add(new AgentActionSchema(SEND_OPTIONS), SendOptions.class);
 			
@@ -223,17 +269,28 @@ public class MessagesOntology extends Ontology {
   	
 	    	cs = (ConceptSchema)getSchema(EVALUATION);
 	    	cs.add(EVALUATION_ERROR_RATE, (PrimitiveSchema)getSchema(BasicOntology.FLOAT));
-	    	cs.add(EVALUATION_PCT_INCORRECT, (PrimitiveSchema)getSchema(BasicOntology.FLOAT));
+	    	cs.add(EVALUATION_KAPPA_STATISTIC, (PrimitiveSchema)getSchema(BasicOntology.FLOAT), ObjectSchema.OPTIONAL);
+	    	cs.add(EVALUATION_MEAN_ABSOLUTE_ERROR, (PrimitiveSchema)getSchema(BasicOntology.FLOAT), ObjectSchema.OPTIONAL);
+	    	cs.add(EVALUATION_MEAN_SQUARED_ERROR, (PrimitiveSchema)getSchema(BasicOntology.FLOAT), ObjectSchema.OPTIONAL);
+	    	cs.add(EVALUATION_RELATIVE_ABSOLUTE_ERROR, (PrimitiveSchema)getSchema(BasicOntology.FLOAT), ObjectSchema.OPTIONAL);
+	    	cs.add(EVALUATION_RELATIVE_SQUARED_ERROR, (PrimitiveSchema)getSchema(BasicOntology.FLOAT), ObjectSchema.OPTIONAL);   	
 	    	cs.add(EVALUATION_DATA_TABLE, (ConceptSchema)getSchema(DATA_INSTANCES), ObjectSchema.OPTIONAL);
     	
 	    	cs = (ConceptSchema)getSchema(RESULTS);
 	    	cs.add(RESULTS_COMPUTATION_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 	    	cs.add(RESULTS_PROBLEM_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 	    	cs.add(RESULTS_AVG_ERROR_RATE, (PrimitiveSchema)getSchema(BasicOntology.FLOAT));
+	    	cs.add(RESULTS_AVG_KAPPA_STATISTIC, (PrimitiveSchema)getSchema(BasicOntology.FLOAT), ObjectSchema.OPTIONAL);
+	    	cs.add(RESULTS_AVG_MEAN_ABSOLUTE_ERROR, (PrimitiveSchema)getSchema(BasicOntology.FLOAT), ObjectSchema.OPTIONAL);
+	    	cs.add(RESULTS_AVG_MEAN_SQUARED_ERROR, (PrimitiveSchema)getSchema(BasicOntology.FLOAT), ObjectSchema.OPTIONAL);
+	    	cs.add(RESULTS_AVG_RELATIVE_ABSOLUTE_ERROR, (PrimitiveSchema)getSchema(BasicOntology.FLOAT), ObjectSchema.OPTIONAL);
+	    	cs.add(RESULTS_AVG_RELATIVE_SQUARED_ERROR, (PrimitiveSchema)getSchema(BasicOntology.FLOAT), ObjectSchema.OPTIONAL);   	
 	    	cs.add(RESULTS_RESULTS, (ConceptSchema)getSchema(TASK), 0, ObjectSchema.UNLIMITED);
 
 	    	cs = (ConceptSchema)getSchema(AGENT);
-	    	cs.add(AGENT_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	cs.add(AGENT_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+	    	cs.add(AGENT_TYPE, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	cs.add(AGENT_GUI_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 	    	cs.add(AGENT_OPTIONS, (ConceptSchema)getSchema(OPTION), 0, ObjectSchema.UNLIMITED);
 
 	    	cs = (ConceptSchema)getSchema(DATA_INSTANCES);
@@ -250,12 +307,22 @@ public class MessagesOntology extends Ontology {
 	    	cs = (ConceptSchema)getSchema(INSTANCE);
 	    	cs.add(INSTANCE_VALUES, (PrimitiveSchema)getSchema(BasicOntology.FLOAT), 0, ObjectSchema.UNLIMITED);
 
+	    	cs = (ConceptSchema)getSchema(METADATA);
+	    	cs.add(METADATA_INTERNAL_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	cs.add(METADATA_EXTERNAL_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+	    	cs.add(METADATA_NUMBER_OF_INSTANCES, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));
+	    	cs.add(METADATA_NUMBER_OF_ATTRIBUTES, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));
+	    	cs.add(METADATA_MISSING_VALUES, (PrimitiveSchema)getSchema(BasicOntology.BOOLEAN), ObjectSchema.OPTIONAL);
+	    	cs.add(METADATA_DEFAULT_TASK, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+	    	cs.add(METADATA_ATTRIBUTE_TYPE, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+
 	    	
 			PredicateSchema ps = (PredicateSchema)getSchema(PARTIALRESULTS);
 	    	ps.add(PARTIALRESULTS_TASK, (ConceptSchema)getSchema(TASK), ObjectSchema.OPTIONAL);
 			ps.add(PARTIALRESULTS_TASK_ID, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 			ps.add(PARTIALRESULTS_RESULTS, (ConceptSchema)getSchema(EVALUATION), 0, ObjectSchema.UNLIMITED);
 			
+	    	
 	    	AgentActionSchema as = (AgentActionSchema)getSchema(COMPUTE);
 			as.add(COMPUTE_COMPUTATION, (ConceptSchema)getSchema(COMPUTATION));
 
@@ -267,19 +334,37 @@ public class MessagesOntology extends Ontology {
 			as = (AgentActionSchema)getSchema(EXECUTE);
 	    	as.add(EXECUTE_TASK, (ConceptSchema)getSchema(TASK));
 
+	    	as = (AgentActionSchema)getSchema(IMPORT_FILE);
+	    	as.add(IMPORT_USER, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));
+	    	as.add(IMPORT_FILENAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	as.setResult((PrimitiveSchema)getSchema(BasicOntology.STRING)); //the internal filename 
+	    	
+	    	as = (AgentActionSchema)getSchema(TRANSLATE);
+	    	as.add(TRANSLATE_USER, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));
+	    	as.add(TRANSLATE_FILENAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	as.setResult((PrimitiveSchema)getSchema(BasicOntology.STRING)); //the internal filename
+	    	
+	    	as = (AgentActionSchema)getSchema(SAVE_RESULTS);
+	    	as.add(SAVE_RESULTS_TASK, (ConceptSchema)getSchema(TASK));
+	    	
+	    	as = (AgentActionSchema)getSchema(SAVE_METADATA);	    	
+	    	as.add(SAVE_METADATA_METADATA, (ConceptSchema)getSchema(METADATA));
+	    	
 	    	as = (AgentActionSchema)getSchema(GET_DATA);
 	    	as.add(GET_DATA_FILE_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 
-	    	//as = (AgentActionSchema)getSchema(SEND_OPTIONS);
+	    	as = (AgentActionSchema)getSchema(GET_ALL_METADATA);
+			
+	    	as = (AgentActionSchema)getSchema(GET_THE_BEST_AGENT);
+	    	as.add(GET_THE_BEST_AGENT_NEAREST_FILE_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+	    	
+			//as = (AgentActionSchema)getSchema(SEND_OPTIONS);
 			//as.add(SEND_OPTIONS_OPTIONS, (ConceptSchema)getSchema(OPTION), 1, ObjectSchema.UNLIMITED);
 			
 	    }
 	    catch(OntologyException oe) {
 	      oe.printStackTrace();
 	    }
-	  }
-	  
+	  }	  
 
-}
-
-	  
+}	  

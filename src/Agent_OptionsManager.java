@@ -1,3 +1,14 @@
+import java.io.*;
+
+import java.util.Date;
+import java.util.Vector;
+
+
+import ontology.messages.*;
+
+import weka.classifiers.Evaluation;
+import weka.core.Instances;
+
 import jade.content.ContentElement;
 import jade.content.lang.Codec;
 import jade.content.lang.Codec.CodecException;
@@ -40,8 +51,6 @@ import ontology.messages.Task;
 public abstract class Agent_OptionsManager extends Agent {
 	 	 private Codec codec = new SLCodec();
 	 	 private Ontology ontology = MessagesOntology.getInstance();
-
-		 boolean _finished = false;
 	 	 
 		 private String trainFileName;
 		 private String testFileName;
@@ -58,7 +67,7 @@ public abstract class Agent_OptionsManager extends Agent {
 	 	 private long timeout = -1; 
 
 	 	 boolean working = false;
-	 	 	 	 
+	 	 boolean finished = false;	 
 		 protected ontology.messages.Evaluation evaluation;
 	 	 protected List Options;
 	 	 protected ontology.messages.Agent Agent;
@@ -101,7 +110,7 @@ public abstract class Agent_OptionsManager extends Agent {
 					  	testFileName = computation.getData().getTest_file_name();
 					  	receiver = computation.getAgent().getName();
 					  	computation_id = computation.getId();
-					  	error_rate = computation.getMethod().getError_rate();
+					  	error_rate = computation.getMethod().getError_rate();			  	
 					  	maximum_tries = computation.getMethod().getMaximum_tries();
 					  	problem_id = computation.getProblem_id();
 					  	if (timeout < 0){
@@ -139,7 +148,9 @@ public abstract class Agent_OptionsManager extends Agent {
 				*/
 				System.out.println("Agent "+getLocalName()+": outgoingRequest: "+outgoingRequest);
 								
-				
+				if (outgoingRequest.getPerformative() == ACLMessage.CANCEL){
+					storeNotification(ACLMessage.CANCEL);
+			 	}
 				Vector v = new Vector(1);
 				v.addElement(outgoingRequest);
 				return v;
@@ -185,7 +196,7 @@ public abstract class Agent_OptionsManager extends Agent {
 				}
 				
 				
-				if (_finished){
+				if (finished() || finished){
 					storeNotification(ACLMessage.INFORM);
 				}
 				
@@ -205,7 +216,7 @@ public abstract class Agent_OptionsManager extends Agent {
 					storeNotification(ACLMessage.FAILURE);	
 				}
 			}
-			
+		 
 			protected void handleFailure(ACLMessage failure) {
 				storeNotification(ACLMessage.FAILURE);
 				if (failure.getSender().equals(myAgent.getAMS())) {
@@ -223,9 +234,15 @@ public abstract class Agent_OptionsManager extends Agent {
 				if (performative == ACLMessage.INFORM) {			
 					System.out.println("Agent "+getLocalName()+": computation executed successfully");
 				}
-				else { 
-				
-					System.out.println("Agent "+getLocalName()+": computation failed");
+				else { 	
+					if (performative == ACLMessage.CANCEL){
+						// there were no tasks to compute => send inform message
+						performative = ACLMessage.INFORM;
+						System.out.println("Agent "+getLocalName()+": there were no tasks to compute.");
+					}
+					else{
+						System.out.println("Agent "+getLocalName()+": computation failed");
+					}
 				}
 					
 				// Retrieve the incoming request from the DataStore
@@ -247,7 +264,7 @@ public abstract class Agent_OptionsManager extends Agent {
 				msgOut.setPerformative(performative);
 				
 				
-				if (_finished){
+				if (finished() || finished){
 					String incomingReplykey = (String) this.REPLY_KEY;
 					ACLMessage incomingReply = (ACLMessage) getDataStore().get(incomingReplykey);   // TODO incomingReply ~ MyWekaEvaluation -> change to ontology Evaluation
 
@@ -314,17 +331,14 @@ public abstract class Agent_OptionsManager extends Agent {
 					 System.out.println(getLocalName()+": Agent "+_result.getSender().getLocalName()+"'s errorRate was "+evaluation.getError_rate());
 				 }
 				 
+				 System.out.println(getLocalName()+": error_rate "+error_rate+" maximum tries "+maximum_tries);
 				 
-				 if (!_finished){
-					if (Options != null){ 
-						generateNewOptions(evaluation);
-						_finished = finished();
-					}
-					else{
-						_finished = true;
-					}
+				 if (!(finished || finished())){
+					 
+					generateNewOptions(evaluation);
+					
 					System.out.println(getLocalName()+": new options for agent "+receiver+" are "
-							+new ontology.messages.Agent().optionsToString() ); 
+							+Agent.optionsToString() ); 
 					 
 					msg = new ACLMessage(ACLMessage.REQUEST);
 					msg.setLanguage(codec.getName());
@@ -368,7 +382,10 @@ public abstract class Agent_OptionsManager extends Agent {
 						e.printStackTrace();
 					}
 
-					// msg.setContent(fileName+" "+opt);
+					
+					if (Options == null || noMutableOptions()){
+						finished = true;
+					}
 					
 				 }
 				 else{
@@ -475,13 +492,20 @@ public abstract class Agent_OptionsManager extends Agent {
 			
 			addBehaviour(receive_computation);
 			
-			
-	 
-
-		 
 		 } // end setup
 
-		 String getImmutableOptions(){
+		 private boolean noMutableOptions(){
+			Iterator itr = Options.iterator();	 		   		 
+   		 	while (itr.hasNext()) {
+   		 		Option next_option = (Option) itr.next();
+   		 		if (next_option.getMutable()){
+   		 			return false;
+   		 		}
+   		 	}
+   		 	return true;
+		 }
+		 
+		 private String getImmutableOptions(){
 			String str = ""; 
 			Iterator itr = Options.iterator();	 		   		 
    		 	while (itr.hasNext()) {

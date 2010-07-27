@@ -31,7 +31,16 @@ public abstract class Agent_WekaCA extends Agent_ComputingAgent {
 		 
 		 ontology.messages.Evaluation result = new ontology.messages.Evaluation();
 		 result.setError_rate((float) eval.errorRate());
-		 result.setPct_incorrect((float) eval.pctIncorrect());
+		 result.setKappa_statistic((float)eval.kappa());
+		 result.setMean_absolute_error((float) eval.meanAbsoluteError());
+		 try {
+			result.setRelative_absolute_error((float) eval.relativeAbsoluteError());
+		 } catch (Exception e) {
+			result.setRelative_absolute_error(-1);
+		 }
+		 result.setRoot_mean_squared_error((float) eval.rootMeanSquaredError());
+		 result.setRoot_relative_squared_error((float) eval.rootRelativeSquaredError());
+		 
 		 return result;
 	 }
 	 
@@ -131,6 +140,7 @@ public abstract class Agent_WekaCA extends Agent_ComputingAgent {
          opt.setName(_weka_opt.name);
          opt.setSynopsis(_weka_opt.synopsis);
          opt.setDefault_value(_weka_opt.default_value);
+         opt.setValue(_weka_opt.default_value);
          return opt;
 	 }
 	 
@@ -144,7 +154,8 @@ public abstract class Agent_WekaCA extends Agent_ComputingAgent {
 			
 			agent_options = new ontology.messages.Agent();
 			agent_options.setName(getLocalName());
-			 // read options from file
+			agent_options.setType(getAgentType());
+			// read options from file
 			try {
 				/*  Sets up a file reader to read the options file */
 				FileReader input = new FileReader(optPath);

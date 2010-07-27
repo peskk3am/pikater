@@ -6,8 +6,14 @@ public class Results implements Concept{
 
 		private String _problem_id;
 		private String _computation_id;
-		private float _avg_error_rate;
-		private float _avg_pct_incorrect;
+		
+		private float _avg_error_rate = -1;
+		private float _avg_kappa_statistic = -1; 
+		private float _avg_mean_absolute_error = -1; 
+		private float _avg_root_mean_squared_error = -1; 
+		private float _avg_relative_absolute_error = -1; 
+		private float _avg_root_relative_squared_error = -1; 
+
 		private List _results;
 		
 		public void setProblem_id(String problem_id) {
@@ -36,13 +42,35 @@ public class Results implements Concept{
 		}
 		public float getAvg_error_rate() {
 			return _avg_error_rate;
+		}		
+		public void setAvg_kappa_statistic(float avg_kappa_statistic) {
+			_avg_kappa_statistic=avg_kappa_statistic;
 		}
-		
-		public void setAvg_pct_incorrect(float avg_pct_incorrect) {
-			_avg_pct_incorrect=avg_pct_incorrect;
+		public float getAvg_kappa_statistic() {
+			return _avg_kappa_statistic;
 		}
-		public float getAvg_pct_incorrect() {
-			return _avg_pct_incorrect;
+		public void setAvg_mean_absolute_error(float avg_mean_absolute_error) {
+			_avg_mean_absolute_error=avg_mean_absolute_error;
 		}
-
+		public float getAvg_mean_absolute_error() {
+			return _avg_mean_absolute_error;
+		}
+		public void setAvg_root_mean_squared_error(float avg_root_mean_squared_error) {
+			_avg_root_mean_squared_error=avg_root_mean_squared_error;
+		}
+		public float getAvg_root_mean_squared_error() {
+			return _avg_root_mean_squared_error;
+		}
+		public void setAvg_relative_absolute_error(float avg_relative_absolute_error) {
+			_avg_relative_absolute_error=avg_relative_absolute_error;
+		}
+		public float getAvg_relative_absolute_error() {
+			return _avg_relative_absolute_error;
+		}		
+		public void setAvg_root_relative_squared_error(float avg_root_relative_squared_error) {
+			_avg_root_relative_squared_error=avg_root_relative_squared_error;
+		}
+		public float getAvg_root_relative_squared_error() {
+			return _avg_root_relative_squared_error;
+		}		
 }

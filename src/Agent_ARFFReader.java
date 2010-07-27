@@ -24,7 +24,10 @@ import java.io.IOException;
 
 import ontology.messages.DataInstances;
 import ontology.messages.GetData;
+import ontology.messages.Instance;
 import ontology.messages.MessagesOntology;
+import ontology.messages.Metadata;
+import ontology.messages.Task;
 
 
 public class Agent_ARFFReader extends Agent {
@@ -38,7 +41,6 @@ public class Agent_ARFFReader extends Agent {
 	// private String path = "D:/diplomka/eclipse/diplomka/";
 	private String path = System.getProperty("user.dir")+System.getProperty("file.separator");
 	private boolean working = false;
-
 	
 	boolean ReadFromFile(String fileName){
 		if(fileName == null || fileName.length()==0)
@@ -105,6 +107,16 @@ public class Agent_ARFFReader extends Agent {
 				throw new FailureException("File haven't been read. Wrong file-name?");
 
 			instances.fillWekaInstances(data);
+			
+			Metadata m = new Metadata();
+			m.setInternal_name(file_name);
+			int ninst = instances.getInstances().size();
+			if (ninst > 0){
+				m.setNumber_of_attributes(((Instance)instances.getInstances().iterator().next()).getValues().size());
+			}
+			m.setNumber_of_instances(instances.getInstances().size());
+			DataManagerService.saveMetadata(this, m);
+			
 			// Prepare the content
 			Result result = new Result((Action)content, instances);
 			try {

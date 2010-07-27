@@ -1,4 +1,5 @@
 import jade.core.Agent;
+
 import jade.util.leap.ArrayList;
 import jade.util.leap.List;
 import jade.wrapper.AgentController;
@@ -86,7 +87,7 @@ public class Agent_Initiator extends Agent{
 			AgentController agent = container.createNewAgent(name, type, args);
 			agent.start();
 			// provide agent time to register with DF etc.
-			// doWait(100);  
+			doWait(300);  
 		}
 		catch (ControllerException e) {
 	        System.err.println( "Exception while adding agent: " + e );
@@ -96,6 +97,5 @@ public class Agent_Initiator extends Agent{
 		
 		return 1;
 	}
-	
-		
+
 }
