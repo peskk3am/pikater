@@ -10,6 +10,7 @@ public class DataInstances implements Concept {
 	private List attributes;
 	private List instances;
 	private String name;
+	private int class_index;
 	
 	/**
 	 * @return the name
@@ -50,6 +51,12 @@ public class DataInstances implements Concept {
 	
 	//=============================
 	
+	public int getClass_index() {
+		return class_index;
+	}
+	public void setClass_index(int classIndex) {
+		class_index = classIndex;
+	}
 	public weka.core.Instances toWekaInstances(){
 		//attributes
 		FastVector wattrs = new FastVector();
@@ -64,14 +71,21 @@ public class DataInstances implements Concept {
 		
 		while (itr.hasNext()) {
 			Instance inst = (Instance)itr.next();
-			weka.core.Instance winst = new weka.core.Instance(wattrs.size());
-			winst.setDataset(winsts);
-			Iterator itr1 = inst.getValues().iterator();
+			Iterator itrval = inst.getValues().iterator();
+			Iterator itrmis = inst.getMissing().iterator();
+			double [] vals = new double[wattrs.size()];
 			for(int i = 0; i < wattrs.size(); i++){
-				winst.setValue((weka.core.Attribute)wattrs.elementAt(i), (Double)(itr1.next()));
+				if((Boolean)itrmis.next()){
+					vals[i] = weka.core.Instance.missingValue();
+				}else{
+					vals[i] = (Double)itrval.next();
+				}
 			}
+			weka.core.Instance winst = new weka.core.Instance(1,vals);
+			winst.setDataset(winsts);
 			winsts.add(winst);
 		}
+		winsts.setClassIndex(this.class_index);
 		return winsts;
 	}
 	
@@ -94,14 +108,23 @@ public class DataInstances implements Concept {
 			weka.core.Instance winst = winsts.instance(i);
 			
 			List instvalues = new ArrayList();
+			List instmis = new ArrayList();
 			for(int j = 0; j < winst.numValues(); j++){
-				instvalues.add(new Double(winst.value(j)));
+				if(winst.isMissing(j)){
+					instvalues.add(new Double(0.0));
+					instmis.add(new Boolean(true));
+				}else{
+					instvalues.add(new Double(winst.value(j)));
+					instmis.add(new Boolean(false));
+				}
 			}
 			
 			inst.setValues(instvalues);
+			inst.setMissing(instmis);
 			onto_insts.add(inst);
 		}
 		setInstances(onto_insts);
+		setClass_index(winsts.classIndex());
 		
 	}
 	/*public void print(){
