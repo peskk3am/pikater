@@ -112,7 +112,7 @@ public class Agent_Manager extends Agent{
 				incomingRequest = request;
 				incomingResponse = response;
 				parentConversationID = incomingRequest.getConversationId();
-				System.out.println(a.getLocalName()+": SendComputation behavior created. "+request);				
+				System.out.println(a.getLocalName()+": SendComputation behavior created."); // +request);				
 			}
 			
 			// Since we don't know what message to send to the responder
@@ -120,7 +120,7 @@ public class Agent_Manager extends Agent{
 			// method to build the request on the fly
 			protected Vector prepareRequests(ACLMessage request) {
 				// Klara's note: this method is called just once at the beginning of the behaviour
-				System.out.println("Agent "+getLocalName()+": Received action: "+incomingRequest.getContent()+". Preparing response.");
+				// System.out.println("Agent "+getLocalName()+": Received action: "+incomingRequest.getContent()+". Preparing response.");
 				
 				// get generated problem id from agree message (it contains a string: "gui_id and id" of a problem 
 				String[] ID = incomingResponse.getContent().split(" ");

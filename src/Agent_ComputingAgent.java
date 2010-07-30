@@ -393,7 +393,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 	    	void failureMsg(String desc){
 	    		result_msg = incoming_request.createReply();
 	    		result_msg.setPerformative(ACLMessage.FAILURE);
-	    		//TODO: add the description
+	    		result_msg.setContent(desc);	    		
 	    	}
 
 	    	void notUnderstoodMsg(){
@@ -409,7 +409,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 	    	
 	    	void setResultMsg(){
 	    		String notificationkey = (String) ((AchieveREResponder) parent).RESULT_NOTIFICATION_KEY;
-				getDataStore().put(notificationkey, result_msg );
+				getDataStore().put(notificationkey, result_msg );				
 	    	}
 	    	
 	    	boolean processNonExecute(){
@@ -571,8 +571,9 @@ public abstract class Agent_ComputingAgent extends Agent{
   							}			
   						}
   						catch (Exception e){
+  							working = false;
   							success = false;
-  							failureMsg("unexpected-error");
+  							failureMsg(e.getMessage());  							
   						}
   					}
  					
