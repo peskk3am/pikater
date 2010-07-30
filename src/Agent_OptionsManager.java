@@ -97,7 +97,7 @@ public abstract class Agent_OptionsManager extends Agent {
 				ACLMessage incomingRequest = (ACLMessage) getDataStore().get(incomingRequestKey);
 				
 				
-				System.out.println("Agent "+getLocalName()+": Received action: "+incomingRequest.getContent()+". Preparing response.");
+				// System.out.println("Agent "+getLocalName()+": Received action: "+incomingRequest.getContent()+". Preparing response.");
 				
 				
 				try {
@@ -146,7 +146,7 @@ public abstract class Agent_OptionsManager extends Agent {
 				outgoingRequest.setContent(incomingRequest.getContent());
 				outgoingRequest.setReplyByDate(incomingRequest.getReplyByDate());
 				*/
-				System.out.println("Agent "+getLocalName()+": outgoingRequest: "+outgoingRequest);
+				// System.out.println("Agent "+getLocalName()+": outgoingRequest: "+outgoingRequest);
 								
 				if (outgoingRequest.getPerformative() == ACLMessage.CANCEL){
 					storeNotification(ACLMessage.CANCEL);
@@ -164,7 +164,12 @@ public abstract class Agent_OptionsManager extends Agent {
 				ACLMessage msgNew = newMessage(inform); 
 				nextRequests.add(msgNew);
 								
-				
+				storeTask();
+								
+				if (finished() || finished){
+					storeNotification(ACLMessage.INFORM);
+				}
+				msgPrev = msgNew;
 				
 				// prepare the result to be added to results List:
 				
@@ -172,36 +177,7 @@ public abstract class Agent_OptionsManager extends Agent {
 				// ontology.messages.Evaluation evaluation = new ontology.messages.Evaluation();
 				// evaluation.setError_rate((float)result.errorRate);
 				// evaluation.setPct_incorrect((float)result.pctIncorrect);
-				
-				// get the Task from the last message						
-				try {
-			  		ContentElement content = getContentManager().extractContent(msgPrev);
-			  		if (((Action)content).getAction() instanceof Execute){
- 
-				  			Task task = ( (Execute) ((Action)content).getAction() ).getTask();
-				  			task.setResult(evaluation);
-					  		results.add(task);
-				  		
-			  		}		
-			  		
-				} catch (UngroundedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (CodecException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (OntologyException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-				
-				if (finished() || finished){
-					storeNotification(ACLMessage.INFORM);
-				}
-				
-				msgPrev = msgNew; 
-				
+												
 			}
 			
 			protected void handleRefuse(ACLMessage refuse) {
@@ -225,9 +201,38 @@ public abstract class Agent_OptionsManager extends Agent {
 					System.out.println("Responder does not exist");
 				}
 				else {
-					System.out.println("Agent "+failure.getSender().getName()+" failed to perform the requested action");
+					System.out.println("Agent "+failure.getSender().getName()+" failed to perform the requested action");					
+					storeTask();
 				}
+				finished = true;
+				storeNotification(ACLMessage.FAILURE);					
 			}
+
+			private void storeTask(){
+				// get the Task from the last message						
+				try {
+			  		ContentElement content = getContentManager().extractContent(msgPrev);
+			  		if (((Action)content).getAction() instanceof Execute){
+	
+				  			Task task = ( (Execute) ((Action)content).getAction() ).getTask();
+				  			task.setResult(evaluation);
+					  		results.add(task);
+				  		
+			  		}		
+			  		
+				} catch (UngroundedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (CodecException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (OntologyException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+							
+			}
+			
 			
 			private void storeNotification(int performative) {
 				
@@ -235,12 +240,12 @@ public abstract class Agent_OptionsManager extends Agent {
 					System.out.println("Agent "+getLocalName()+": computation executed successfully");
 				}
 				else { 	
+					performative = ACLMessage.FAILURE;
 					if (performative == ACLMessage.CANCEL){
-						// there were no tasks to compute => send inform message
-						performative = ACLMessage.INFORM;
+						// there were no tasks to compute => send inform message					
 						System.out.println("Agent "+getLocalName()+": there were no tasks to compute.");
 					}
-					else{
+					else{						
 						System.out.println("Agent "+getLocalName()+": computation failed");
 					}
 				}
@@ -269,7 +274,7 @@ public abstract class Agent_OptionsManager extends Agent {
 					ACLMessage incomingReply = (ACLMessage) getDataStore().get(incomingReplykey);   // TODO incomingReply ~ MyWekaEvaluation -> change to ontology Evaluation
 
 					
-					System.out.println("Agent "+getLocalName()+" finished the goal succesfully, sending the results to the manager.");
+					System.out.println("Agent "+getLocalName()+" finished the goal, sending the results to the manager.");
 				
 					// prepare the outgoing message content:
 					
@@ -337,6 +342,7 @@ public abstract class Agent_OptionsManager extends Agent {
 					 
 					generateNewOptions(evaluation);
 					
+					Agent.setOptions(Options);
 					System.out.println(getLocalName()+": new options for agent "+receiver+" are "
 							+Agent.optionsToString() ); 
 					 

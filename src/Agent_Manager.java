@@ -168,19 +168,27 @@ public class Agent_Manager extends Agent{
 			}
 			
 			private void sendSubscription(ACLMessage result) {
-				System.out.println("Agent: "+getLocalName()+": result: "+result+" "+result.getPerformative());
+				// System.out.println("Agent: "+getLocalName()+": result: "+result+" "+result.getPerformative());
 								
 				// Prepare the msgOut to the request originator				
 				ACLMessage msgOut = incomingRequest.createReply();
 				msgOut.setPerformative(result.getPerformative());
 				
 				String problemGuiId = null;
-				if (result.getPerformative() != ACLMessage.FAILURE){
+			
+				// if (result.getPerformative() != ACLMessage.FAILURE){
 
 					// fill its content
 					Results results = prepareComputationResults(result);
 					if (results != null){
+					 							
+						// write results to the database
+						Iterator resIterator = results.getResults().iterator();					 	
+					 	while (resIterator.hasNext()) {					 		
+					 		DataManagerService.saveResult(myAgent, (Task)resIterator.next());
+					 	}
 						
+					 	
 						writeXMLResults(results);						
 						
 						msgOut.setPerformative(ACLMessage.INFORM);
@@ -208,7 +216,7 @@ public class Agent_Manager extends Agent{
 					else{
 						msgOut.setPerformative(ACLMessage.FAILURE);
 					}
-				}  // end if				
+				// }  // end if				
 		
 				// go through every subscription				
 				java.util.Iterator it = subscriptions.iterator();
@@ -316,7 +324,7 @@ public class Agent_Manager extends Agent{
 		  	
 		  	AchieveREResponder receive_problem = new AchieveREResponder(this, template_inform) {
 		  		protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException, RefuseException {
-		  		System.out.println("Agent "+getLocalName()+": REQUEST received from "+request.getSender().getName()+". Action is "+request.getContent());
+		  		System.out.println("Agent "+getLocalName()+": REQUEST received from "+request.getSender().getName()); // +". Action is "+request.getContent());
 
 			  		// We agree to perform the action. Note that in the FIPA-Request
 			  		// protocol the AGREE message is optional. Return null if you
@@ -717,7 +725,7 @@ public class Agent_Manager extends Agent{
 	
 	protected Results prepareComputationResults(ACLMessage result){
 		Results results = null;
-		// System.out.println("Agent "+getLocalName()+": rrrresult:"+result.getContent());
+		
 		ContentElement content;
 		try {
 			content = getContentManager().extractContent(result);
@@ -736,15 +744,25 @@ public class Agent_Manager extends Agent{
            		 	
                 	if (listOfResults == null){
                 		// there were no tasks computed
-                		// leave the default values                		
+                		// leave the default values
+                		return null;
                 	}
                 	else{
 	           		 	Iterator itr = listOfResults.iterator();
 	           		 	while (itr.hasNext()) {
 	           	            Task next = (Task) itr.next();
-	           	            Evaluation evaluation = next.getResult();	           	         
+	           	            Evaluation evaluation;
+	           	            // if the task failed
+	           	            if (next.getResult() == null){	           	            	
+	           	            	evaluation = new Evaluation();	           	            	
+	           	            	evaluation.setError_rate(Integer.MAX_VALUE);
+	           	            	next.setResult(evaluation);
+	           	            }
+	           	            else{
+	           	            	evaluation = next.getResult();
+	           	            }
 	           	            
-	           	            sumError_rate += evaluation.getError_rate();  // error rate is a manadatory slot		
+	           	            sumError_rate += evaluation.getError_rate();  // error rate is a manadatory slot	           	            
 	           	            
 	           	            // if the value has not been set by the CA, the sum will < 0
 	           	            sumKappa_statistic += evaluation.getKappa_statistic();
@@ -792,12 +810,6 @@ public class Agent_Manager extends Agent{
 	
 	 protected boolean writeXMLResults(Results results){
 	 	String file_name = "xml"+System.getProperty("file.separator")+results.getComputation_id()+".xml"; 
-	 	
-	 	Iterator resIterator = results.getResults().iterator();
-	 	
-	 	while (resIterator.hasNext()) {
-	 		DataManagerService.saveResult(this, (Task)resIterator.next());
-	 	}
 	 	
 		// create the "xml" directory, if it doesn't exist
 		boolean exists = (new File("xml")).exists();

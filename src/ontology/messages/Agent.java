@@ -84,7 +84,7 @@ public class Agent implements Concept{
 	 	while (itr.hasNext()) {
 	 		ontology.messages.Option next_opt = (ontology.messages.Option) itr.next();
 	 		if (next_opt.getData_type().equals("BOOLEAN")){
-	 			if (next_opt.getValue() == "True"){
+	 			if (next_opt.getValue().equals("True")){
 	 				str += "-"+next_opt.getName()+" ";	
 	 			}
 	 		}

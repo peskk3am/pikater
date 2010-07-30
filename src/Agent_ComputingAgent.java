@@ -227,7 +227,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 	  			AchieveREResponder resp =	
 	  		  	new AchieveREResponder(this, template_inform) {
 	  					protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException, RefuseException {
-	  						System.out.println("Agent "+getLocalName()+": REQUEST received from "+request.getSender().getName()+". Action is "+request.getContent());
+	  						System.out.println("Agent "+getLocalName()+": REQUEST received from "+request.getSender().getName()); // +". Action is "+request.getContent());
 	  						if (!working) {
 	  							// We agree to perform the action. Note that in the FIPA-Request
 	  							// protocol the AGREE message is optional. Return null if you
