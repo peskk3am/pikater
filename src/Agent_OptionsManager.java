@@ -329,11 +329,8 @@ public abstract class Agent_OptionsManager extends Agent {
 				} // end if (finished())	
 
 				// save the outgoing message to the dataStore
-				System.out.println("ok1");
-				System.out.println(ACLMessage.FAILURE+" "+performative);
 				String notificationkey = (String) ((AchieveREResponder) parent).RESULT_NOTIFICATION_KEY;
 				getDataStore().put(notificationkey, msgOut);
-				System.out.println("ok2");	
 		
 			}   // end storeNotification
 		

@@ -126,7 +126,11 @@ public class Agent_Manager extends Agent{
 				String[] ID = incomingResponse.getContent().split(" ");
 				String problemId = ID[1];
 			
-				return prepareComputations(incomingRequest, problemId, failure); // Prepare the request to forward to the responder										
+				Vector v = prepareComputations(this, incomingRequest, problemId, failure);
+				if (v.size() == 0){
+					storeNotification(ACLMessage.FAILURE);
+				}
+				return v;								
 			}
 			
 			protected void handleInform(ACLMessage inform) {
@@ -173,7 +177,7 @@ public class Agent_Manager extends Agent{
 				// Prepare the msgOut to the request originator				
 				ACLMessage msgOut = incomingRequest.createReply();
 				msgOut.setPerformative(result.getPerformative());
-				
+									
 				String problemGuiId = null;
 			
 				// if (result.getPerformative() != ACLMessage.FAILURE){
@@ -214,7 +218,8 @@ public class Agent_Manager extends Agent{
 						} 
 					}
 					else{
-						msgOut.setPerformative(ACLMessage.FAILURE);
+						msgOut.setPerformative(ACLMessage.FAILURE);						
+						msgOut.setContent(result.getContent());
 					}
 				// }  // end if				
 		
@@ -376,11 +381,11 @@ public class Agent_Manager extends Agent{
 			
 	}  // end setup
 	
-	protected Vector<ACLMessage> prepareComputations(ACLMessage request, String problemId,
+	protected Vector<ACLMessage> prepareComputations(SendComputation behav, ACLMessage request, String problemId,
 			ACLMessage failure){
-		Vector<ACLMessage> msgVector = new Vector<ACLMessage>();		
 		
-		System.out.println("Agent "+getLocalName()+" failure :"+failure);
+		Vector<ACLMessage> msgVector = new Vector<ACLMessage>();				
+		// System.out.println("Agent "+getLocalName()+" failure :"+failure);
 		
 		ContentElement content;
 		try {
@@ -408,23 +413,33 @@ public class Agent_Manager extends Agent{
 	    	        	   if (a_next.getName() == null){
 	    	        		   String agentType = a_next.getType();	
 	    	        		   
-	    	        		   if (agentType.contains("?")){
+	    	        		   if (agentType.contains("?")){	    	        			   
+	    	        			   	    	        			  	    	        			   
 	    	        			   // TODO set metadata
 	    	        			   Metadata metadata = new Metadata();
-		    	        		   metadata.setNumber_of_attributes(5);
-		    	        		   metadata.setNumber_of_instances(150);
-		    	        		   metadata.setAttribute_type("float");	    	        		   
-		    	        		   metadata.setMissing_values(false);	    	        		   	    	        		   
+		    	        		   // metadata.setNumber_of_attributes(5);
+		    	        		   // metadata.setNumber_of_instances(150);
+		    	        		   // metadata.setAttribute_type("float");	    	        		   
+		    	        		   // metadata.setMissing_values(false);
+	    	        			   metadata.setInternal_name(next_data.getTest_file_name());
 		    	        		   
 		    	        		   a_next = chooseTheBestAgent(metadata);
-		    	        		   ontology.messages.Agent agent_options = onlyGetAgentOptions(a_next.getName());
-	    	        			   
-		    	        		   a_next.setOptions(mergeOptions(agent_options.getOptions(), a_next.getOptions()));
-	    	        			   
-		    	        		   System.out.println("********** Agent "+a_next.getName()+
-		    	        				   " recommended. Options: "+a_next.optionsToString()+"**********");	   	    	        		   
+		    	        		   
+		    	        		   if (a_next == null){
+		    	        			   ACLMessage msg = new ACLMessage(ACLMessage.FAILURE);
+		    	        			   msg.setContent("No metadata available.");
+		    	        			   behav.sendSubscription(msg);		    	        			   
+		    	        		   }
+		    	        		   else{
+			    	        		   ontology.messages.Agent agent_options = onlyGetAgentOptions(a_next.getName());
+			    	        		   a_next.setOptions(mergeOptions(agent_options.getOptions(), a_next.getOptions()));
+		    	        			  		    	        		   
+			    	        		   System.out.println("********** Agent "+a_next.getName()+
+			    	        				   " recommended. Options: "+a_next.optionsToString()+"**********");	   	    	        		   
+		    	        		   }
 	    	        		   }
-	    	        		   else{
+
+	    	        		   if (a_next != null){
 		    	        		   AID aid = null;
 		    	        		   String agentName = null;		    	      	    	        		  	    	        		   
 		    	        		   while (aid == null) { // TODO && System.currentTimeMillis() < timeout){
@@ -437,24 +452,28 @@ public class Agent_Manager extends Agent{
 			    	    					doWait(100);
 			    	    				}
 			    	    			}
-		    	        		   if (aid == null){
-		    	        			   // TODO ! this computation failed
+		    	        		   if (aid == null){	    	        			   
+		    	        			   ACLMessage msg = new ACLMessage(ACLMessage.FAILURE);
+		    	        			   msg.setContent(agentType+" agent could not be created.");
+		    	        			   behav.sendSubscription(msg);		    	        			   
 		    	        		   }
 		    	        		   agentName = aid.getLocalName();
 		    	        		   a_next.setName(agentName);
-	    	        		   }	    	        		   	    	        		   	    	        		   
+	    	        		   }
 	    	        	   }
 	    	        	   
-	    	        	   Computation computation = new Computation();
-	    	        	   computation.setAgent(a_next);
-	    	        	   computation.setData(next_data);
-	    	        	   computation.setProblem_id(problemId);
-	    	        	   computation.setId(problemId+"_"+computation_i);
-	    	        	   computation.setTimeout(problem.getTimeout());
-	    	        	   computation.setMethod(problem.getMethod());
-	    	        	   computation_i++;
-	    	        	   
-	    	        	   msgVector.add( Compute(computation) );
+	    	        	   if (a_next != null){			    	        	
+		    	        	   Computation computation = new Computation();
+		    	        	   computation.setAgent(a_next);
+		    	        	   computation.setData(next_data);
+		    	        	   computation.setProblem_id(problemId);
+		    	        	   computation.setId(problemId+"_"+computation_i);
+		    	        	   computation.setTimeout(problem.getTimeout());
+		    	        	   computation.setMethod(problem.getMethod());
+		    	        	   computation_i++;
+		    	        	   
+		    	        	   msgVector.add( Compute(computation) );
+	    	        	   }
 	    	           } // end while (iteration over files)
 	       	           
 	               	} // end while (iteration over agents List)
@@ -470,8 +489,7 @@ public class Agent_Manager extends Agent{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}	   
-			
-			
+					
 			return msgVector;
 			
 	} // end prepareComputations
@@ -794,10 +812,10 @@ public class Agent_Manager extends Agent{
 	  		}
 		} catch (UngroundedException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			// e.printStackTrace(); return null
 		} catch (CodecException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			// e.printStackTrace(); return null
 		} catch (OntologyException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -808,7 +826,7 @@ public class Agent_Manager extends Agent{
 	} // prepareComputationResult
 
 	
-	 protected boolean writeXMLResults(Results results){
+	protected boolean writeXMLResults(Results results){
 	 	String file_name = "xml"+System.getProperty("file.separator")+results.getComputation_id()+".xml"; 
 	 	
 		// create the "xml" directory, if it doesn't exist
@@ -939,7 +957,14 @@ public class Agent_Manager extends Agent{
 	}
 	
 	
-	private ontology.messages.Agent chooseTheBestAgent(Metadata metadata){
+	private ontology.messages.Agent chooseTheBestAgent(Metadata metadata){						
+		// at least name attribute in metadata has to be filled 
+		boolean hasMetadata = false;
+		if (metadata.getNumber_of_attributes() > -1 && 
+				metadata.getNumber_of_instances() > -1){
+			hasMetadata = true;
+		}
+		
 		// choose the nearest training data
 		List allMetadata = DataManagerService.getAllMetadata(this);
 		
@@ -947,6 +972,15 @@ public class Agent_Manager extends Agent{
 		Iterator itr = allMetadata.iterator();	 		
 		while (itr.hasNext()) {
 	 		Metadata next_md = (Metadata) itr.next();
+
+			// try to look up the file (-> metadata) in the database
+			if (!hasMetadata){
+				if (next_md.getInternal_name().equals(metadata.getInternal_name())){ 
+					metadata = next_md;
+					hasMetadata = true;
+				}
+			}
+					
 	 		int na = next_md.getNumber_of_attributes();
 	 		if (na < minAttributes){ minAttributes = na; }
 	 		if (na > maxAttributes){ maxAttributes = na; }
@@ -958,6 +992,10 @@ public class Agent_Manager extends Agent{
 	 		if (ni > maxInstances){
 	 			maxInstances = ni;
 	 		}	
+		}
+
+		if (!hasMetadata){
+			return null;
 		}
 		
 		System.out.println("*********** files from the table: ");
@@ -983,6 +1021,7 @@ public class Agent_Manager extends Agent{
 
 		// find the agent with the lowest error_rate
 		ontology.messages.Agent agent = DataManagerService.getTheBestAgent(this, nearestInternalName);
+		agent.setName(null); // we want only the type, since the particular agent may not any longer  exist 
 		
 		return agent;		
 		

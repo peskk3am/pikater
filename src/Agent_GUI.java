@@ -389,9 +389,11 @@ public abstract class Agent_GUI extends GuiAgent {
 					// FAILURE notification from the JADE runtime: the receiver
 					// does not exist
 					System.out.println("Responder does not exist");
+					displayResult(failure);
 				}
 				else {
 					System.out.println("Agent "+failure.getSender().getName()+" failed to perform the requested action");
+					displayResult(failure);
 				}
 			}	
 					

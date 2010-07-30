@@ -6,8 +6,8 @@ public class Metadata implements Concept{
 	
 	private String _internal_name;
 	private String _external_name;
-	private int _number_of_instances;
-	private int _number_of_attributes;
+	private int _number_of_instances = -1;
+	private int _number_of_attributes = -1; 
 	private boolean _missing_values;
 	private String _default_task;  // Classification, Regression, Clustering
 	private String _attribute_type; // Categorical, Numerical, Mixed
