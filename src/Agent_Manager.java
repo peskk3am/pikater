@@ -425,6 +425,12 @@ public class Agent_Manager extends Agent{
 	            	while (d_itr.hasNext()) {
 	    	           Data next_data = (Data) d_itr.next();
 	    	           	    	        
+	    	           // enter metadata to the table
+	    	           if (next_data.getMetadata() != null){
+	    	        	   next_data.getMetadata().setInternal_name(next_data.getTrain_file_name());
+	    	        	   DataManagerService.saveMetadata(this, next_data.getMetadata());	    	        	
+	    	           }
+	    	           
 	    	           Iterator a_itr = problem.getAgents().iterator();
 	    	           while (a_itr.hasNext()) {
 	    	        	   ontology.messages.Agent a_next = (ontology.messages.Agent) a_itr.next();	    	       
@@ -436,18 +442,18 @@ public class Agent_Manager extends Agent{
 	    	        	   a_next_copy.setType(a_next.getType());
 	    	        	  
 	    	        	   if (a_next_copy.getName() == null){
-	    	        		   String agentType = a_next.getType();	
-	    	        		   
-	    	        		   
+	    	        		   String agentType = a_next.getType();		    	        		   	    	        		   	    	        		   
+	    	        		   boolean getOptions = false;
 	    	        		   if (agentType.contains("?")){	    	        			   
-	    	        			   	    	        			  	    	        			   
-	    	        			   // TODO set metadata
-	    	        			   Metadata metadata = new Metadata();
-		    	        		   // metadata.setNumber_of_attributes(5);
-		    	        		   // metadata.setNumber_of_instances(150);
-		    	        		   // metadata.setAttribute_type("float");	    	        		   
-		    	        		   // metadata.setMissing_values(false);
-	    	        			   metadata.setInternal_name(next_data.getTest_file_name());
+	    	        			   
+	    	        			   Metadata metadata;
+	    	        			   if (next_data.getMetadata() == null){
+	    	        				   metadata = new Metadata(); 
+	    	        				   metadata.setInternal_name(next_data.getTest_file_name());
+	    	        			   }
+	    	        			   else{
+	    	        				   metadata = next_data.getMetadata();
+	    	        			   }
 		    	        		   
 		    	        		   a_next = chooseTheBestAgent(metadata);
 		    	        		   
@@ -456,12 +462,11 @@ public class Agent_Manager extends Agent{
 		    	        			   msg.setContent("No metadata available.");
 		    	        			   behav.sendSubscription(msg);		    	        			   
 		    	        		   }
-		    	        		   else{
-			    	        		   ontology.messages.Agent agent_options = onlyGetAgentOptions(a_next.getName());
-			    	        		   a_next.setOptions(mergeOptions(agent_options.getOptions(), a_next.getOptions()));
-		    	        			  		    	        		   
-			    	        		   System.out.println("********** Agent "+a_next.getName()+
-			    	        				   " recommended. Options: "+a_next.optionsToString()+"**********");	   	    	        		   
+		    	        		   else{	    	        			   
+		    	        			   getOptions = true;
+		    	        			   agentType = a_next.getType();
+		    	        			   System.out.println("********** Agent "+agentType+
+			    	        				   " recommended. Options: "+a_next.optionsToString()+"**********");		    	        			  
 		    	        		   }
 	    	        		   }
 
@@ -483,9 +488,16 @@ public class Agent_Manager extends Agent{
 		    	        			   msg.setContent(agentType+" agent could not be created.");
 		    	        			   behav.sendSubscription(msg);		    	        			   
 		    	        		   }
-		    	        		   agentName = aid.getLocalName();
-		    	        		   // a_next.setName(agentName);
-		    	        		   a_next_copy.setName(agentName);
+		    	        		   else{
+			    	        		   agentName = aid.getLocalName();
+			    	        		   // a_next.setName(agentName);
+			    	        		   a_next_copy.setName(agentName);
+		    	        			   
+		    	        			   if (getOptions){
+		    	        				   ontology.messages.Agent agent_options = onlyGetAgentOptions(agentName);
+		    	        				   a_next_copy.setOptions(mergeOptions(agent_options.getOptions(), a_next.getOptions()));
+		    	        			   }
+		    	        		   }
 	    	        		   }
 	    	        	   }
 	    	        	   
@@ -1109,7 +1121,7 @@ public class Agent_Manager extends Agent{
 		// find the agent with the lowest error_rate
 		ontology.messages.Agent agent = DataManagerService.getTheBestAgent(this, nearestInternalName);
 		agent.setName(null); // we want only the type, since the particular agent may not any longer  exist 
-		
+
 		return agent;		
 		
 		// TODO - testing data?

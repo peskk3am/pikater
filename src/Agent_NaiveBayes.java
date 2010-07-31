@@ -37,7 +37,8 @@ public class Agent_NaiveBayes extends Agent_WekaCA{
 		 // try {
 			if (OPTIONS.length > 0){
 				cls.setOptions(OPTIONS);
-			}
+			}					
+			
 			cls.buildClassifier(train);
 			state = states.TRAINED;  // change agent state
 			OPTIONS = cls.getOptions();

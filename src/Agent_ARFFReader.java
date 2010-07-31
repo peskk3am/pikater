@@ -115,7 +115,7 @@ public class Agent_ARFFReader extends Agent {
 				m.setNumber_of_attributes(((Instance)instances.getInstances().iterator().next()).getValues().size());
 			}
 			m.setNumber_of_instances(instances.getInstances().size());
-			DataManagerService.saveMetadata(this, m);
+			// DataManagerService.saveMetadata(this, m);
 			
 			// Prepare the content
 			Result result = new Result((Action)content, instances);

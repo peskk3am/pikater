@@ -6,18 +6,46 @@
 # learning rate, default 0.3; 1 arguments
 $ L float 1 1 r 0 1
 
+# Momentum Rate for the backpropagation algorithm., Default = 0.2
+$ M float 1 1 r 0 1
+
+#  Number of epochs to train through.
+$ N int 1 1 r 100 1000
+
+#  Percentage size of validation set to use to terminate
+#  training (if this is non zero it can pre-empt num of epochs.
+#  (Value should be between 0 - 100, Default = 0).
+$ V int 1 1 r 0 100
+
+#  The value used to seed the random number generator
+#  (Value should be >= 0 and and a long, Default = 0).
+$ S int 1 1 r 0 MAXINT
+
+#  The consequetive number of errors allowed for validation
+#  testing before the netwrok terminates.
+#  (Value should be > 0, Default = 20).
+$ E int 1 1 r 0 50
+
 # Learning rate decay will occur; 0 arguments
 $ D boolean
 
 # Normalizing the attributes will NOT be done.
-# $ I boolean
+$ I boolean
 
-# Momentum Rate for the backpropagation algorithm., Default = 0.2
-$ M float 1 1 r 0 1
+#  GUI will be opened.
+#  (Use this to bring up a GUI).
+$ G boolean
 
 # The hidden layers to be created for the network.
 # (Value should be a list of comma seperated Natural numbers or the letters 'a' = (attribs + classes) / 2,
 # 'i' = attribs, 'o' = classes, 't' = attribs .+ classes) For wildcard values,Default = a).
 # type list - length (2 numbers), range (2 numbers)  ... max
-
 $ H mixed 1 3 s 3, 4, 5, i, o
+
+#  A NominalToBinary filter will NOT automatically be used.
+#  (Set this to not use a NominalToBinary filter).
+$ B boolean
+
+#  Normalizing a numeric class will NOT be done.
+#  (Set this to not normalize the class if it's numeric).
+$ C boolean

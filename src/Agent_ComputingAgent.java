@@ -258,7 +258,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 		   * Fills the OPTIONS array and current_task.
 		   */
 		 current_task = task;
-		 OPTIONS = task.getAgent().optionsToString().split(" ");
+		 OPTIONS = task.getAgent().optionsToString().split("[ ]+");		 		    
 		 
 		 return true;
 	 }  // end loadConfiguration
@@ -573,7 +573,9 @@ public abstract class Agent_ComputingAgent extends Agent{
   						catch (Exception e){
   							working = false;
   							success = false;
-  							failureMsg(e.getMessage());  							
+  							failureMsg(e.getMessage()); 
+  							System.out.println("Error: "+e.getMessage()+" ");
+  							e.printStackTrace();
   						}
   					}
  					

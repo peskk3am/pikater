@@ -1028,17 +1028,18 @@ public abstract class Agent_GUI extends GuiAgent {
 	        	   int d_id = addDatasetToProblem(p_id, next_dataset.getAttributeValue("train"), next_dataset.getAttributeValue("test"));
 	        	   
 	        	   java.util.List metadata = next_dataset.getChildren("metadata");
-		           java.util.Iterator md_itr = metadata.iterator();
-		           Element next_metadata = (Element)md_itr.next();
-		      
-		           addMetadataToDataset(d_id, next_dataset.getAttributeValue("train"),
-	        			   next_metadata.getAttributeValue("missing_values"),
-	        			   next_metadata.getAttributeValue("number_of_attributes"),
-	        			   next_metadata.getAttributeValue("number_of_instances"),
-	        			   next_metadata.getAttributeValue("attribute_type"),
-	        			   next_metadata.getAttributeValue("default_task")
-	        	   );
-	        	   
+		           if (metadata.size() > 0){
+		        	   java.util.Iterator md_itr = metadata.iterator();
+			           Element next_metadata = (Element)md_itr.next();
+			      
+			           addMetadataToDataset(d_id, next_dataset.getAttributeValue("train"),
+		        			   next_metadata.getAttributeValue("missing_values"),
+		        			   next_metadata.getAttributeValue("number_of_attributes"),
+		        			   next_metadata.getAttributeValue("number_of_instances"),
+		        			   next_metadata.getAttributeValue("attribute_type"),
+		        			   next_metadata.getAttributeValue("default_task")
+		        	   );
+		           }	        	   
 	           }
 	           
 	           java.util.List _agents = next_problem.getChildren("agent");

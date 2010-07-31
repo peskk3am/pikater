@@ -45,19 +45,23 @@ public class Agent implements Concept{
     			// if the next array element is again an option name, 
     			// (or it is the last element)
     			// => it's a boolean parameter
+    			
+    			Option opt = new Option();
     			String value;
     			if (i == optArray.length-1){
     				value = "True";
+    				opt.setData_type("BOOLEAN");
     			}
     			else {
     				if (optArray[i+1].startsWith("-")){
     					value = "True";
+    					opt.setData_type("BOOLEAN");
     				}
     				else{
     					value = optArray[i+1];    				
     				}
     			}
-    			Option opt = new Option();
+    			
     			opt.setName(name);
     			opt.setValue(value);
     		

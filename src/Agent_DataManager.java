@@ -306,9 +306,17 @@ public class Agent_DataManager extends Agent {
 
 						String query = "UPDATE metadata SET "; 												 						
 						query += "numberOfInstances=" + metadata.getNumber_of_instances()+ ", ";
-						query += "numberOfAttributes=" + metadata.getNumber_of_attributes()+" ";
+						query += "numberOfAttributes=" + metadata.getNumber_of_attributes()+", ";
+						query += "missingValues=" + metadata.getMissing_values();
+						if (metadata.getAttribute_type() != null){
+							query += ", attributeType=\'" + metadata.getAttribute_type()+"\' ";
+						}
+						if (metadata.getDefault_task() != null){
+							query += ", defaultTask=\'" + metadata.getDefault_task()+"\' ";
+						}
+																	
 						// the external file name contains part o the path (db/files/name) -> split and use only the [2] part
-						query += "WHERE internalFilename=\'"+metadata.getInternal_name().split(Pattern.quote(System.getProperty("file.separator")))[2]+"\'"; 						
+						query += " WHERE internalFilename=\'"+metadata.getInternal_name().split(Pattern.quote(System.getProperty("file.separator")))[2]+"\'"; 						
 						
 						log.info("Executing query: " + query);
 					
