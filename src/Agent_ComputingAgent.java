@@ -356,7 +356,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 	    	public CompAgentResultsServer(Agent agent) {
 	    		super(agent);
 	    	}
-
+	    	//TODO: will we accept or refuse the request? (working, size of taksFIFO, latency time...)
 	    	boolean acceptTask(){
 	    		return true/*taskFIFO.size()<=MAX_TASKS*/;
 	    	}
@@ -426,7 +426,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 	    	void failureMsg(String desc){
 	    		result_msg = incoming_request.createReply();
 	    		result_msg.setPerformative(ACLMessage.FAILURE);
-	    		result_msg.setContent("("+desc+")");
+	    		result_msg.setContent(desc);
 	    	}
 
 	    	/*Get a message from the FIFO of tasks*/
@@ -600,7 +600,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 	    				catch (Exception e){
 	    					success = false;
 	    					working = false;
-	    					failureMsg("unexpected-error");
+	    					failureMsg(e.getMessage());
 	    				}
 	    			}
 
