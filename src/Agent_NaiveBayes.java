@@ -48,7 +48,7 @@ public class Agent_NaiveBayes extends Agent_WekaCA{
 		//	// TODO Auto-generated catch block
 		//	e.printStackTrace();
 		// }
-		 working = false;
+		working = false;
      }  // end train
      
 	 protected Evaluation test(){

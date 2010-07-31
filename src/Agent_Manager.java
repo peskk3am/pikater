@@ -101,6 +101,8 @@ public class Agent_Manager extends Agent{
 	double minInstances = Integer.MAX_VALUE;
 	double maxInstances = Integer.MIN_VALUE;
 	
+	Vector<AID> busyAgents = new Vector<AID>();  // by this manager
+	
 	private class SendComputation extends AchieveREInitiator{
 			private ACLMessage failure = null;
 			private ACLMessage incomingRequest = null;
@@ -139,8 +141,18 @@ public class Agent_Manager extends Agent{
 				// killAgent(inform.getSender().getName());
 			}
 			
-			protected void handleFailure(ACLMessage failure) {
+			protected void handleFailure(ACLMessage failure) {			
 				System.out.println("Agent:"+getLocalName()+": Agent "+failure.getSender().getName()+" sent a failure.");
+
+				if (failure.getSender().equals(myAgent.getAMS())) {
+					// FAILURE notification from the JADE runtime: the receiver does not exist
+					System.out.println("Responder does not exist");
+				}
+				else {
+					System.out.println("Agent "+failure.getSender().getName()+" failed to perform the requested action");					
+				}
+				sendSubscription(failure);
+								
 				// if (System.currentTimeMillis() < timeout){
 					// this.reset();
 				//	this.failure = failure;
@@ -149,12 +161,11 @@ public class Agent_Manager extends Agent{
 				//else{
 				//	sendSubscription(failure);
 					// killAgent(failure.getSender().getName());
-				//}
+				//}				
 				
-				sendSubscription(failure);
 				// killAgent(failure.getSender().getName());
 			}
-			
+
 			protected void handleAllResultNotifications(java.util.Vector resultNotifications) {
 			/*  JADE documentation: 
 			 * Known bugs: The handler handleAllResponses is not called if the 
@@ -232,6 +243,14 @@ public class Agent_Manager extends Agent{
 						subscription.notify(msgOut);
 					}
 				}
+				try{
+					String name = ((Task)results.getResults().iterator().next()).getAgent().getName();
+					busyAgents.remove(new AID(name, AID.ISLOCALNAME));
+				}
+				catch (Exception e){
+					// do nothing (we don't need to remove an agent, if there wasn't any)
+				}
+				
 				//*/					            					
 			}
 			
@@ -402,16 +421,25 @@ public class Agent_Manager extends Agent{
 	            	problem.setId(problemId);
 	            	
 	            	int computation_i = 0;
-	       		 	Iterator a_itr = problem.getAgents().iterator();	 
-	            	while (a_itr.hasNext()) {
-	    	           ontology.messages.Agent a_next = (ontology.messages.Agent) a_itr.next();
-	    	           
-	    	           Iterator d_itr = problem.getData().iterator();	 
-	    	           while (d_itr.hasNext()) {
-	    	        	   Data next_data = (Data) d_itr.next();
-	    	        	   
-	    	        	   if (a_next.getName() == null){
+	            	Iterator d_itr = problem.getData().iterator();	 
+	            	while (d_itr.hasNext()) {
+	    	           Data next_data = (Data) d_itr.next();
+	    	           	    	        
+	    	           Iterator a_itr = problem.getAgents().iterator();
+	    	           while (a_itr.hasNext()) {
+	    	        	   ontology.messages.Agent a_next = (ontology.messages.Agent) a_itr.next();	    	       
+    	        		   
+	    	        	   ontology.messages.Agent a_next_copy = new ontology.messages.Agent();
+	    	        	   a_next_copy.setGui_id(a_next.getGui_id());
+	    	        	   a_next_copy.setName(a_next.getName());
+	    	        	   a_next_copy.setOptions(a_next.getOptions());
+	    	        	   a_next_copy.setType(a_next.getType());
+
+	    	        	   System.out.println("aaaaaaaaaaaaaaaaaaaa"+a_next.getType()+" "+a_next.getName());
+	    	        	   if (a_next_copy.getName() == null){
+	    	        		   System.out.println("aaaaaaaaaaaaaaaaaaa name"+a_next.getType());
 	    	        		   String agentType = a_next.getType();	
+	    	        		   
 	    	        		   
 	    	        		   if (agentType.contains("?")){	    	        			   
 	    	        			   	    	        			  	    	        			   
@@ -445,12 +473,12 @@ public class Agent_Manager extends Agent{
 		    	        		   while (aid == null) { // TODO && System.currentTimeMillis() < timeout){
 			    	    				// try until you find agent of the given type or you manage to create it	    	        			    
 		    	        			    aid = getAgentByType(agentType);
-			    	    				if (aid == null){
+			    	    				//if (aid == null){
 			    	    					// agent of given type doesn't exist
-			    	    					agentName = generateName(agentType);
-			    	    					aid = createAgent("Agent_"+agentType, agentName);
-			    	    					doWait(100);
-			    	    				}
+			    	    				//	agentName = generateName(agentType);
+			    	    				//	aid = createAgent("Agent_"+agentType, agentName);
+			    	    				//	doWait(100);
+			    	    				//}
 			    	    			}
 		    	        		   if (aid == null){	    	        			   
 		    	        			   ACLMessage msg = new ACLMessage(ACLMessage.FAILURE);
@@ -458,13 +486,14 @@ public class Agent_Manager extends Agent{
 		    	        			   behav.sendSubscription(msg);		    	        			   
 		    	        		   }
 		    	        		   agentName = aid.getLocalName();
-		    	        		   a_next.setName(agentName);
+		    	        		   // a_next.setName(agentName);
+		    	        		   a_next_copy.setName(agentName);
 	    	        		   }
 	    	        	   }
 	    	        	   
-	    	        	   if (a_next != null){			    	        	
-		    	        	   Computation computation = new Computation();
-		    	        	   computation.setAgent(a_next);
+	    	        	   if (a_next != null){
+		    	        	   Computation computation = new Computation();		    	        	   
+		    	        	   computation.setAgent(a_next_copy);
 		    	        	   computation.setData(next_data);
 		    	        	   computation.setProblem_id(problemId);
 		    	        	   computation.setId(problemId+"_"+computation_i);
@@ -520,10 +549,51 @@ public class Agent_Manager extends Agent{
 			return o1_CA;
 	}
 	
+	
+	private boolean isBusy(AID agent){
+		
+		ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
+		request.addReceiver(agent);
+		
+		request.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+		
+		request.setLanguage(codec.getName());
+		request.setOntology(ontology.getName());
+		request.setReplyByDate(new Date(System.currentTimeMillis() + 200));
+		
+		ontology.messages.GetOptions get = new ontology.messages.GetOptions();
+		Action a = new Action();
+		a.setAction(get);
+		a.setActor(this.getAID());
+		
+		try {
+			// Let JADE convert from Java objects to string
+			getContentManager().fillContent(request, a);
+			
+			ACLMessage r = FIPAService.doFipaRequestClient(this, request);
+			
+			if (r != null) {
+				return false;
+			}
+		}
+		catch (CodecException ce) {
+			ce.printStackTrace();
+		}
+		catch (OntologyException oe) {
+			oe.printStackTrace();
+		}
+		catch (FIPAException fe) {
+			fe.printStackTrace();
+		}
+		
+		return true;		
+	}
+	
 	public AID getAgentByType(String agentType){
+		
 		AID[] Agents;
 		
-		System.out.println(agentType);
+		// System.out.println("getAgentByType"+agentType);
 		// Make the list of agents of given type
 		DFAgentDescription template = new DFAgentDescription();
         ServiceDescription sd = new ServiceDescription();
@@ -535,18 +605,37 @@ public class Agent_Manager extends Agent{
         	Agents = new AID[result.length];
           
           for (int i = 0; i < result.length; ++i) {
-       	   Agents[i] = result[i].getName();
+       	  Agents[i] = result[i].getName();
 	          	System.out.println(Agents[i].getName());
           }
 
-          if (Agents.length > 0){
-              // choose one
-              Random generator = new Random();
-       	   int rnd = generator.nextInt(Agents.length);
-	           return Agents[rnd];
+          if (Agents.length == 0){
+    		  // create agent
+    		  String agentName = generateName(agentType);
+    		  AID a = createAgent("Agent_"+agentType, agentName);
+    		  busyAgents.add(a);
+    		  return a;        	  
           }
-          else {
-       	   return null;
+          else{
+              // choose one
+              // Random generator = new Random();
+        	  // int rnd = generator.nextInt(Agents.length);
+        	  // return Agents[rnd];
+        	  int i = 0;  
+        	  while ( (isBusy(Agents[i]) || busyAgents.contains(Agents[i])) && i < Agents.length-1 ){        		  
+        		  i++;
+        	  }
+        	  if (i < Agents.length-1){
+        		  busyAgents.add(Agents[i]);
+        		  return Agents[i];
+        	  }
+        	  else{
+        		  String agentName = generateName(agentType);
+        		  AID a = createAgent("Agent_"+agentType, agentName);
+        		  busyAgents.add(a);
+        		  return a;
+        	  }
+
           }
         }
         catch (FIPAException fe) {

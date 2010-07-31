@@ -336,7 +336,7 @@ public class MessagesOntology extends Ontology {
 			as = (AgentActionSchema)getSchema(GET_OPTIONS);
 			
 			as = (AgentActionSchema)getSchema(EXECUTE);
-	    	as.add(EXECUTE_TASK, (ConceptSchema)getSchema(TASK));
+	    	as.add(EXECUTE_TASK, (ConceptSchema)getSchema(TASK), ObjectSchema.OPTIONAL);
 
 	    	as = (AgentActionSchema)getSchema(IMPORT_FILE);
 	    	as.add(IMPORT_USER, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));
