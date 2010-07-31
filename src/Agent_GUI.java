@@ -59,6 +59,7 @@ public abstract class Agent_GUI extends GuiAgent {
 		
 	private int problem_id = 0;
 	private int agent_id = 0;
+	private int data_id = 0;
 	
 	private long timeout = 10000; 
 	
@@ -636,7 +637,7 @@ public abstract class Agent_GUI extends GuiAgent {
 		}
 		
 	}
-	protected void addDatasetToProblem(int _problem_id, String _train, String _test){
+	protected int addDatasetToProblem(int _problem_id, String _train, String _test){
 		// get the problem
 		for (Enumeration pe = problems.elements() ; pe.hasMoreElements() ;) {
 			Problem next_problem = (Problem)pe.nextElement();
@@ -650,6 +651,38 @@ public abstract class Agent_GUI extends GuiAgent {
 			        next_problem.setData(data);
 				}
 			}
+		}
+		return data_id++;
+	}
+	
+	protected void addMetadataToDataset(int d_id, String file_name, String missing_values, String number_of_attributes,
+	   			String number_of_instances, String attribute_type, String default_task ){
+		
+		for (Enumeration pe = problems.elements() ; pe.hasMoreElements() ;) {
+			Problem next_problem = (Problem)pe.nextElement();
+			
+			Iterator itr = next_problem.getData().iterator();	 		   		 
+   		 	while (itr.hasNext()){
+   		 		Data next_data = (Data) itr.next();
+   		 		if (next_data.getGui_id() == d_id){
+   		 			Metadata m = new Metadata();
+   		 			m.setAttribute_type(attribute_type);
+   		 			m.setDefault_task(default_task);
+   		 			m.setExternal_name(file_name);
+   		 			if (missing_values != null){
+	   		 			if (missing_values.equals("True")){
+	   		 				m.setMissing_values(true);
+	   		 			}
+	   		 			else {
+	   		 				m.setMissing_values(false);
+	   		 			}
+   		 			}
+   		 			m.setNumber_of_attributes(Integer.parseInt(number_of_attributes));
+   		 			m.setNumber_of_instances(Integer.parseInt(number_of_instances));
+   		 			
+   		 			next_data.setMetadata(m);
+   		 		}
+   		 	}
 		}
 	}
 	
@@ -989,10 +1022,23 @@ public abstract class Agent_GUI extends GuiAgent {
 	           }
 	           
 	           java.util.List dataset = next_problem.getChildren("dataset");
-	           java.util.Iterator fn_itr = dataset.iterator();	 
-	           while (fn_itr.hasNext()) {
-	        	   Element next_dataset = (Element) fn_itr.next();
-	        	   addDatasetToProblem(p_id, next_dataset.getAttributeValue("train"), next_dataset.getAttributeValue("test"));
+	           java.util.Iterator ds_itr = dataset.iterator();	 
+	           while (ds_itr.hasNext()) {
+	        	   Element next_dataset = (Element) ds_itr.next();
+	        	   int d_id = addDatasetToProblem(p_id, next_dataset.getAttributeValue("train"), next_dataset.getAttributeValue("test"));
+	        	   
+	        	   java.util.List metadata = next_dataset.getChildren("metadata");
+		           java.util.Iterator md_itr = metadata.iterator();
+		           Element next_metadata = (Element)md_itr.next();
+		      
+		           addMetadataToDataset(d_id, next_dataset.getAttributeValue("train"),
+	        			   next_metadata.getAttributeValue("missing_values"),
+	        			   next_metadata.getAttributeValue("number_of_attributes"),
+	        			   next_metadata.getAttributeValue("number_of_instances"),
+	        			   next_metadata.getAttributeValue("attribute_type"),
+	        			   next_metadata.getAttributeValue("default_task")
+	        	   );
+	        	   
 	           }
 	           
 	           java.util.List _agents = next_problem.getChildren("agent");

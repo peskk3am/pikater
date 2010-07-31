@@ -28,6 +28,7 @@ public class MessagesOntology extends Ontology {
 	  public static final String DATA = "data";
 	  public static final String DATA_TRAIN_FILE_NAME = "train_file_name";
 	  public static final String DATA_TEST_FILE_NAME = "test_file_name";
+	  public static final String DATA_METADATA = "metadata";
 	  
 	  public static final String COMPUTATION = "COMPUTATION";
 	  public static final String COMPUTATION_ID = "id";
@@ -249,6 +250,7 @@ public class MessagesOntology extends Ontology {
 			cs = (ConceptSchema)getSchema(DATA);
 			cs.add(DATA_TRAIN_FILE_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 			cs.add(DATA_TEST_FILE_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+			cs.add(DATA_METADATA, (ConceptSchema)getSchema(METADATA), ObjectSchema.OPTIONAL);
 	    	
 	    	cs = (ConceptSchema)getSchema(INTERVAL);
 	    	cs.add(INTERVAL_MIN, (PrimitiveSchema)getSchema(BasicOntology.FLOAT));
@@ -312,7 +314,7 @@ public class MessagesOntology extends Ontology {
 	    	cs.add(INSTANCE_MISSING, (PrimitiveSchema)getSchema(BasicOntology.BOOLEAN), 0, ObjectSchema.UNLIMITED);
 
 	    	cs = (ConceptSchema)getSchema(METADATA);
-	    	cs.add(METADATA_INTERNAL_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	cs.add(METADATA_INTERNAL_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 	    	cs.add(METADATA_EXTERNAL_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 	    	cs.add(METADATA_NUMBER_OF_INSTANCES, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));
 	    	cs.add(METADATA_NUMBER_OF_ATTRIBUTES, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));

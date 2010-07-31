@@ -434,10 +434,8 @@ public class Agent_Manager extends Agent{
 	    	        	   a_next_copy.setName(a_next.getName());
 	    	        	   a_next_copy.setOptions(a_next.getOptions());
 	    	        	   a_next_copy.setType(a_next.getType());
-
-	    	        	   System.out.println("aaaaaaaaaaaaaaaaaaaa"+a_next.getType()+" "+a_next.getName());
+	    	        	  
 	    	        	   if (a_next_copy.getName() == null){
-	    	        		   System.out.println("aaaaaaaaaaaaaaaaaaa name"+a_next.getType());
 	    	        		   String agentType = a_next.getType();	
 	    	        		   
 	    	        		   
