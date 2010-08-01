@@ -124,7 +124,7 @@ public class Agent_GUI_WS extends Agent_GUI {
 						
 						while (it.hasNext()) {
 							String s = (String)it.next();
-							addDatasetToProblem(problemID, s, s);
+							addDatasetToProblem(problemID, s, s, null, null);
 						}
 						
 						it = sp.getAgentDescriptions().iterator();

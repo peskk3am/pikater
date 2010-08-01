@@ -54,6 +54,8 @@ public abstract class Agent_OptionsManager extends Agent {
 	 	 
 		 private String trainFileName;
 		 private String testFileName;
+		 
+		 private Computation receivedComputation;
 
 		 private String receiver;
 	 	 private String computation_id;
@@ -105,6 +107,7 @@ public abstract class Agent_OptionsManager extends Agent {
 			  		ContentElement content = getContentManager().extractContent(incomingRequest);
 			  		if (((Action)content).getAction() instanceof Compute){
 	                    Computation computation = (Computation)((Compute) ((Action)content).getAction()).getComputation();
+	                    receivedComputation = computation;
 	                    Agent = computation.getAgent();
 	                    Options = Agent.getOptions();
 					  	trainFileName = computation.getData().getTrain_file_name();
@@ -384,15 +387,16 @@ public abstract class Agent_OptionsManager extends Agent {
 					String id = computation_id+"_"+task_i;
 					task_i++;
 					task.setId(id);
-					task.setComputation_id(computation_id);
+					task.setComputation_id(computation_id);  // TODO vzit z receivedComputation
 					task.setProblem_id(problem_id);
 					// task.setOptions(opt);
 
-					Data data = new Data();
-					data.setTrain_file_name(trainFileName);
-					data.setTest_file_name(testFileName);
-					task.setData(data);
-										
+					// Data data = new Data();
+					// data.setTrain_file_name(trainFileName);
+					// data.setTest_file_name(testFileName);
+					
+					// task.setData(data);
+					task.setData(receivedComputation.getData());				
 					task.setAgent(Agent);
 					
 					execute.setTask(task);

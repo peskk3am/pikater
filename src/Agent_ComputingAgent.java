@@ -48,7 +48,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 protected ontology.messages.Agent agent_options = null;
 	 
 	 protected Instances data; // data read from fileName file
-	 Instances train;  // TODO - divide data
+	 Instances train; 
 	 DataInstances onto_train;
 	 Instances test;
 	 DataInstances onto_test;
@@ -66,6 +66,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 	
 	 protected abstract void train() throws Exception;
 	 protected abstract ontology.messages.Evaluation evaluateCA();
+	 protected abstract DataInstances getPredictions(Instances test, DataInstances onto_test);
 	 
 	 public abstract String getAgentType();
 	 
@@ -390,6 +391,9 @@ public abstract class Agent_ComputingAgent extends Agent{
 	    	ontology.messages.Evaluation eval;
 	    	String train_fn;
 	    	String test_fn;
+	    	String output;
+	    	String mode;
+	    	
 	    	void failureMsg(String desc){
 	    		result_msg = incoming_request.createReply();
 	    		result_msg.setPerformative(ACLMessage.FAILURE);
@@ -473,14 +477,18 @@ public abstract class Agent_ComputingAgent extends Agent{
   						eval = null;
   						success = true;
   						Data data = execute_action.getTask().getData();
+  						output = data.getOutput();
+  						mode = data.getMode();
+  						
   						//Get training data
-  						train_fn = data.getTrain_file_name();
-						AchieveREInitiator get_train_behaviour = (AchieveREInitiator) ((ProcessAction)parent).getState(GETTRAINDATA_STATE);
+  						train_fn = data.getTrain_file_name();  						  							  						
+  						AchieveREInitiator get_train_behaviour = (AchieveREInitiator) ((ProcessAction)parent).getState(GETTRAINDATA_STATE);
   						if (!train_fn.equals(trainFileName)){
   							get_train_behaviour.reset(sendGetDataReq(train_fn));
   						}else{
   							get_train_behaviour.reset(null);
-  						}
+  						}  						
+  					
   						//Get testing data
 						test_fn = data.getTest_file_name();
 						AchieveREInitiator get_test_behaviour = (AchieveREInitiator) ((ProcessAction)parent).getState(GETTESTDATA_STATE);
@@ -536,14 +544,14 @@ public abstract class Agent_ComputingAgent extends Agent{
   							onto_test= _test;
   							test = onto_test.toWekaInstances();
   							test.setClassIndex(test.numAttributes() - 1);
+  							
   							next = NEXT_JMP;
   							return;
   						}else{
   							next = LAST_JMP;
   							failureMsg("No test data received from the reader agent: Wrong content.");
   							return;
-  						}
-  						 
+  						}  						 
   					}
   					
   					protected void handleFailure(ACLMessage failure) {
@@ -560,15 +568,26 @@ public abstract class Agent_ComputingAgent extends Agent{
   				
   				registerState(new Behaviour(a){
   					
-  					public void action(){
+  					public void action(){  						
   						//Train&test		  							
   						try{
-  							if(state != states.TRAINED) { 
-  								train(); 
-  								if(state == states.TRAINED){
-  									eval = evaluateCA();
+  							if (mode.equals("test_only")){
+  								eval = evaluateCA();
+  		  						if (output.equals("predictions")){
+  		  							eval.setData_table(getPredictions(test, onto_test));
   								}
-  							}			
+  							}
+  							else{
+  								if(state != states.TRAINED) { 
+	  								train(); 
+	  								if(state == states.TRAINED){
+	  									eval = evaluateCA();
+	  	  		  						if (output.equals("predictions")){	  	  		  							
+	  	  		  							eval.setData_table(getPredictions(test, onto_test));
+	  	  								}
+	  								}
+	  							}
+  							}  							
   						}
   						catch (Exception e){
   							working = false;

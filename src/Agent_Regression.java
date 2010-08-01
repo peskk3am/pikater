@@ -7,6 +7,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Vector;
 
+import ontology.messages.DataInstances;
+
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.functions.RBFNetwork;
@@ -182,6 +184,13 @@ public class Agent_Regression extends Agent_ComputingAgent {
 		System.out.println(getLocalName()+" "+getOptions());
 
 		working = false;
+	}
+
+	@Override
+	protected DataInstances getPredictions(Instances test,
+			DataInstances onto_test) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

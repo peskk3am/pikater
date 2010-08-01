@@ -6,6 +6,8 @@ public class Data implements Concept{
 	private String _train_file_name;
 	private String _test_file_name;
 	private Metadata _metadata;
+	private String _output = "evaluation_only"; // "predictions"
+	private String _mode = "train_test";  // test_only, train_test
 	
 	private int _gui_id;  // not included in ontology
 	
@@ -27,11 +29,23 @@ public class Data implements Concept{
 	public Metadata getMetadata() {
 		return _metadata;
 	}
+	public void setOutput(String _output) {
+		this._output = _output;
+	}
+	public String getOutput() {
+		return _output;
+	}
 	public void setGui_id(int _gui_id) {
 		this._gui_id = _gui_id;
 	}
 	public int getGui_id() {
 		return _gui_id;
+	}
+	public void setMode(String mode) {
+		_mode = mode;
+	}
+	public String getMode() {
+		return _mode;
 	}
 
 }

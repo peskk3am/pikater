@@ -637,7 +637,7 @@ public abstract class Agent_GUI extends GuiAgent {
 		}
 		
 	}
-	protected int addDatasetToProblem(int _problem_id, String _train, String _test){
+	protected int addDatasetToProblem(int _problem_id, String _train, String _test, String _output, String _mode){		
 		// get the problem
 		for (Enumeration pe = problems.elements() ; pe.hasMoreElements() ;) {
 			Problem next_problem = (Problem)pe.nextElement();
@@ -647,6 +647,12 @@ public abstract class Agent_GUI extends GuiAgent {
 					Data d = new Data();
 					d.setTrain_file_name("data" + System.getProperty("file.separator") + "files" + System.getProperty("file.separator") + DataManagerService.translateFilename(this, 1, _train));
 					d.setTest_file_name("data" + System.getProperty("file.separator") + "files" + System.getProperty("file.separator") + DataManagerService.translateFilename(this, 1, _test));
+					if (_output != null){
+						d.setOutput(_output);
+					}
+					if (_mode != null){
+						d.setMode(_mode);
+					}
 					data.add(d);
 			        next_problem.setData(data);
 				}
@@ -1025,7 +1031,10 @@ public abstract class Agent_GUI extends GuiAgent {
 	           java.util.Iterator ds_itr = dataset.iterator();	 
 	           while (ds_itr.hasNext()) {
 	        	   Element next_dataset = (Element) ds_itr.next();
-	        	   int d_id = addDatasetToProblem(p_id, next_dataset.getAttributeValue("train"), next_dataset.getAttributeValue("test"));
+	        	   int d_id = addDatasetToProblem(p_id, next_dataset.getAttributeValue("train"),
+	        			   next_dataset.getAttributeValue("test"),
+	        			   next_dataset.getAttributeValue("output"),
+	        			   next_dataset.getAttributeValue("mode"));
 	        	   
 	        	   java.util.List metadata = next_dataset.getChildren("metadata");
 		           if (metadata.size() > 0){

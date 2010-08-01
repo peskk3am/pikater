@@ -98,7 +98,7 @@ public class Agent_GUI_Java extends Agent_GUI {
 		case MainWindow.SET_PROBLEM :
 			int probID = createNewProblem("30000");
 			for (String s: (String [])ev.getParameter(0)) {
-				addDatasetToProblem(probID, s, s);
+				addDatasetToProblem(probID, s, s, null, null);
 			}
 			//addMethodToProblem(probID, "Random", "0.2", "4");
 			
