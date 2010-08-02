@@ -1,6 +1,8 @@
 import java.security.MessageDigest;
 
 import ontology.messages.GetAllMetadata;
+import ontology.messages.GetFileInfo;
+import ontology.messages.GetFiles;
 import ontology.messages.GetTheBestAgent;
 import ontology.messages.ImportFile;
 import ontology.messages.MessagesOntology;
@@ -9,6 +11,7 @@ import ontology.messages.SaveMetadata;
 import ontology.messages.SaveResults;
 import ontology.messages.Task;
 import ontology.messages.TranslateFilename;
+import ontology.messages.UpdateMetadata;
 import jade.content.lang.Codec;
 import jade.content.lang.Codec.CodecException;
 import jade.content.lang.sl.SLCodec;
@@ -21,6 +24,7 @@ import jade.domain.FIPAException;
 import jade.domain.FIPANames;
 import jade.domain.FIPAService;
 import jade.lang.acl.ACLMessage;
+import jade.util.leap.ArrayList;
 import jade.util.leap.List;
 
 
@@ -220,4 +224,109 @@ public class DataManagerService extends FIPAService {
 		return null;
 	}
 
+	public static ArrayList getFilesInfo(Agent agent, int userID) {
+		
+		GetFileInfo gfi = new GetFileInfo();
+		gfi.setUserID(userID);
+		
+		ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
+		request.addReceiver(new AID("dataManager", false));
+		request.setOntology(MessagesOntology.getInstance().getName());
+		request.setLanguage(codec.getName());
+		request.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+		
+		Action a = new Action();
+		a.setActor(agent.getAID());
+		a.setAction(gfi);
+		
+		try {
+			agent.getContentManager().fillContent(request, a);
+			
+			ACLMessage inform = FIPAService.doFipaRequestClient(agent, request); 
+			
+			if (inform == null) {
+				return null;
+			}
+			
+			Result r = (Result)agent.getContentManager().extractContent(inform);
+			
+			return (ArrayList)r.getValue();
+		} catch (CodecException e) {
+			e.printStackTrace();
+		} catch (OntologyException e) {
+			e.printStackTrace();
+		} catch (FIPAException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	
+	}
+	
+	public static void updateMetadata(Agent agent, Metadata m) {
+		UpdateMetadata updateMetadata = new UpdateMetadata();
+		updateMetadata.setMetadata(m);				
+		
+		ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
+		request.addReceiver(new AID("dataManager", false));
+		request.setOntology(MessagesOntology.getInstance().getName());
+		request.setLanguage(codec.getName());
+		request.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+		
+		Action a = new Action();
+		a.setActor(agent.getAID());
+		a.setAction(updateMetadata);
+		
+		try {
+			agent.getContentManager().fillContent(request, a);
+			
+			FIPAService.doFipaRequestClient(agent, request); 
+			
+		} catch (CodecException e) {
+			e.printStackTrace();
+		} catch (OntologyException e) {
+			e.printStackTrace();
+		} catch (FIPAException e) {
+			e.printStackTrace();
+		}	
+	}
+	
+	public static ArrayList getFiles(Agent agent, int userID) {
+		GetFiles gfi = new GetFiles();
+		gfi.setUserID(userID);
+		
+		ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
+		request.addReceiver(new AID("dataManager", false));
+		request.setOntology(MessagesOntology.getInstance().getName());
+		request.setLanguage(codec.getName());
+		request.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+		
+		Action a = new Action();
+		a.setActor(agent.getAID());
+		a.setAction(gfi);
+		
+		try {
+			agent.getContentManager().fillContent(request, a);
+			
+			ACLMessage inform = FIPAService.doFipaRequestClient(agent, request); 
+			
+			if (inform == null) {
+				return null;
+			}
+			
+			Result r = (Result)agent.getContentManager().extractContent(inform);
+			
+			return (ArrayList)r.getValue();
+		} catch (CodecException e) {
+			e.printStackTrace();
+		} catch (OntologyException e) {
+			e.printStackTrace();
+		} catch (FIPAException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	
+	}
+	
 }

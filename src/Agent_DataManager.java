@@ -27,9 +27,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.LinkedList;
+import java.util.Vector;
 import java.util.regex.Pattern;
 
 import ontology.messages.GetAllMetadata;
+import ontology.messages.GetFileInfo;
+import ontology.messages.GetFiles;
 import ontology.messages.GetTheBestAgent;
 import ontology.messages.ImportFile;
 import ontology.messages.MessagesOntology;
@@ -38,6 +41,7 @@ import ontology.messages.SaveMetadata;
 import ontology.messages.SaveResults;
 import ontology.messages.Task;
 import ontology.messages.TranslateFilename;
+import ontology.messages.UpdateMetadata;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.FileAppender;
@@ -79,12 +83,19 @@ public class Agent_DataManager extends Agent {
 		getContentManager().registerOntology(ontology);
 		
 		LinkedList<String> tableNames = new LinkedList<String>();
+		LinkedList<String> triggerNames = new LinkedList<String>();
 		try {
-			String[] types = {"TABLE"};
+			String[] types = {"TABLE", "VIEW"};
 			ResultSet tables = db.getMetaData().getTables(null, null, "%", types);
 			while (tables.next()) {
 				tableNames.add(tables.getString(3));
 			}
+			
+			ResultSet triggers = db.createStatement().executeQuery("SELECT trigger_name FROM INFORMATION_SCHEMA.TRIGGERS");
+			while (triggers.next()) {
+				triggerNames.add(triggers.getString("trigger_name"));
+			}
+			
 		} catch (SQLException e) {
 			log.error("Error getting tables list: " + e.getMessage());
 			e.printStackTrace();
@@ -92,6 +103,11 @@ public class Agent_DataManager extends Agent {
 		
 		log.info("Found the following tables: ");
 		for (String s : tableNames) {
+			log.info(s);
+		}
+		
+		log.info("Found the following triggers: ");
+		for (String s : triggerNames) {
 			log.info(s);
 		}
 		
@@ -153,6 +169,31 @@ public class Agent_DataManager extends Agent {
 			log.fatal("Error creating table RESULTS: " + e.getMessage());
 		}
 		
+		try {
+			if (!tableNames.contains("FILEMETADATA")) {
+				log.info("Creating view FILEMETADATA");
+				db.createStatement().executeUpdate("CREATE VIEW filemetadata AS " +
+						"SELECT userid, filemapping.internalfilename, filemapping.externalfilename, " +
+						"defaulttask, attributetype, numberofattributes, numberofinstances, missingvalues " +
+						"FROM filemapping JOIN metadata " +
+						"ON filemapping.internalfilename = metadata.internalfilename");
+			}
+		} catch (SQLException e) {
+			log.fatal("Error creating table FILEMETADATA: " + e.getMessage());
+		}
+		
+		try {
+			if (!triggerNames.contains("PREPAREMETADATA")) {
+				db.createStatement().execute("CREATE TRIGGER prepareMetadata AFTER INSERT ON filemapping " +
+						"REFERENCING NEW ROW AS newrow FOR EACH ROW " +
+						"INSERT INTO metadata (internalfilename, externalfilename) " +
+						"VALUES (newrow.internalfilename, newrow.externalfilename)");
+			}
+		}
+		catch (SQLException e) {
+			log.fatal("Error creating trigger prepareMetadata: " + e.getMessage());
+		}
+		
 		MessageTemplate mt = MessageTemplate.and(
 				MessageTemplate.MatchOntology(ontology.getName()),
 				MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
@@ -210,14 +251,15 @@ public class Agent_DataManager extends Agent {
 							
 							// insert the same file into the metadata table, 
 							// other values will be filled in when the file is read by a reader agent
-							stmt = db.createStatement();
+							//stmt = db.createStatement();
 							
-							query = "INSERT INTO metadata (externalFilename, internalFilename" +
+							//not needed anymore, there is now a trigger which does the same
+							/*query = "INSERT INTO metadata (externalFilename, internalFilename" +
 									// ", defaultTask, attributeType, missingValues
 									") VALUES (\'" + im.getExternalFilename() + "\', \'" + internalFilename + "\')";
 													 													
 							log.info("Executing query: " + query);						
-							stmt.executeQuery(query);
+							stmt.execute(query);*/
 							
 							
 							// move the file to db\files directory
@@ -377,6 +419,91 @@ public class Agent_DataManager extends Agent {
 						
 						return reply;						
 					}
+					if (a.getAction() instanceof GetFileInfo) {
+						
+						GetFileInfo gfi = (GetFileInfo)a.getAction();
+						
+						String query = "SELECT * FROM filemetadata WHERE userid = " + gfi.getUserID();
+						
+						Statement stmt = db.createStatement();
+						
+						log.info("Executing query: " + query);
+						
+						ResultSet rs = stmt.executeQuery(query);
+						
+						List fileInfos = new ArrayList();
+						
+						while (rs.next())  {
+							Metadata m = new Metadata();
+							m.setAttribute_type(rs.getString("attributeType"));
+							m.setDefault_task(rs.getString("defaultTask"));
+							m.setExternal_name(rs.getString("externalFilename"));
+							m.setInternal_name(rs.getString("internalFilename"));
+							m.setMissing_values(rs.getBoolean("missingValues"));
+							m.setNumber_of_attributes(rs.getInt("numberOfAttributes"));
+							m.setNumber_of_instances(rs.getInt("numberOfInstances"));	
+							fileInfos.add(m);
+						}
+						
+						Result r = new Result(a.getAction(), fileInfos);
+						ACLMessage reply = request.createReply();
+						reply.setPerformative(ACLMessage.INFORM);
+						
+						getContentManager().fillContent(reply, r);
+						
+						return reply;
+					}
+					
+					if (a.getAction() instanceof UpdateMetadata) {
+						
+						UpdateMetadata updateMetadata = (UpdateMetadata)a.getAction();
+						Metadata metadata = updateMetadata.getMetadata();
+						
+						Statement stmt = db.createStatement();
+
+						String query = "UPDATE metadata SET "; 												 						
+						query += "numberOfInstances=" + metadata.getNumber_of_instances()+ ", ";
+						query += "numberOfAttributes=" + metadata.getNumber_of_attributes() + ", ";
+						query += "defaultTask= \'" + metadata.getDefault_task() + "\', ";
+						query += "missingValues=" + metadata.getMissing_values() + ", ";
+						query += "attributetype= \'" + metadata.getAttribute_type() + "\'";
+						query += " WHERE internalFilename =\'"+metadata.getInternal_name() + "\'"; 						
+						
+						log.info("Executing query: " + query);
+					
+						stmt.executeUpdate(query);
+						
+						ACLMessage reply = request.createReply();
+						reply.setPerformative(ACLMessage.INFORM);
+						return reply;
+					}
+					if (a.getAction() instanceof GetFiles) {
+						
+						GetFiles gf = (GetFiles)a.getAction();
+						
+						String query = "SELECT * FROM filemapping WHERE userid = " + gf.getUserID();
+						
+						log.info("Executing query: " + query);
+						
+						Statement stmt = db.createStatement();
+						ResultSet rs = stmt.executeQuery(query);
+						
+						ArrayList files = new ArrayList(); 
+						
+						while (rs.next()) {
+							files.add(rs.getString("externalFilename"));
+						}
+						
+						Result r = new Result(a.getAction(), files);
+						ACLMessage reply = request.createReply();
+						reply.setPerformative(ACLMessage.INFORM);
+						
+						getContentManager().fillContent(reply, r);
+						
+						return reply;		
+					}
+				
+					
 				} catch (OntologyException e) {
 					e.printStackTrace();
 					log.error("Problem extracting content: " + e.getMessage());
@@ -394,6 +521,8 @@ public class Agent_DataManager extends Agent {
 				log.error("Failure responding to request: " + request.getContent());
 				return failure;
 			}
+			
+			
 			
 		});
 		

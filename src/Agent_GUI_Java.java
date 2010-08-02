@@ -1,5 +1,6 @@
 import java.awt.TextArea;
 import java.awt.event.ActionEvent;
+import java.util.Vector;
 
 import jade.content.lang.Codec.CodecException;
 import jade.content.onto.OntologyException;
@@ -8,8 +9,10 @@ import jade.content.onto.basic.Result;
 import jade.domain.FIPAAgentManagement.FailureException;
 import jade.gui.GuiEvent;
 import jade.lang.acl.ACLMessage;
+import jade.util.leap.ArrayList;
 import jade.util.leap.Iterator;
 import jade.util.leap.List;
+import ontology.messages.Metadata;
 import ontology.messages.Problem;
 import ontology.messages.Results;
 import ontology.messages.Task;
@@ -59,7 +62,7 @@ public class Agent_GUI_Java extends Agent_GUI {
 			
 			while (it.hasNext()) {
 				Task t = (Task)it.next();
-				myGUI.addResult(t.getAgent().getName(), t.getAgent().optionsToString(), Float.toString(t.getResult().getError_rate()));
+				myGUI.addResult(t);
 			}
 		} catch (UngroundedException e) {
 			// TODO Auto-generated catch block
@@ -93,27 +96,66 @@ public class Agent_GUI_Java extends Agent_GUI {
 	@Override
 	protected void onGuiEvent(GuiEvent ev) {
 		switch (ev.getType()) {
-		case MainWindow.ONLOAD :
-			myGUI.setAgents(offerAgentTypes()); break;
-		case MainWindow.SET_PROBLEM :
-			int probID = createNewProblem("30000");
-			for (String s: (String [])ev.getParameter(0)) {
-				addDatasetToProblem(probID, s, s);
-			}
-			//addMethodToProblem(probID, "Random", "0.2", "4");
+		case MainWindow.GET_FILES_INFO :
 			
-			for (Object[] os:(Object[][])ev.getParameter(1)){
-				try {
-					addAgentToProblem(probID, null, (String)os[0], ((String)os[1]));
-				} catch (FailureException e) {
-					e.printStackTrace();
-				}
-				// getAgentOptions((String)os[0]);
-			}
+			FileManagerPanel fm = (FileManagerPanel)ev.getSource();
+			fm.setFiles(DataManagerService.getFilesInfo(this, 1));
+			break;
+		
+		case MainWindow.UPDATE_METADATA :
+			
+			Metadata update = (Metadata)ev.getParameter(0);
+			DataManagerService.updateMetadata(this, update);
 			break;
 			
-		}
+		case MainWindow.ON_LOAD :
+			
+			NewExperimentPanel nep = (NewExperimentPanel) ev.getSource();
+			
+			Vector<String> types = offerAgentTypes();
+			String[] agentTypes = new String[types.size()];
+			
+			for (int i = 0; i < types.size(); i++) {
+				agentTypes[i] = types.get(i);
+			}
+			
+			ArrayList files = DataManagerService.getFiles(this, 1);
+			String[] filesList = new String[files.size()];
+			
+			for (int i = 0; i < files.size(); i++) {
+				filesList[i] = (String)files.get(i);
+			}
+			
+			nep.setFilesList(filesList);	
+			nep.setAgentTypes(agentTypes);
+			break;
 		
+		case MainWindow.START_EXPERIMENT :
+			
+			Vector<String> agents = (Vector<String>)ev.getParameter(0);
+			Vector<String> agentOptions = (Vector<String>)ev.getParameter(1);
+			Vector<String> trainFiles = (Vector<String>)ev.getParameter(2);
+			Vector<String> testFiles = (Vector<String>)ev.getParameter(3);
+			Vector<String> optionsManager = (Vector<String>)ev.getParameter(4);
+			
+			int problemID = createNewProblem("10000");
+			
+			try {
+				for (int i = 0; i < agents.size(); i++) {
+					addAgentToProblem(problemID, null, agents.get(i), agentOptions.get(i));
+				}
+			} 
+			catch (FailureException e) {
+					e.printStackTrace();
+			}
+			
+			for (int i = 0; i < trainFiles.size(); i++) {
+				addDatasetToProblem(problemID, trainFiles.get(i), testFiles.get(i));
+			}
+			
+			addMethodToProblem(problemID, optionsManager.get(0), optionsManager.get(1), optionsManager.get(2));
+		
+		}
 	}
 
 }
