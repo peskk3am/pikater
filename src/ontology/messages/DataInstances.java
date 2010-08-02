@@ -127,7 +127,30 @@ public class DataInstances implements Concept {
 		setClass_index(winsts.classIndex());
 		
 	}
+	
+	/* returns all instances as a multi-line string
+	 */
+	public String toString(){
+		if(instances==null)
+			return "";
+		StringBuffer text = new StringBuffer();
+		Iterator institr = instances.iterator();
+		while(institr.hasNext()){
+			Instance inst = (Instance)institr.next();
+			text.append(inst.toString(this));
+			text.append('\n');
+		}
+		return text.toString();
+	}
+	/*returns a value in the table on the row and index*/
+	public String toString(int row, int index){
+		if(instances==null)
+			return "";
+		Instance inst = (Instance)instances.get(row);
+		return inst.toString(this, index);
+	}
 	/*public void print(){
+	}
 	System.out.println(name);
 	System.out.println("Atributy:");
 	Iterator itr = attributes.iterator();
