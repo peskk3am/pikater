@@ -465,6 +465,7 @@ public class Agent_Manager extends Agent{
 		    	        		   else{	    	        			   
 		    	        			   getOptions = true;
 		    	        			   agentType = a_next.getType();
+		    	        			   a_next_copy.setType(agentType);
 		    	        			   System.out.println("********** Agent "+agentType+
 			    	        				   " recommended. Options: "+a_next.optionsToString()+"**********");		    	        			  
 		    	        		   }

@@ -3,10 +3,6 @@
 # s ... set  (example: s 1, 2, 3, 4, 5, 6, 7, 8)
 # 
 
-
-# -D
-# Produce debugging output.
-
 # Set the attriute selection method to use. 1 = None, 2 = Greedy (default 0 = M5' method)
 $ S int 1 1 r 0 2
 
@@ -14,4 +10,4 @@ $ S int 1 1 r 0 2
 $ C boolean
 
 # The ridge parameter (default 1.0e-8)
-$ R float 1 1 r 1.0E-12 1.0E-4 
+$ R float 1 1 r 0.00000000001 0.0004 

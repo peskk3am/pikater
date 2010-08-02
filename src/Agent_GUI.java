@@ -587,7 +587,8 @@ public abstract class Agent_GUI extends GuiAgent {
 		   		 	while (itr.hasNext()) {
 		   		 		ontology.messages.Agent next_agent = (ontology.messages.Agent) itr.next();
 		   		 		// find the right agent
-		   		 		if (Integer.parseInt(next_agent.getGui_id()) == _agent_id){
+		   		 		if (Integer.parseInt(next_agent.getGui_id()) == _agent_id){		   		 			
+		   		 			
 		   		 			Option option = new Option();
 		   		 			option.setName(option_name);
 		   		 			
@@ -735,6 +736,7 @@ public abstract class Agent_GUI extends GuiAgent {
 	   		 		
 	   		 		if (!(type.contains("?") && next_agent.getName() == null)){
 		   		 	// if we will recomend the type of the agent, we don't wait for the options to be received
+	   		 			if (next_agent.getOptions() == null) {next_agent.setOptions(new ArrayList());}
 	   		 			if (next_agent.getOptions().size() > 0 ){ // if there is at least one option
 			   		 		// if data_type is set it means that the options from a computing agent have
 			   		 		// been received already
@@ -769,11 +771,11 @@ public abstract class Agent_GUI extends GuiAgent {
 			   		 		if ( next_agent.getName().equals(agent.getName()) ){
 			   		 			next_agent.setType(agent.getType());
 			   		 			next_agent.setOptions(_refreshOptions(next_agent, agent, next_problem));
-			   		 			System.out.println("DT "+((Option)(next_agent.getOptions().iterator().next())).getData_type());
+			   		 			// System.out.println("DT "+((Option)(next_agent.getOptions().iterator().next())).getData_type());
 			   		 		}
 						} // end if getName != null
 		   		 		if (next_agent.getType() != null){
-		   		 			System.out.println("type1 "+next_agent.getType()+" type2 "+agent.getType());
+		   		 			// System.out.println("type1 "+next_agent.getType()+" type2 "+agent.getType());
 		   		 			if ( next_agent.getType().equals(agent.getType()) ){
 			   		 			next_agent.setOptions(_refreshOptions(next_agent, agent, next_problem));
 			   		 		}
@@ -782,8 +784,7 @@ public abstract class Agent_GUI extends GuiAgent {
 				}  // end if performative = inform
 
 	 			else{
-	 				// TODO remove the agent from the problem and let the user know
-	 				System.out.println("mjjjjjjj "+agent.getName());
+	 				// TODO remove the agent from the problem and let the user know	 				
 	 				removeAgentFromAllProblems(Integer.parseInt(agent.getGui_id()));
 	 			}
 				// display the options for a selected problem
@@ -804,8 +805,18 @@ public abstract class Agent_GUI extends GuiAgent {
 			Iterator oitr = agent.getOptions().iterator();	 		   		 
    		 	while (oitr.hasNext()) {
    		 		Option next_option = (Option) oitr.next();
-   		 		next_option.setValue(next_option.getDefault_value());
-   		 		mergedOptions.add(next_option);
+   		 		// next_option.setValue(next_option.getDefault_value());
+   		 		Option o = new Option();
+   		 		o.setData_type(next_option.getData_type());
+   		 		o.setDefault_value(next_option.getDefault_value());
+   		 		o.setIs_a_set(next_option.getIs_a_set());
+   		 		o.setName(next_option.getName());
+   		 		o.setNumber_of_args(next_option.getNumber_of_args());
+   		 		o.setRange(next_option.getRange());
+   		 		o.setSet(next_option.getSet());
+   		 		o.setValue(next_option.getDefault_value());
+   		 		// mergedOptions.add(next_option);
+   		 		mergedOptions.add(o);
    		 	}
 			
 			// go through the options set in the problem 
@@ -820,7 +831,7 @@ public abstract class Agent_GUI extends GuiAgent {
 	   		 				//&& (next_problem_option.getValue() != null 
 	   		 				//	|| next_problem_option.getUser_value() != null )
 	   		 			) {
-	   		 			// copy all the parameters (problem -> merged)
+	   		 			// copy all the parameters (problem -> merged)	   		 				   		 				   		 			
 	   		 			if (next_problem_option.getMutable()){
 	   		 				next_merged_option.setMutable(true);
 	   		 				next_merged_option.setUser_value(next_problem_option.getValue());

@@ -91,7 +91,8 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
 		   //  }
 		   
 		   // sub_generate(0, "-H ", next.getSet().toArray(), values );
-		   sub_generate(0, optionName, next.getSet().toArray(), values );
+		   
+		   sub_generate(0, "-"+next.getName()+" ", next.getSet().toArray(), values );
 		   
 		   // copy vector to array:
 		   String[] a = new String[sub_options_vector.size()];
@@ -128,10 +129,15 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
 	        for (int i=0; i < optStringArray.length; i=i+2){
 	        	// always a couple name - value
 	        	if (optStringArray[i].equals("-"+next.getName())){	        			     	       
-	        			next.setValue(optStringArray[i+1]);
-			        	newOptions.add(next);
+	        			next.setValue(optStringArray[i+1]);			        	
+	        			newOptions.add(next);
 			    }
 			}
+			if (!newOptions.contains(next)){
+				if (!next.getValue().equals(next.getDefault_value())){
+					newOptions.add(next);	        	
+				}
+			}			
 		}
 		Options = newOptions;
 	}
@@ -192,7 +198,6 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
 			}
 						
 			if (!values[j].equals("?")){
-				
 				if (str.startsWith("-")){
 					sub_generate(++j, str+values[j-1], possible_options_array, values);
 				}
@@ -202,7 +207,14 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
 			}
 			else{	
 				for (int i=0; i < possible_options_array.length; i++){
-					sub_generate(++j, str+","+possible_options_array[i], possible_options_array, values);
+					if (str.startsWith("-")){
+						sub_generate(++j, str+possible_options_array[i], possible_options_array, values);
+					}
+					else{
+						sub_generate(++j, str+","+possible_options_array[i], possible_options_array, values);
+					}					
+					
+					// sub_generate(++j, str+","+possible_options_array[i], possible_options_array, values);
 					j--;					
 				}
 			}
