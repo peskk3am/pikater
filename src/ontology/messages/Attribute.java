@@ -1,12 +1,20 @@
 package ontology.messages;
 
+import java.util.Date;
+
 import weka.core.FastVector;
+import weka.core.Utils;
 import jade.content.Concept;
 import jade.util.leap.ArrayList;
 import jade.util.leap.Iterator;
 import jade.util.leap.List;
 
 public class Attribute implements Concept {
+	public final static String NUMERIC_TYPE = "NUMERIC";
+	public final static String NOMINAL_TYPE = "NOMINAL";
+	public final static String STRING_TYPE = "STRING";
+	public final static String DATE_TYPE = "DATE";
+	public final static String RELATIONAL_TYPE = "RELATIONAL";
 	private String name;
 	private String type;//nominal/numeric/string
 	private List values;
@@ -71,9 +79,9 @@ public class Attribute implements Concept {
 			//co type???
 			return new weka.core.Attribute(name, my_nominal_values);
 		}else{
-			if(type.equals("DATE")){
+			if(type.equals(DATE_TYPE)){
 				return new weka.core.Attribute(name, date_format);
-			}else if (type.equals("RELATIONAL")){
+			}else if (type.equals(RELATIONAL_TYPE)){
 				//TODO: another instance
 				weka.core.Instances winst= null;
 				return new weka.core.Attribute(name, winst);
@@ -86,20 +94,20 @@ public class Attribute implements Concept {
 		setName(wattr.name());
 		switch(wattr.type()){
 		case weka.core.Attribute.NUMERIC:
-			setType("NUMERIC");
+			setType(NUMERIC_TYPE);
 			break;
 		case weka.core.Attribute.NOMINAL:
-			setType("NOMINAL");
+			setType(NOMINAL_TYPE);
 			break;
 		case weka.core.Attribute.STRING:
-			setType("STRING");
+			setType(STRING_TYPE);
 			break;
 		case weka.core.Attribute.DATE:
-			setType("DATE");
+			setType(DATE_TYPE);
 			setDate_format(wattr.getDateFormat());
 			break;
 		case weka.core.Attribute.RELATIONAL:
-			setType("RELATIONAL");
+			setType(RELATIONAL_TYPE);
 			/*TODO: treating another table*/
 			break;
 		default:
@@ -110,6 +118,20 @@ public class Attribute implements Concept {
 			attr_values.add(wattr.value(j));
 		}
 		setValues(attr_values);
+	}
+	
+	String stringValue(double _dval){
+		if(values!= null && values.size()>0){
+			return Utils.quote((String)values.get((int)_dval));
+		}else
+		if(type.equals(NUMERIC_TYPE)){
+			return Utils.doubleToString(_dval, 6);
+		}else if(type.equals(DATE_TYPE)){
+			Date d = new Date((long) _dval);
+			return Utils.quote(d.toString());//TODO: normalized date format SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+		}
+		//TODO: relational
+		return null;
 	}
 	/*
 	public void print() {
