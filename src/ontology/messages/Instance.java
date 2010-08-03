@@ -6,7 +6,8 @@ import jade.util.leap.Iterator;
 import jade.util.leap.List;
 
 public class Instance implements Concept {
-	private List values;
+	private List values;//Double[]
+	private List missing;//Boolean[]
 
 	/**
 	 * @return the values
@@ -28,5 +29,19 @@ public class Instance implements Concept {
 			System.out.print((Double)itr.next()+" ");
 		}
 	}*/
+
+	public List getMissing() {
+		return missing;
+	}
+
+	public void setMissing(List missing) {
+		this.missing = missing;
+	}
+
+	// -----------------------------
 	
+	public void setPrediction(double v){
+		values.remove(values.size()-1);
+		values.add(v);
+	}
 }

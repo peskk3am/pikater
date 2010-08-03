@@ -28,6 +28,9 @@ public class MessagesOntology extends Ontology {
 	  public static final String DATA = "data";
 	  public static final String DATA_TRAIN_FILE_NAME = "train_file_name";
 	  public static final String DATA_TEST_FILE_NAME = "test_file_name";
+	  public static final String DATA_METADATA = "metadata";
+	  public static final String DATA_OUTPUT = "output";
+	  public static final String DATA_MODE = "mode";
 	  
 	  public static final String COMPUTATION = "COMPUTATION";
 	  public static final String COMPUTATION_ID = "id";
@@ -100,6 +103,7 @@ public class MessagesOntology extends Ontology {
 	  public static final String DATA_INSTANCES_ATTRIBUTES = "attributes";
 	  public static final String DATA_INSTANCES_INSTANCES = "instances";
 	  public static final String DATA_INSTANCES_NAME = "name";
+	  public static final String DATA_INSTANCES_CLASS_INDEX = "class_index";
 
 	  public static final String ATTRIBUTE = "ATTRIBUTE";
 	  public static final String ATTRIBUTE_NAME = "name";
@@ -109,6 +113,7 @@ public class MessagesOntology extends Ontology {
 
 	  public static final String INSTANCE = "INSTANCE";
 	  public static final String INSTANCE_VALUES = "values";
+	  public static final String INSTANCE_MISSING = "missing";
 	  
 	  public static final String METADATA = "METADATA";
 	  public static final String METADATA_INTERNAL_NAME = "internal_name";
@@ -258,7 +263,10 @@ public class MessagesOntology extends Ontology {
 			cs = (ConceptSchema)getSchema(DATA);
 			cs.add(DATA_TRAIN_FILE_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 			cs.add(DATA_TEST_FILE_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
-	    	
+			cs.add(DATA_METADATA, (ConceptSchema)getSchema(METADATA), ObjectSchema.OPTIONAL);
+			cs.add(DATA_OUTPUT, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);			
+			cs.add(DATA_MODE, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+			
 	    	cs = (ConceptSchema)getSchema(INTERVAL);
 	    	cs.add(INTERVAL_MIN, (PrimitiveSchema)getSchema(BasicOntology.FLOAT));
 	    	cs.add(INTERVAL_MAX, (PrimitiveSchema)getSchema(BasicOntology.FLOAT));	
@@ -308,6 +316,7 @@ public class MessagesOntology extends Ontology {
 	    	cs.add(DATA_INSTANCES_ATTRIBUTES, (ConceptSchema)getSchema(ATTRIBUTE), 0, ObjectSchema.UNLIMITED);
 	    	cs.add(DATA_INSTANCES_INSTANCES, (ConceptSchema)getSchema(INSTANCE), 0, ObjectSchema.UNLIMITED);
 	    	cs.add(DATA_INSTANCES_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+	    	cs.add(DATA_INSTANCES_CLASS_INDEX, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));
 
 	    	cs = (ConceptSchema)getSchema(ATTRIBUTE);
 	    	cs.add(ATTRIBUTE_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
@@ -317,9 +326,10 @@ public class MessagesOntology extends Ontology {
 
 	    	cs = (ConceptSchema)getSchema(INSTANCE);
 	    	cs.add(INSTANCE_VALUES, (PrimitiveSchema)getSchema(BasicOntology.FLOAT), 0, ObjectSchema.UNLIMITED);
-
+	    	cs.add(INSTANCE_MISSING, (PrimitiveSchema)getSchema(BasicOntology.BOOLEAN), 0, ObjectSchema.UNLIMITED);
+	    	
 	    	cs = (ConceptSchema)getSchema(METADATA);
-	    	cs.add(METADATA_INTERNAL_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	cs.add(METADATA_INTERNAL_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 	    	cs.add(METADATA_EXTERNAL_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 	    	cs.add(METADATA_NUMBER_OF_INSTANCES, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));
 	    	cs.add(METADATA_NUMBER_OF_ATTRIBUTES, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));
@@ -343,7 +353,7 @@ public class MessagesOntology extends Ontology {
 			as = (AgentActionSchema)getSchema(GET_OPTIONS);
 			
 			as = (AgentActionSchema)getSchema(EXECUTE);
-	    	as.add(EXECUTE_TASK, (ConceptSchema)getSchema(TASK));
+	    	as.add(EXECUTE_TASK, (ConceptSchema)getSchema(TASK), ObjectSchema.OPTIONAL);
 
 	    	as = (AgentActionSchema)getSchema(IMPORT_FILE);
 	    	as.add(IMPORT_USER, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));

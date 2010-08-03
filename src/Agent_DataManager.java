@@ -82,6 +82,8 @@ public class Agent_DataManager extends Agent {
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
 		
+		// updateMetadata();
+		
 		LinkedList<String> tableNames = new LinkedList<String>();
 		LinkedList<String> triggerNames = new LinkedList<String>();
 		try {
@@ -265,7 +267,8 @@ public class Agent_DataManager extends Agent {
 							// move the file to db\files directory
 							String newName = System.getProperty("user.dir")+System.getProperty("file.separator")+"data"+System.getProperty("file.separator")+"files"+System.getProperty("file.separator")+internalFilename;
 							// Boolean res = f.renameTo(new File(newName));
-							f.renameTo(new File(newName));						
+							move(f, new File(newName));								
+						
 							// move(f, new File(newName));								
 							
 						}
@@ -310,7 +313,7 @@ public class Agent_DataManager extends Agent {
 						Task res = sr.getTask();
 						
 						Statement stmt = db.createStatement();
-						
+												
 						String query = "INSERT INTO results (agentName, agentType, options, dataFile, testFile," +
 								"errorRate, kappaStatistic, meanAbsoluteError, rootMeanSquaredError, relativeAbsoluteError," +
 								"rootRelativeSquaredError) VALUES (";
@@ -345,9 +348,17 @@ public class Agent_DataManager extends Agent {
 
 						String query = "UPDATE metadata SET "; 												 						
 						query += "numberOfInstances=" + metadata.getNumber_of_instances()+ ", ";
-						query += "numberOfAttributes=" + metadata.getNumber_of_attributes();
+						query += "numberOfAttributes=" + metadata.getNumber_of_attributes()+", ";
+						query += "missingValues=" + metadata.getMissing_values();
+						if (metadata.getAttribute_type() != null){
+							query += ", attributeType=\'" + metadata.getAttribute_type()+"\' ";
+						}
+						if (metadata.getDefault_task() != null){
+							query += ", defaultTask=\'" + metadata.getDefault_task()+"\' ";
+						}
+																	
 						// the external file name contains part o the path (db/files/name) -> split and use only the [2] part
-						query += " WHERE internalFilename =\'"+metadata.getInternal_name().split(Pattern.quote(System.getProperty("file.separator")))[2]+"\'"; 						
+						query += " WHERE internalFilename=\'"+metadata.getInternal_name().split(Pattern.quote(System.getProperty("file.separator")))[2]+"\'"; 						
 						
 						log.info("Executing query: " + query);
 					
@@ -513,6 +524,12 @@ public class Agent_DataManager extends Agent {
 				} catch (SQLException e) {
 					e.printStackTrace();
 					log.error("SQL error: " + e.getMessage());			
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
 				
 				
@@ -555,6 +572,51 @@ public class Agent_DataManager extends Agent {
 		log.info("MD5 hash of file " + path + " is " + md5);
 		
 		return md5;
+	}
+	
+	public void updateMetadata(){
+		try {
+			Statement stmt = db.createStatement();		
+			String query = "UPDATE metadata SET defaultTask='Classification', attributeType='Categorical', missingValues='False' WHERE externalFilename='car.arff';"
+				+" UPDATE metadata SET defaultTask='Regression', attributeType='Multivariate', missingValues='False' WHERE externalFilename='machine.arff';"
+				+" UPDATE metadata SET defaultTask='Regression', attributeType='Real', missingValues='True' WHERE externalFilename='communities.arff';"
+				+" UPDATE metadata SET defaultTask='Classification', attributeType='Integer', missingValues='True' WHERE externalFilename='lung-cancer.arff';"
+				+" UPDATE metadata SET defaultTask='Classification', attributeType='Integer', missingValues='False' WHERE externalFilename='haberman.arff';"
+				+" UPDATE metadata SET defaultTask='Classification', attributeType='Categorical', missingValues='False' WHERE externalFilename='tic-tac-toe.arff';"
+				+" UPDATE metadata SET defaultTask='Classification', attributeType='Integer', missingValues='False' WHERE externalFilename='letter-recognition.arff';"
+				+" UPDATE metadata SET defaultTask='Classification', attributeType='Real', missingValues='False' WHERE externalFilename='magic.arff';"
+				+" UPDATE metadata SET defaultTask='Classification', attributeType='Real', missingValues='False' WHERE externalFilename='iris.arff';"
+				+" UPDATE metadata SET defaultTask='Classification', attributeType='Multivariate', missingValues='False' WHERE externalFilename='weather.arff';";
+			
+			stmt.executeUpdate(query);
+			log.info("Executing query: " + query);
+		
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}	
+	}
+	
+	
+	// Move file (src) to File/directory dest.
+	public static synchronized void move(File src, File dest) throws FileNotFoundException, IOException {
+		copy(src, dest);
+		// src.delete();
+	}
+
+	// Copy file (src) to File/directory dest.
+	public static synchronized void copy(File src, File dest) throws IOException {
+		InputStream in = new FileInputStream(src);
+		OutputStream out = new FileOutputStream(dest);
+
+		// Transfer bytes from in to out
+		byte[] buf = new byte[1024];
+		int len;
+		while ((len = in.read(buf)) > 0) {
+			out.write(buf, 0, len);
+		}
+		in.close();
+		out.close();
 	}
 		
 }

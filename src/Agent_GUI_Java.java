@@ -150,7 +150,7 @@ public class Agent_GUI_Java extends Agent_GUI {
 			}
 			
 			for (int i = 0; i < trainFiles.size(); i++) {
-				addDatasetToProblem(problemID, trainFiles.get(i), testFiles.get(i));
+				addDatasetToProblem(problemID, trainFiles.get(i), testFiles.get(i), null, null);
 			}
 			
 			addMethodToProblem(problemID, optionsManager.get(0), optionsManager.get(1), optionsManager.get(2));

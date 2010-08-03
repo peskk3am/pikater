@@ -80,7 +80,7 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
 	   			return a;
 		  }
 		  if(next.getData_type().equals("BOOLEAN")){
-			  return new String[] {optionName, ""};
+			  return new String[] {optionName+" True", optionName+" False"};
 		  }
 	   }
 	   else{		   
@@ -90,7 +90,8 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
 		   //	   x = next.getSet().size();
 		   //  }
 		   
-		   sub_generate(0, "-H ", next.getSet().toArray(), values );
+		   // sub_generate(0, "-H ", next.getSet().toArray(), values );
+		   sub_generate(0, optionName, next.getSet().toArray(), values );
 		   
 		   // copy vector to array:
 		   String[] a = new String[sub_options_vector.size()];
@@ -117,21 +118,20 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
 		}
 		// return options_vector.get(ni++);
 		// go through a string, add the values to the Options
-		String optString = options_vector.get(ni++);
-		List newOpt = (new ontology.messages.Agent()).stringToOptions(optString);
-		
+		String[] optStringArray = options_vector.get(ni++).replaceFirst("[ ]+", "").split("[ ]+");
+		// List newOpt = (new ontology.messages.Agent()).stringToOptions(optString);
+				
 		List newOptions = new ArrayList();
 		Iterator itr = Options.iterator();	 
 		while (itr.hasNext()) {
 	        Option next = (Option) itr.next();
-	        Iterator itrnew = newOpt.iterator();	 
-			while (itrnew.hasNext()) {
-		        Option nextnew = (Option) itrnew.next();
-		        if (nextnew.getName().equals(next.getName())){
-		        	next.setValue(nextnew.getValue());
-		        	newOptions.add(next);
-		        }
-			}		       
+	        for (int i=0; i < optStringArray.length; i=i+2){
+	        	// always a couple name - value
+	        	if (optStringArray[i].equals("-"+next.getName())){	        			     	       
+	        			next.setValue(optStringArray[i+1]);
+			        	newOptions.add(next);
+			    }
+			}
 		}
 		Options = newOptions;
 	}
@@ -169,7 +169,7 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
 			for (Enumeration e = possible_options.elements() ; e.hasMoreElements() ;) {
 			       String[] next_option = (String[])e.nextElement();
 			       for (int i=0; i < next_option.length; i++){
-			    	   System.out.println("element: "+next_option[i]);
+			    	  System.out.println("element: "+next_option[i]);
 			       }
 			       System.out.println("------------next array");
 			}

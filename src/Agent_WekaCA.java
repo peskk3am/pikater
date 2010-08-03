@@ -1,4 +1,5 @@
 import jade.util.leap.ArrayList;
+import jade.util.leap.Iterator;
 import jade.util.leap.List;
 
 import java.io.BufferedReader;
@@ -11,6 +12,9 @@ import java.io.ObjectOutputStream;
 import java.util.Enumeration;
 import java.util.Vector;
 
+import ontology.messages.Data;
+import ontology.messages.DataInstances;
+import ontology.messages.Instance;
 import ontology.messages.Interval;
 
 import weka.classifiers.Classifier;
@@ -42,6 +46,31 @@ public abstract class Agent_WekaCA extends Agent_ComputingAgent {
 		 result.setRoot_relative_squared_error((float) eval.rootRelativeSquaredError());
 		 
 		 return result;
+	 }
+	 
+	 @Override
+	 protected DataInstances getPredictions(Instances test, DataInstances onto_test){
+		 
+		 Evaluation eval = test();		 
+		 double pre[] = new double[test.numInstances()];
+		 for (int i=0; i<test.numInstances(); i++){
+			 try {
+				pre[i] = eval.evaluateModelOnce(getModelObject(), test.instance(i));
+			} catch (Exception e) {
+				pre[i] = Integer.MAX_VALUE;
+			}
+		 }
+		 
+		// copy results to the DataInstancs
+		int i = 0; 
+		Iterator itr = onto_test.getInstances().iterator();	 		   		 
+		while (itr.hasNext()){
+			Instance next_instance = (Instance) itr.next();
+			next_instance.setPrediction(pre[i]);
+			i++;
+		}
+		 
+		return onto_test;
 	 }
 	 
 	 @Override

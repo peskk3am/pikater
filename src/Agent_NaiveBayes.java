@@ -29,26 +29,27 @@ public class Agent_NaiveBayes extends Agent_WekaCA{
 		 return "NaiveBayes";
 	 }
 	  
-	 protected void train(){
+	 protected void train() throws Exception{
 		 working = true;   
 		 System.out.println("Agent "+getLocalName()+": Training...");	       
 
 		 cls = new NaiveBayes();
-		 try {
+		 // try {
 			if (OPTIONS.length > 0){
 				cls.setOptions(OPTIONS);
-			}
+			}					
+			
 			cls.buildClassifier(train);
 			state = states.TRAINED;  // change agent state
 			OPTIONS = cls.getOptions();
 			
 			// write out net parameters
 			System.out.println(getLocalName()+" "+getOptions());
-	 	 } catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		 }
-		 working = false;
+	 	// } catch (Exception e) {
+		//	// TODO Auto-generated catch block
+		//	e.printStackTrace();
+		// }
+		working = false;
      }  // end train
      
 	 protected Evaluation test(){
