@@ -852,7 +852,15 @@ public abstract class Agent_GUI extends GuiAgent {
 	   		 			else{
    		 					next_merged_option.setValue(next_problem_option.getValue());
 	   		 			}
-
+	   		 			
+	   		 			if (next_problem_option.getSet() != null){
+	   		 				next_merged_option.setSet(next_problem_option.getSet());
+	   		 			}
+	   		 			
+	   		 			if (next_problem_option.getNumber_of_args() != null){
+	   		 				next_merged_option.setNumber_of_args(next_problem_option.getNumber_of_args());
+	   		 			}
+	   		 				
 	   		 			ocaitr.set(next_merged_option);
 	   		 		}
 	   		 	}

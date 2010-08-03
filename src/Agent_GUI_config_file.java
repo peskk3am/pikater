@@ -92,7 +92,7 @@ public class Agent_GUI_config_file extends Agent_GUI{
 
 	@Override
 	protected void mySetup() {
-		setDefault_number_of_values_to_try(4);
+		setDefault_number_of_values_to_try(3);
 		setDefault_error_rate(0.01);
 		
 		doWait(1000);

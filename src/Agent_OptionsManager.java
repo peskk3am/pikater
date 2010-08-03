@@ -296,8 +296,7 @@ public abstract class Agent_OptionsManager extends Agent {
 				msgOut.setPerformative(performative);
 				
 				
-				if (finished() || finished){
-					System.out.println(finished+" ():"+finished());
+				if (finished() || finished){					
 					// String incomingReplykey = (String) this.REPLY_KEY;
 					// ACLMessage incomingReply = (ACLMessage) getDataStore().get(incomingReplykey);
 					
