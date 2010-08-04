@@ -242,7 +242,7 @@ public abstract class Agent_WekaCA extends Agent_ComputingAgent {
 			       	    	   Option next = (weka.core.Option)en.nextElement();
 			       	    	   String default_value = "False";
 			       	    	   for (int i=0; i<default_options.length; i++){ 
-			       	    		 if (default_options[i].equals("-"+next.name())){ 
+			       	    		 if (default_options[i].equals("-"+next.name())){
 									if (default_options[i].startsWith("-")){									
 										// if the next array element is again an option name, 
 										// (or it is the last element)
@@ -251,7 +251,8 @@ public abstract class Agent_WekaCA extends Agent_ComputingAgent {
 											default_value = "True";
 										}
 										else {
-											if (default_options[i+1].startsWith("-")){
+											//if (default_options[i+1].startsWith("-")){
+					         				if (default_options[i+1].matches("\\-[A-Z]")){					         					
 												default_value = "True";
 											}
 											else{

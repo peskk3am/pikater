@@ -53,7 +53,8 @@ public class Agent implements Concept{
     				opt.setData_type("BOOLEAN");
     			}
     			else {
-    				if (optArray[i+1].startsWith("-")){
+    				// if (optArray[i+1].startsWith("-")){
+    				if (optArray[i+1].matches("\\-[A-Z]")){
     					value = "True";
     					opt.setData_type("BOOLEAN");
     				}
