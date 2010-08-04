@@ -423,12 +423,10 @@ public class Agent_Manager extends Agent{
 	            	int computation_i = 0;
 	            	Iterator d_itr = problem.getData().iterator();	 
 	            	while (d_itr.hasNext()) {
-	    	           Data next_data = (Data) d_itr.next();
-	    	           	    	        
-	    	           // enter metadata to the table
+	    	           Data next_data = (Data) d_itr.next();	    	           	    	        
+	    	           
 	    	           if (next_data.getMetadata() != null){
 	    	        	   next_data.getMetadata().setInternal_name(next_data.getTrain_file_name());
-	    	        	   DataManagerService.saveMetadata(this, next_data.getMetadata());	    	        	
 	    	           }
 	    	           
 	    	           Iterator a_itr = problem.getAgents().iterator();
@@ -465,8 +463,7 @@ public class Agent_Manager extends Agent{
 		    	        		   else{	    	        			   
 		    	        			   getOptions = true;
 		    	        			   agentType = a_next.getType();
-		    	        			   System.out.println("********** Agent "+agentType+
-			    	        				   " recommended. Options: "+a_next.optionsToString()+"**********");		    	        			  
+		    	        			   a_next_copy.setType(agentType);
 		    	        		   }
 	    	        		   }
 
@@ -496,6 +493,10 @@ public class Agent_Manager extends Agent{
 		    	        			   if (getOptions){
 		    	        				   ontology.messages.Agent agent_options = onlyGetAgentOptions(agentName);
 		    	        				   a_next_copy.setOptions(mergeOptions(agent_options.getOptions(), a_next.getOptions()));
+			    	        			   
+		    	        				   System.out.println("********** Agent "+agentType+
+				    	        				   " recommended. Options: "+a_next_copy.optionsToString()+"**********");		    	        			  
+
 		    	        			   }
 		    	        		   }
 	    	        		   }
@@ -514,7 +515,12 @@ public class Agent_Manager extends Agent{
 		    	        	   msgVector.add( Compute(computation) );
 	    	        	   }
 	    	           } // end while (iteration over files)
-	       	           
+	    	           
+	    	           // enter metadata to the table
+	    	           if (next_data.getMetadata() != null){
+	    	        	   DataManagerService.saveMetadata(this, next_data.getMetadata());	    	        	
+	    	           }
+	    	           
 	               	} // end while (iteration over agents List)
  			    	             
                 }
@@ -543,14 +549,13 @@ public class Agent_Manager extends Agent{
 	   		 	// and replace the options send by an computing agent
 				Iterator o1itr = o1_CA.iterator();	 		   		 
 	   		 	while (o1itr.hasNext()) {
-	   		 		Option next_CA_option = (Option) o1itr.next();
-		   		 	
+	   		 		Option next_CA_option = (Option) o1itr.next();	   		 			   		 	
 	   		 		Iterator o2itr = o2.iterator();		   		 	
 		   		 	while (o2itr.hasNext()) {
 		   		 		Option next_option = (Option) o2itr.next();
 		   		 		if (next_option.getName().equals(next_CA_option.getName())){
 		   		 			// copy the value
-		   		 			next_CA_option.setValue(next_CA_option.getValue());
+		   		 			next_CA_option.setValue(next_option.getValue());
 		   		 			next_CA_option.setMutable(false);
 		   		 		}
 	   		 		}

@@ -45,16 +45,16 @@ public class MyWekaOption implements Serializable{
         String[] params = rest.split(delims);
         
         if (range.equals("r")){
- 		    int maxValue;
+ 		    float maxValue;
 	    	if (params[1].equals("MAXINT")){
-	    	   maxValue = Integer.MAX_VALUE;
+	    	   maxValue = new Float(Integer.MAX_VALUE);
 	    	}
 	    	else {
-	    	   maxValue = new Integer(params[1]).intValue();
+	    	   maxValue = new Float(params[1]);
 	    	}
         	
         	lower = new Float(params[0]);
-            upper = new Float(maxValue);
+            upper = maxValue;
 		}
         if (range.equals("s")){
         	isASet = true;

@@ -36,6 +36,7 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
     	Random generator = new Random();
     	String optionName = " -"+next.getName()+" ";
     	// number of values ~ number of "?"s set by user
+    	System.out.println("user value:"+next.getUser_value());
     	String[] values = next.getUser_value().split(",");
     	int numArgs = values.length;
     	
@@ -91,7 +92,8 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
 		   //  }
 		   
 		   // sub_generate(0, "-H ", next.getSet().toArray(), values );
-		   sub_generate(0, optionName, next.getSet().toArray(), values );
+		   System.out.println("velikost pole:"+next.getSet().toArray().length);
+		   sub_generate(0, "-"+next.getName()+" ", next.getSet().toArray(), values );
 		   
 		   // copy vector to array:
 		   String[] a = new String[sub_options_vector.size()];
@@ -128,10 +130,15 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
 	        for (int i=0; i < optStringArray.length; i=i+2){
 	        	// always a couple name - value
 	        	if (optStringArray[i].equals("-"+next.getName())){	        			     	       
-	        			next.setValue(optStringArray[i+1]);
-			        	newOptions.add(next);
+	        			next.setValue(optStringArray[i+1]);			        	
+	        			newOptions.add(next);
 			    }
 			}
+			if (!newOptions.contains(next)){
+				if (!next.getValue().equals(next.getDefault_value())){
+					newOptions.add(next);	        	
+				}
+			}			
 		}
 		Options = newOptions;
 	}
@@ -186,23 +193,35 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
 	 
 	 
 	 private void sub_generate(int j, String str, Object[] possible_options_array, String[] values){
-		 	if ((str.split("[, ]")).length > values.length){		
+		 	System.out.println("888888str"+str);
+		    if ((str.split("[, ]+")).length > values.length+1){		
 		 		sub_options_vector.add(str);
 				return;
 			}
-						
-			if (!values[j].equals("?")){
+		 	System.out.println("333333333333333j:"+j);
+			System.out.println("3333333333333333 :"+values[j]);
 				
+			if (!values[j].equals("?")){
 				if (str.startsWith("-")){
-					sub_generate(++j, str+values[j-1], possible_options_array, values);
+					sub_generate(++j, " "+str+values[j-1], possible_options_array, values);
 				}
 				else{
 					sub_generate(++j, str+","+values[j-1], possible_options_array, values);
 				}
+				// problem, kdyz je jina velikost mnoziny, ze ktery se vybira a pocet argumentu (aspon to tak vyada)
 			}
 			else{	
 				for (int i=0; i < possible_options_array.length; i++){
-					sub_generate(++j, str+","+possible_options_array[i], possible_options_array, values);
+					System.out.println("44444444444444i:"+i);
+					System.out.println("44444444444444 :"+possible_options_array[i]);
+					if (str.startsWith("-")){
+						sub_generate(++j, " "+str+possible_options_array[i], possible_options_array, values);
+					}
+					else{
+						sub_generate(++j, str+","+possible_options_array[i], possible_options_array, values);
+					}					
+					
+					// sub_generate(++j, str+","+possible_options_array[i], possible_options_array, values);
 					j--;					
 				}
 			}

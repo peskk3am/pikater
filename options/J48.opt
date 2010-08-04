@@ -7,10 +7,10 @@
 $ U boolean
 
 # Set confidence threshold for pruning. (Default: 0.25) (smaller values incur more pruning).
-$ C float 1 1 r 0 1
+$ C float 1 1 r 0.0001 0.6
 
 # Set minimum number of instances per leaf. (Default: 2)
-$ M integer 1 1 r 1 10
+$ M int 1 1 r 1 10
 
 # Use reduced error pruning. No subtree raising is performed.
 $ R boolean

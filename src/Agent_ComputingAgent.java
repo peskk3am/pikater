@@ -597,13 +597,14 @@ public abstract class Agent_ComputingAgent extends Agent{
 	    			@Override
 	    			public void action(){		  							
 	    				try{
-  							if (mode.equals("test_only")){
+  						/*	if (mode.equals("test_only")){
   								eval = evaluateCA();
   		  						if (output.equals("predictions")){
   		  							eval.setData_table(getPredictions(test, onto_test));
   								}
   							}
-  							else{
+  						*/	
+  							
   								if(state != states.TRAINED) { 
 	  								train(); 
 	  								if(state == states.TRAINED){
@@ -611,8 +612,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 	  	  		  						if (output.equals("predictions")){	  	  		  							
 	  	  		  							eval.setData_table(getPredictions(test, onto_test));
 	  	  								}
-	  								}
-  								}
+	  								}		
   							}			
 	    				}
 	    				catch (Exception e){

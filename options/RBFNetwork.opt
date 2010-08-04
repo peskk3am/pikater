@@ -10,11 +10,11 @@ $ B int 1 1 r 2 10
 $ W float 1 1 r 0.01 1
 
 # Ridge (Set the Ridge value for the logistic or linear regression), default 1.0E-8
-$ R float 1 1 r 0.000000001 100
+$ R float 1 1 r 0.000000001 10
 
 #  The value used to seed the random number generator
 #  (Value should be >= 0 and and a long, Default = 0).
 $ S int 1 1 r 0 MAXINT
 
 #  Set the maximum number of iterations for the logistic regression. (default -1, until convergence).
-$ M int 1 1 r -1 100
+$ M int 1 1 r -1 50
