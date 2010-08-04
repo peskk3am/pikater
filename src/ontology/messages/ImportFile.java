@@ -8,7 +8,14 @@ public class ImportFile implements AgentAction {
 	
 	private int userID;
 	private String externalFilename;
+	private String fileContent;
 	
+	public String getFileContent() {
+		return fileContent;
+	}
+	public void setFileContent(String fileContent) {
+		this.fileContent = fileContent;
+	}
 	public int getUserID() {
 		return userID;
 	}

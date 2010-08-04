@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -216,71 +217,121 @@ public class Agent_DataManager extends Agent {
 					if (a.getAction() instanceof ImportFile) {
 						ImportFile im = (ImportFile)a.getAction();
 						
-						String path = System.getProperty("user.dir") + System.getProperty("file.separator");
-						path += "incoming" + System.getProperty("file.separator") + im.getExternalFilename();
-
-						String internalFilename = md5(path);
-						
-						File f = new File(path);		
-						
-						Statement stmt = db.createStatement();
-						String query = "SELECT COUNT(*) AS num FROM fileMapping WHERE internalFilename = \'" + internalFilename + "\'";
-						log.info("Executing query " + query);
-						
-						ResultSet rs = stmt.executeQuery(query);
-						
-						rs.next();
-						int count = rs.getInt("num");
-			
-						stmt.close();
-						
-																		
-						if (count > 0) {
-							f.delete();
-							log.info("File " +  internalFilename + " already present in the database");
-						} 
+						if (im.getFileContent() == null) {
+							String path = System.getProperty("user.dir") + System.getProperty("file.separator");
+							path += "incoming" + System.getProperty("file.separator") + im.getExternalFilename();
+	
+							String internalFilename = md5(path);
+							
+							File f = new File(path);		
+							
+							Statement stmt = db.createStatement();
+							String query = "SELECT COUNT(*) AS num FROM fileMapping WHERE internalFilename = \'" + internalFilename + "\'";
+							log.info("Executing query " + query);
+							
+							ResultSet rs = stmt.executeQuery(query);
+							
+							rs.next();
+							int count = rs.getInt("num");
+				
+							stmt.close();
+							
+																			
+							if (count > 0) {
+								f.delete();
+								log.info("File " +  internalFilename + " already present in the database");
+							} 
+							else {
+								
+								
+								stmt = db.createStatement();
+								
+								log.info("Executing query: " + query);
+								query = "INSERT into fileMapping (userId, externalFilename, internalFilename) VALUES (" + im.getUserID() + ",\'" + im.getExternalFilename() + "\',\'" + internalFilename + "\')";
+								
+								stmt.executeUpdate(query);
+								stmt.close();
+	
+								
+								// insert the same file into the metadata table, 
+								// other values will be filled in when the file is read by a reader agent
+								//stmt = db.createStatement();
+								
+								//not needed anymore, there is now a trigger which does the same
+								/*query = "INSERT INTO metadata (externalFilename, internalFilename" +
+										// ", defaultTask, attributeType, missingValues
+										") VALUES (\'" + im.getExternalFilename() + "\', \'" + internalFilename + "\')";
+														 													
+								log.info("Executing query: " + query);						
+								stmt.execute(query);*/
+								
+								
+								// move the file to db\files directory
+								String newName = System.getProperty("user.dir")+System.getProperty("file.separator")+"data"+System.getProperty("file.separator")+"files"+System.getProperty("file.separator")+internalFilename;
+								// Boolean res = f.renameTo(new File(newName));
+								move(f, new File(newName));								
+							
+								// move(f, new File(newName));								
+								
+							}
+							
+							ACLMessage reply = request.createReply();
+							reply.setPerformative(ACLMessage.INFORM);
+							
+							Result r = new Result(im, internalFilename);
+							getContentManager().fillContent(reply, r);
+							
+							return reply;
+						}
 						else {
 							
+							String fileContent = im.getFileContent();
+							String fileName = im.getExternalFilename();
+							String internalFilename = DigestUtils.md5Hex(fileContent);
 							
-							stmt = db.createStatement();
+							Statement stmt = db.createStatement();
+							String query = "SELECT COUNT(*) AS num FROM fileMapping WHERE internalFilename = \'" + internalFilename + "\'";
+							log.info("Executing query " + query);
 							
-							log.info("Executing query: " + query);
-							query = "INSERT into fileMapping (userId, externalFilename, internalFilename) VALUES (" + im.getUserID() + ",\'" + im.getExternalFilename() + "\',\'" + internalFilename + "\')";
+							ResultSet rs = stmt.executeQuery(query);
 							
-							stmt.executeUpdate(query);
+							rs.next();
+							int count = rs.getInt("num");
+				
 							stmt.close();
-
 							
-							// insert the same file into the metadata table, 
-							// other values will be filled in when the file is read by a reader agent
-							//stmt = db.createStatement();
+																			
+							if (count > 0) {
+								log.info("File " +  internalFilename + " already present in the database");
+							} 
+							else {
+								
+								stmt = db.createStatement();
+								
+								log.info("Executing query: " + query);
+								query = "INSERT into fileMapping (userId, externalFilename, internalFilename) VALUES (" + im.getUserID() + ",\'" + im.getExternalFilename() + "\',\'" + internalFilename + "\')";
+								
+								stmt.executeUpdate(query);
+								stmt.close();
+								
+								String newName = System.getProperty("user.dir")+System.getProperty("file.separator")+"data"+System.getProperty("file.separator")+"files"+System.getProperty("file.separator")+internalFilename;
+								
+								FileWriter file = new FileWriter(newName);
+								file.write(fileContent);
+								file.close();
+																
+								log.info("Created file: " + newName);
+							}
 							
-							//not needed anymore, there is now a trigger which does the same
-							/*query = "INSERT INTO metadata (externalFilename, internalFilename" +
-									// ", defaultTask, attributeType, missingValues
-									") VALUES (\'" + im.getExternalFilename() + "\', \'" + internalFilename + "\')";
-													 													
-							log.info("Executing query: " + query);						
-							stmt.execute(query);*/
+							ACLMessage reply = request.createReply();
+							reply.setPerformative(ACLMessage.INFORM);
 							
+							Result r = new Result(im, internalFilename);
+							getContentManager().fillContent(reply, r);
 							
-							// move the file to db\files directory
-							String newName = System.getProperty("user.dir")+System.getProperty("file.separator")+"data"+System.getProperty("file.separator")+"files"+System.getProperty("file.separator")+internalFilename;
-							// Boolean res = f.renameTo(new File(newName));
-							move(f, new File(newName));								
-						
-							// move(f, new File(newName));								
-							
+							return reply;
 						}
 						
-						
-						ACLMessage reply = request.createReply();
-						reply.setPerformative(ACLMessage.INFORM);
-						
-						Result r = new Result(im, internalFilename);
-						getContentManager().fillContent(reply, r);
-						
-						return reply;
 					}
 					if (a.getAction() instanceof TranslateFilename) {
 						
@@ -288,14 +339,18 @@ public class Agent_DataManager extends Agent {
 						
 						Statement stmt = db.createStatement();
 						
-						String query = "SELECT internalFilename FROM fileMapping WHERE userID=" + tf.getUserID() + " AND externalFilename=\'" + tf.getExternalFilename() + "\'";
+						String query = null;
+						if (tf.getInternalFilename() == null)
+							query = "SELECT internalFilename AS filename FROM fileMapping WHERE userID=" + tf.getUserID() + " AND externalFilename=\'" + tf.getExternalFilename() + "\'";
+						else 
+							query = "SELECT externalFilename AS filename FROM fileMapping WHERE userID=" + tf.getUserID() + " AND internalFilename=\'" + tf.getInternalFilename() + "\'";
 						
 						log.info("Executing query: " + query);
 						
 						ResultSet rs = stmt.executeQuery(query);
 						
 						if (rs.next()) { //should return single line (or none, if file does not exist)
-							String internalFilename = rs.getString("internalFilename");
+							String internalFilename = rs.getString("filename");
 							
 							ACLMessage reply = request.createReply();
 							reply.setPerformative(ACLMessage.INFORM);

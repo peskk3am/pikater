@@ -16,13 +16,20 @@ import javax.swing.JTextField;
 import javax.swing.BoxLayout;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 
 import ontology.messages.Metadata;
+import sun.java2d.pipe.BufferedRenderPipe;
 
 public class FileManagerPanel extends JPanel {
 
@@ -54,6 +61,7 @@ public class FileManagerPanel extends JPanel {
 	public void setFiles(ArrayList data) {
 		filesModel.setFiles(data);
 		jTable.setModel(filesModel);
+		jTable.createDefaultColumnsFromModel();
 	}
 	
 	private class FilesTableModel implements TableModel {
@@ -294,9 +302,10 @@ public class FileManagerPanel extends JPanel {
 				public void mouseClicked(java.awt.event.MouseEvent e) {
 					JFileChooser importFile = new JFileChooser();
 					importFile.setVisible(true);
-					importFile.showOpenDialog(FileManagerPanel.this);
-					File f = importFile.getSelectedFile();
-					jTextField.setText(f.getPath());
+					if (importFile.showOpenDialog(FileManagerPanel.this) == JFileChooser.APPROVE_OPTION){
+						File f = importFile.getSelectedFile();
+						jTextField.setText(f.getPath());
+					}
 				}
 				public void mousePressed(java.awt.event.MouseEvent e) {
 				}
@@ -321,6 +330,45 @@ public class FileManagerPanel extends JPanel {
 			jButton1 = new JButton();
 			jButton1.setPreferredSize(new Dimension(90, 20));
 			jButton1.setText("Import");
+			jButton1.addActionListener(new java.awt.event.ActionListener() {
+				public void actionPerformed(java.awt.event.ActionEvent e) {
+					
+					String fileName = jTextField.getText();
+					File in = new File(fileName);
+					
+					try {
+						BufferedReader fis = new BufferedReader(new FileReader(in));
+						StringBuffer data = new StringBuffer(10000);
+						
+						System.err.println("Starting reading file");
+						
+						char[] buf = new char[1024];
+				        int numRead=0;
+				        while((numRead=fis.read(buf)) != -1){
+				            String readData = String.valueOf(buf, 0, numRead);
+				            data.append(readData);
+				            buf = new char[1024];
+				        }
+						
+				        fis.close();
+						
+				        System.err.println("Finished reading file");
+						
+						GuiEvent ge = new GuiEvent(FileManagerPanel.this, MainWindow.IMPORT_FILE);
+						
+						String[] names = fileName.split(System.getProperty("file.separator"));
+						ge.addParameter(names[names.length-1]);
+						ge.addParameter(data.toString());
+						myAgent.postGuiEvent(ge);
+					}
+					catch (FileNotFoundException ex) {
+						ex.printStackTrace();
+					}
+					catch (IOException ex) {
+						ex.printStackTrace();
+					}
+				}
+			});
 		}
 		return jButton1;
 	}

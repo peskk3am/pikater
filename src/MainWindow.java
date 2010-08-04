@@ -36,6 +36,7 @@ public class MainWindow extends JFrame {
 	public static final int UPDATE_METADATA = 1;
 	public static final int ON_LOAD = 2;
 	public static final int START_EXPERIMENT = 3;
+	public static final int IMPORT_FILE = 4;
 	
 	private class TreePanel {
 		

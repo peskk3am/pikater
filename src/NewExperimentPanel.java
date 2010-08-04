@@ -77,12 +77,17 @@ public class NewExperimentPanel extends JPanel {
 	
 	public void setAgentTypes(String[] agentTypes) {
 		this.agentTypes = agentTypes;
-		addAgentButton.setEnabled(true);	
+		addAgentButton.setEnabled(true);
+		if (agentsPanel.getComponentCount() == 0) {
+			agentsPanel.add(new AgentOptionsPanel(agentTypes));
+		}
 	}
 	
 	public void setFilesList(String[] filesList) {
 		this.filesList = filesList;
 		addFileButton.setEnabled(true);
+		if (filesPanel.getComponentCount() == 0)
+			filesPanel.add(new FilePanel(filesList));
 	}
 	/**
 	 * This method initializes this

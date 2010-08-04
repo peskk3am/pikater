@@ -140,10 +140,12 @@ public class MessagesOntology extends Ontology {
 	  public static final String IMPORT_FILE = "IMPORT_FILE";
 	  public static final String IMPORT_USER = "userID";
 	  public static final String IMPORT_FILENAME = "externalFilename";
+	  public static final String IMPORT_FILECONTENT = "fileContent";
 	  
 	  public static final String TRANSLATE = "TRANSLATE";
 	  public static final String TRANSLATE_USER = "userID";
-	  public static final String TRANSLATE_FILENAME = "externalFilename";
+	  public static final String TRANSLATE_EXTERNAL_FILENAME = "externalFilename";
+	  public static final String TRANSLATE_INTERNAL_FILENAME = "internalFilename";
 	  
 	  public static final String SOLVE = "SOLVE";
 	  public static final String SOLVE_PROBLEM = "problem";
@@ -358,11 +360,13 @@ public class MessagesOntology extends Ontology {
 	    	as = (AgentActionSchema)getSchema(IMPORT_FILE);
 	    	as.add(IMPORT_USER, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));
 	    	as.add(IMPORT_FILENAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	as.add(IMPORT_FILECONTENT, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 	    	as.setResult((PrimitiveSchema)getSchema(BasicOntology.STRING)); //the internal filename 
 	    	
 	    	as = (AgentActionSchema)getSchema(TRANSLATE);
 	    	as.add(TRANSLATE_USER, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));
-	    	as.add(TRANSLATE_FILENAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	as.add(TRANSLATE_EXTERNAL_FILENAME, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+	    	as.add(TRANSLATE_INTERNAL_FILENAME, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 	    	as.setResult((PrimitiveSchema)getSchema(BasicOntology.STRING)); //the internal filename
 	    	
 	    	as = (AgentActionSchema)getSchema(SAVE_RESULTS);

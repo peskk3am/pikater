@@ -645,8 +645,8 @@ public abstract class Agent_GUI extends GuiAgent {
 				if (Integer.parseInt(next_problem.getGui_id()) == _problem_id){
 					List data = next_problem.getData();
 					Data d = new Data();
-					d.setTrain_file_name("data" + System.getProperty("file.separator") + "files" + System.getProperty("file.separator") + DataManagerService.translateFilename(this, 1, _train));
-					d.setTest_file_name("data" + System.getProperty("file.separator") + "files" + System.getProperty("file.separator") + DataManagerService.translateFilename(this, 1, _test));
+					d.setTrain_file_name("data" + System.getProperty("file.separator") + "files" + System.getProperty("file.separator") + DataManagerService.translateFilename(this, 1, _train, null));
+					d.setTest_file_name("data" + System.getProperty("file.separator") + "files" + System.getProperty("file.separator") + DataManagerService.translateFilename(this, 1, _test, null));
 					if (_output != null){
 						d.setOutput(_output);
 					}
@@ -968,7 +968,7 @@ public abstract class Agent_GUI extends GuiAgent {
 		File incomingFiles = new File(incomingFilesPath);
 		
 		for (String fileName : incomingFiles.list()) {
-			DataManagerService.importFile(this, 1, fileName);
+			DataManagerService.importFile(this, 1, fileName, null);
 		}
 		
 	  	System.out.println("GUI agent "+getLocalName()+" is alive and waiting...");

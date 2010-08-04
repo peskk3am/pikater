@@ -62,6 +62,19 @@ public class Agent_GUI_Java extends Agent_GUI {
 			
 			while (it.hasNext()) {
 				Task t = (Task)it.next();
+				
+				String testInternalFilename = t.getData().getTest_file_name();
+				String trainInternalFilename = t.getData().getTrain_file_name();
+				
+				String[] path = testInternalFilename.split(System.getProperty("file.separator"));
+				testInternalFilename = path[path.length -1];
+				
+				path = trainInternalFilename.split(System.getProperty("file.separator"));
+				trainInternalFilename = path[path.length -1];
+				
+				t.getData().setTest_file_name(DataManagerService.translateFilename(this, 1, null, testInternalFilename));
+				t.getData().setTrain_file_name(DataManagerService.translateFilename(this, 1, null, trainInternalFilename));
+				
 				myGUI.addResult(t);
 			}
 		} catch (UngroundedException e) {
@@ -154,6 +167,20 @@ public class Agent_GUI_Java extends Agent_GUI {
 			}
 			
 			addMethodToProblem(problemID, optionsManager.get(0), optionsManager.get(1), optionsManager.get(2));
+			
+			break;
+			
+		case MainWindow.IMPORT_FILE :
+			
+			String fileName = (String)ev.getParameter(0);
+			String fileContent = (String)ev.getParameter(1);
+			
+			DataManagerService.importFile(this, 1, fileName, fileContent);
+			
+			FileManagerPanel fmp = (FileManagerPanel)ev.getSource();
+			fmp.reloadFileInfo();
+			
+			break;
 		
 		}
 	}

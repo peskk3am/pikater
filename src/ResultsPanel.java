@@ -16,7 +16,7 @@ public class ResultsPanel extends JPanel {
 	private static final long serialVersionUID = 1L;
 	private JScrollPane jScrollPane = null;
 	private JTable jTable = null;
-	private String[] columns = {"Agent type", "Train file", "Test file", "Error rate", "Mean absolute error", "MSE", "Kappa"};
+	private String[] columns = {"Agent type", "Options", "Train file", "Test file", "Error rate", "Mean absolute error", "MSE", "Kappa"};
 	private DefaultTableModel tableModel = new DefaultTableModel(columns, 0);  //  @jve:decl-index=0:visual-constraint="12,223"
 
 	/**
@@ -32,6 +32,7 @@ public class ResultsPanel extends JPanel {
 		Vector<String> data = new Vector<String>();
 		
 		data.add(t.getAgent().getType());
+		data.add(t.getAgent().optionsToString());
 		data.add(t.getData().getTrain_file_name());
 		data.add(t.getData().getTest_file_name());
 		data.add(String.valueOf(t.getResult().getError_rate()));

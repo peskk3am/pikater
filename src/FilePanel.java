@@ -1,3 +1,5 @@
+import java.awt.Component;
+import java.awt.Container;
 import java.awt.GridBagLayout;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
@@ -5,6 +7,7 @@ import java.awt.GridBagConstraints;
 import javax.swing.JTextField;
 import java.awt.Dimension;
 import javax.swing.JComboBox;
+import javax.swing.JButton;
 
 public class FilePanel extends JPanel {
 
@@ -14,6 +17,7 @@ public class FilePanel extends JPanel {
 	private JLabel jLabel1 = null;
 	private JComboBox jComboBox1 = null;
 	private String[] filesList = null;
+	private JButton jButton = null;
 	/**
 	 * This is the default constructor
 	 */
@@ -41,6 +45,9 @@ public class FilePanel extends JPanel {
 	 * @return void
 	 */
 	private void initialize() {
+		GridBagConstraints gridBagConstraints11 = new GridBagConstraints();
+		gridBagConstraints11.gridx = 3;
+		gridBagConstraints11.gridy = 0;
 		GridBagConstraints gridBagConstraints3 = new GridBagConstraints();
 		gridBagConstraints3.fill = GridBagConstraints.VERTICAL;
 		gridBagConstraints3.gridy = 0;
@@ -67,6 +74,7 @@ public class FilePanel extends JPanel {
 		this.add(getJComboBox(), gridBagConstraints1);
 		this.add(jLabel1, gridBagConstraints2);
 		this.add(getJComboBox1(), gridBagConstraints3);
+		this.add(getJButton());
 	}
 
 	/**
@@ -95,6 +103,26 @@ public class FilePanel extends JPanel {
 			jComboBox1.setEditable(true);
 		}
 		return jComboBox1;
+	}
+
+	/**
+	 * This method initializes jButton	
+	 * 	
+	 * @return javax.swing.JButton	
+	 */
+	private JButton getJButton() {
+		if (jButton == null) {
+			jButton = new JButton();
+			jButton.setText("Remove");
+			jButton.addActionListener(new java.awt.event.ActionListener() {
+				public void actionPerformed(java.awt.event.ActionEvent e) {
+					Container parent = getParent();
+					parent.remove(FilePanel.this);
+					parent.repaint();
+				}
+			});
+		}
+		return jButton;
 	}
 
 }  //  @jve:decl-index=0:visual-constraint="0,0"

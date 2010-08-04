@@ -1,3 +1,4 @@
+import java.awt.Container;
 import java.awt.GridBagLayout;
 import javax.swing.JPanel;
 import javax.swing.JComboBox;
@@ -97,6 +98,14 @@ public class AgentOptionsPanel extends JPanel {
 		if (jButton == null) {
 			jButton = new JButton();
 			jButton.setPreferredSize(new Dimension(100, 24));
+			jButton.setText("Remove");
+			jButton.addActionListener(new java.awt.event.ActionListener() {
+				public void actionPerformed(java.awt.event.ActionEvent e) {
+					Container parent = getParent();
+					parent.remove(AgentOptionsPanel.this);
+					parent.repaint();
+				}
+			});
 		}
 		return jButton;
 	}
