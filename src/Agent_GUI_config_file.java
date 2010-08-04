@@ -67,8 +67,7 @@ public class Agent_GUI_config_file extends Agent_GUI{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (CodecException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("Agent "+getLocalName()+" "+inform.getContent());
 		} catch (OntologyException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -103,14 +102,14 @@ public class Agent_GUI_config_file extends Agent_GUI{
         int newId = createNewProblem("1000");
         try {
 			//addAgentToProblem(newId, null, "MultilayerPerceptron", "-L 0.4 -D -M ? -H ?,?");
-        	addAgentToProblem(newId, null, "RBFNetwork", "-B 4");
-        	addAgentToProblem(newId, null, "RBFNetwork", "-B ?");
+        	// addAgentToProblem(newId, null, "RBFNetwork", "-B 4");
+        	addAgentToProblem(newId, null, "?", null);
 
 		} catch (FailureException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-         addDatasetToProblem(newId, "iris.arff", "iris.arff");
+         addDatasetToProblem(newId, "iris.arff", "iris.arff", null, null);
  		// getAgentOptions("mp1"); 
         // */
 		
