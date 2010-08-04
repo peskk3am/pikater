@@ -440,7 +440,7 @@ public class Agent_Manager extends Agent{
 	    	        	   a_next_copy.setType(a_next.getType());
 	    	        	  
 	    	        	   if (a_next_copy.getName() == null){
-	    	        		   String agentType = a_next.getType();		    	        		   	    	        		   	    	        		   
+	    	        		   String agentType = a_next.getType();		    	        		   	    	        		   	    	        		   	    	        		   
 	    	        		   boolean getOptions = false;
 	    	        		   if (agentType.contains("?")){	    	        			   
 	    	        			   
@@ -1078,8 +1078,8 @@ public class Agent_Manager extends Agent{
 	 		Metadata next_md = (Metadata) itr.next();
 
 			// try to look up the file (-> metadata) in the database
-			if (!hasMetadata){
-				if (next_md.getInternal_name().equals(metadata.getInternal_name())){ 
+			if (!hasMetadata){				
+				if (("data"+System.getProperty("file.separator")+"files"+System.getProperty("file.separator")+next_md.getInternal_name()).equals(metadata.getInternal_name())){ 
 					metadata = next_md;
 					hasMetadata = true;
 				}
