@@ -53,6 +53,12 @@ public class Agent_GUI_Java extends Agent_GUI {
 
 	@Override
 	protected void displayPartialResult(ACLMessage inform) {
+		if (inform.getPerformative() != ACLMessage.INFORM) {
+			System.err.println("Received FAILURE");
+			myGUI.displayError(inform.getContent());
+			return;
+		}
+		
 		try {
 			Result r = (Result)getContentManager().extractContent(inform);
 			Results res = (Results)r.getValue();
@@ -126,6 +132,7 @@ public class Agent_GUI_Java extends Agent_GUI {
 			NewExperimentPanel nep = (NewExperimentPanel) ev.getSource();
 			
 			Vector<String> types = offerAgentTypes();
+			types.add(0, "?");
 			String[] agentTypes = new String[types.size()];
 			
 			for (int i = 0; i < types.size(); i++) {
@@ -153,20 +160,34 @@ public class Agent_GUI_Java extends Agent_GUI {
 			
 			int problemID = createNewProblem("10000");
 			
-			try {
-				for (int i = 0; i < agents.size(); i++) {
-					addAgentToProblem(problemID, null, agents.get(i), agentOptions.get(i));
-				}
-			} 
-			catch (FailureException e) {
-					e.printStackTrace();
-			}
-			
 			for (int i = 0; i < trainFiles.size(); i++) {
 				addDatasetToProblem(problemID, trainFiles.get(i), testFiles.get(i), null, null);
 			}
 			
-			addMethodToProblem(problemID, optionsManager.get(0), optionsManager.get(1), optionsManager.get(2));
+			try {
+				for (int i = 0; i < agents.size(); i++) {
+					
+					if (agents.get(i).contains("?")) {
+						System.err.println("? agent");
+						addAgentToProblem(problemID, null, agents.get(i), null);
+					}
+					else {
+						addAgentToProblem(problemID, null, agents.get(i), agentOptions.get(i));
+					}
+				}
+			}
+			
+			catch (FailureException e) {
+					e.printStackTrace();
+			}
+			
+			if (optionsManager.get(0).equals("Random")) {
+				addMethodToProblem(problemID, optionsManager.get(0), optionsManager.get(1), optionsManager.get(2));
+			}
+			else {
+				setDefault_number_of_values_to_try(Integer.parseInt(optionsManager.get(1)));
+				addMethodToProblem(problemID, "ChooseXValues", null, null);
+			}
 			
 			break;
 			

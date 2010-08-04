@@ -29,6 +29,7 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
 
 import ontology.messages.Task;
+import javax.swing.JDialog;
 
 public class MainWindow extends JFrame {
 
@@ -66,8 +67,6 @@ public class MainWindow extends JFrame {
 	private FileManagerPanel fileManager = null;
 	private NewExperimentPanel experimentPanel = null;
 	private ResultsPanel resultsPanel = null;
-	
-	
 	public MainWindow(Agent_GUI myAgent) {
 		super();
 		this.myAgent = myAgent;
@@ -77,8 +76,17 @@ public class MainWindow extends JFrame {
 		initialize();
 	}
 	
+	public void displayError(String error) {
+		JOptionPane.showMessageDialog(this, error, "Error", JOptionPane.ERROR_MESSAGE);
+	}
+	
 	public void addResult(Task t) {
-		resultsPanel.addResult(t);
+		if (t.getResult().getMean_absolute_error() < 0) {
+			JOptionPane.showMessageDialog(this, "There was a problem with the computing agent", "Error", JOptionPane.ERROR_MESSAGE);
+		}
+		else {
+			resultsPanel.addResult(t);
+		}
 	}
 	
 	public void setAgents(Vector<String> agents) {};

@@ -5,6 +5,9 @@ import jade.util.leap.ArrayList;
 
 import java.awt.GridBagLayout;
 
+import javax.swing.DefaultCellEditor;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
@@ -26,6 +29,8 @@ import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.event.TableModelListener;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
 import ontology.messages.Metadata;
@@ -64,7 +69,12 @@ public class FileManagerPanel extends JPanel {
 		jTable.createDefaultColumnsFromModel();
 	}
 	
-	private class FilesTableModel implements TableModel {
+	String[] attributesTypes = {"Categorical", "Numerical", "Mixed"};
+	String[] defaultTasks = {"Classification", "Regression", "Clustering"};
+	
+	private class FilesTableModel extends AbstractTableModel {
+
+		private static final long serialVersionUID = -5772409714155549244L;
 
 		ArrayList data = new ArrayList();
 		
@@ -113,7 +123,7 @@ public class FileManagerPanel extends JPanel {
 		
 		@Override
 		public void addTableModelListener(TableModelListener l) {
-			
+			//super.addTableModelListener(l);
 		}
 
 		@Override
@@ -145,18 +155,21 @@ public class FileManagerPanel extends JPanel {
 
 		@Override
 		public Object getValueAt(int rowIndex, int columnIndex) {
-			return getColumnValue((Metadata)data.get(rowIndex), columnIndex);
+			Object value = getColumnValue((Metadata)data.get(rowIndex), columnIndex);
+			
+			return value;
 		}
 
 		@Override
 		public boolean isCellEditable(int rowIndex, int columnIndex) {
-			return true;
+			if (columnIndex > 0)  
+				return true;
+			return false;
 		}
 
 		@Override
 		public void removeTableModelListener(TableModelListener l) {
-			// TODO Auto-generated method stub
-			
+			//super.removeTableModelListener(l);
 		}
 
 		@Override

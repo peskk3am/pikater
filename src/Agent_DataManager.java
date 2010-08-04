@@ -83,7 +83,7 @@ public class Agent_DataManager extends Agent {
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
 		
-		// updateMetadata();
+		updateMetadata();
 		
 		LinkedList<String> tableNames = new LinkedList<String>();
 		LinkedList<String> triggerNames = new LinkedList<String>();

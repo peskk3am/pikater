@@ -244,6 +244,7 @@ public abstract class Agent_GUI extends GuiAgent {
 
 				refreshOptions(agent, refuse.getPerformative());
 				checkProblems();
+				displayResult(refuse);
 			}
 			
 			protected void handleFailure(ACLMessage failure) {
@@ -267,6 +268,7 @@ public abstract class Agent_GUI extends GuiAgent {
 				
 				refreshOptions(agent, failure.getPerformative());
 				checkProblems();
+				displayResult(failure);
 
 			}
 
@@ -345,6 +347,7 @@ public abstract class Agent_GUI extends GuiAgent {
 			
 			protected void handleRefuse(ACLMessage refuse) {
 				System.out.println(getLocalName()+": Agent "+refuse.getSender().getName()+" refused to perform the requested action");
+				displayResult(refuse);
 			}
 			
 			protected void handleFailure(ACLMessage failure) {
@@ -356,6 +359,7 @@ public abstract class Agent_GUI extends GuiAgent {
 				else {
 					System.out.println("Agent "+failure.getSender().getName()+" failed to perform the requested action");
 				}
+				displayResult(failure);
 			}
 
 		};
@@ -383,6 +387,7 @@ public abstract class Agent_GUI extends GuiAgent {
 
 			protected void handleRefuse(ACLMessage refuse) {
 				System.out.println(getLocalName()+": Agent "+refuse.getSender().getName()+" refused to perform the requested action");
+				displayResult(refuse);
 			}
 			
 			protected void handleFailure(ACLMessage failure) {
@@ -390,12 +395,11 @@ public abstract class Agent_GUI extends GuiAgent {
 					// FAILURE notification from the JADE runtime: the receiver
 					// does not exist
 					System.out.println("Responder does not exist");
-					displayResult(failure);
 				}
 				else {
 					System.out.println("Agent "+failure.getSender().getName()+" failed to perform the requested action");
-					displayResult(failure);
 				}
+				displayResult(failure);
 			}	
 					
 		};
@@ -565,7 +569,16 @@ public abstract class Agent_GUI extends GuiAgent {
 						agent.setOptions(new ArrayList());
 					}
 					else {
-						agent.setOptions(agent.stringToOptions(optString));
+						List options = agent.stringToOptions(optString);
+						Iterator it = options.iterator();
+						
+						while (it.hasNext()) {
+							Option opt = (Option)it.next();
+							opt.setNumber_of_values_to_try(default_number_of_values_to_try);
+						}
+						
+						agent.setOptions(options);
+						
 					}
 					List agents = next_problem.getAgents();
 					agents.add(agent);
@@ -578,6 +591,7 @@ public abstract class Agent_GUI extends GuiAgent {
 	protected void addOptionToAgent(int _problem_id, int _agent_id, String option_name,
 			String option_value, String lower, String upper, String number_of_values_to_try, String set){
 		// TODO add interval ... 
+		System.err.println("Add option to agent");
 		for (Enumeration pe = problems.elements() ; pe.hasMoreElements() ;) {
 			Problem next_problem = (Problem)pe.nextElement();
 			if (!next_problem.getSent()){

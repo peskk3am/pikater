@@ -168,6 +168,7 @@ public class NewExperimentPanel extends JPanel {
 					else {
 						optionsPanel.add(chooseXvaluesPanel);
 					}
+					NewExperimentPanel.this.validate();
 					NewExperimentPanel.this.repaint();
 				}
 			});
@@ -302,6 +303,7 @@ public class NewExperimentPanel extends JPanel {
 					if (optionManager.get(0).equals("ChooseXValues")) {
 						ChooseXValuesOptionManagerOptionsPanel cxv = (ChooseXValuesOptionManagerOptionsPanel)optionsPanel.getComponent(0);
 						
+						System.err.println("Default tries: " + cxv.getDefaultTries());
 						optionManager.add(cxv.getDefaultTries());
 					}
 					

@@ -118,6 +118,7 @@ public class FilePanel extends JPanel {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
 					Container parent = getParent();
 					parent.remove(FilePanel.this);
+					((JPanel)parent).revalidate();
 					parent.repaint();
 				}
 			});

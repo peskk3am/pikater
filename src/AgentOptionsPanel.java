@@ -103,6 +103,7 @@ public class AgentOptionsPanel extends JPanel {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
 					Container parent = getParent();
 					parent.remove(AgentOptionsPanel.this);
+					((JPanel)parent).revalidate();
 					parent.repaint();
 				}
 			});
