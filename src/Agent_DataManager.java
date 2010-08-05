@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -27,9 +28,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.LinkedList;
+import java.util.Vector;
 import java.util.regex.Pattern;
 
 import ontology.messages.GetAllMetadata;
+import ontology.messages.GetFileInfo;
+import ontology.messages.GetFiles;
 import ontology.messages.GetTheBestAgent;
 import ontology.messages.ImportFile;
 import ontology.messages.MessagesOntology;
@@ -38,6 +42,7 @@ import ontology.messages.SaveMetadata;
 import ontology.messages.SaveResults;
 import ontology.messages.Task;
 import ontology.messages.TranslateFilename;
+import ontology.messages.UpdateMetadata;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.FileAppender;
@@ -78,15 +83,22 @@ public class Agent_DataManager extends Agent {
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
 		
-		// updateMetadata();
+		updateMetadata();
 		
 		LinkedList<String> tableNames = new LinkedList<String>();
+		LinkedList<String> triggerNames = new LinkedList<String>();
 		try {
-			String[] types = {"TABLE"};
+			String[] types = {"TABLE", "VIEW"};
 			ResultSet tables = db.getMetaData().getTables(null, null, "%", types);
 			while (tables.next()) {
 				tableNames.add(tables.getString(3));
 			}
+			
+			ResultSet triggers = db.createStatement().executeQuery("SELECT trigger_name FROM INFORMATION_SCHEMA.TRIGGERS");
+			while (triggers.next()) {
+				triggerNames.add(triggers.getString("trigger_name"));
+			}
+			
 		} catch (SQLException e) {
 			log.error("Error getting tables list: " + e.getMessage());
 			e.printStackTrace();
@@ -94,6 +106,11 @@ public class Agent_DataManager extends Agent {
 		
 		log.info("Found the following tables: ");
 		for (String s : tableNames) {
+			log.info(s);
+		}
+		
+		log.info("Found the following triggers: ");
+		for (String s : triggerNames) {
 			log.info(s);
 		}
 		
@@ -155,6 +172,31 @@ public class Agent_DataManager extends Agent {
 			log.fatal("Error creating table RESULTS: " + e.getMessage());
 		}
 		
+		try {
+			if (!tableNames.contains("FILEMETADATA")) {
+				log.info("Creating view FILEMETADATA");
+				db.createStatement().executeUpdate("CREATE VIEW filemetadata AS " +
+						"SELECT userid, filemapping.internalfilename, filemapping.externalfilename, " +
+						"defaulttask, attributetype, numberofattributes, numberofinstances, missingvalues " +
+						"FROM filemapping JOIN metadata " +
+						"ON filemapping.internalfilename = metadata.internalfilename");
+			}
+		} catch (SQLException e) {
+			log.fatal("Error creating table FILEMETADATA: " + e.getMessage());
+		}
+		
+		try {
+			if (!triggerNames.contains("PREPAREMETADATA")) {
+				db.createStatement().execute("CREATE TRIGGER prepareMetadata AFTER INSERT ON filemapping " +
+						"REFERENCING NEW ROW AS newrow FOR EACH ROW " +
+						"INSERT INTO metadata (internalfilename, externalfilename) " +
+						"VALUES (newrow.internalfilename, newrow.externalfilename)");
+			}
+		}
+		catch (SQLException e) {
+			log.fatal("Error creating trigger prepareMetadata: " + e.getMessage());
+		}
+		
 		MessageTemplate mt = MessageTemplate.and(
 				MessageTemplate.MatchOntology(ontology.getName()),
 				MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
@@ -175,70 +217,121 @@ public class Agent_DataManager extends Agent {
 					if (a.getAction() instanceof ImportFile) {
 						ImportFile im = (ImportFile)a.getAction();
 						
-						String path = System.getProperty("user.dir") + System.getProperty("file.separator");
-						path += "incoming" + System.getProperty("file.separator") + im.getExternalFilename();
-
-						String internalFilename = md5(path);
-						
-						File f = new File(path);		
-						
-						Statement stmt = db.createStatement();
-						String query = "SELECT COUNT(*) AS num FROM fileMapping WHERE internalFilename = \'" + internalFilename + "\'";
-						log.info("Executing query " + query);
-						
-						ResultSet rs = stmt.executeQuery(query);
-						
-						rs.next();
-						int count = rs.getInt("num");
-			
-						stmt.close();
-						
-																		
-						if (count > 0) {
-							f.delete();
-							log.info("File " +  internalFilename + " already present in the database");
-						} 
+						if (im.getFileContent() == null) {
+							String path = System.getProperty("user.dir") + System.getProperty("file.separator");
+							path += "incoming" + System.getProperty("file.separator") + im.getExternalFilename();
+	
+							String internalFilename = md5(path);
+							
+							File f = new File(path);		
+							
+							Statement stmt = db.createStatement();
+							String query = "SELECT COUNT(*) AS num FROM fileMapping WHERE internalFilename = \'" + internalFilename + "\'";
+							log.info("Executing query " + query);
+							
+							ResultSet rs = stmt.executeQuery(query);
+							
+							rs.next();
+							int count = rs.getInt("num");
+				
+							stmt.close();
+							
+																			
+							if (count > 0) {
+								f.delete();
+								log.info("File " +  internalFilename + " already present in the database");
+							} 
+							else {
+								
+								
+								stmt = db.createStatement();
+								
+								log.info("Executing query: " + query);
+								query = "INSERT into fileMapping (userId, externalFilename, internalFilename) VALUES (" + im.getUserID() + ",\'" + im.getExternalFilename() + "\',\'" + internalFilename + "\')";
+								
+								stmt.executeUpdate(query);
+								stmt.close();
+	
+								
+								// insert the same file into the metadata table, 
+								// other values will be filled in when the file is read by a reader agent
+								//stmt = db.createStatement();
+								
+								//not needed anymore, there is now a trigger which does the same
+								/*query = "INSERT INTO metadata (externalFilename, internalFilename" +
+										// ", defaultTask, attributeType, missingValues
+										") VALUES (\'" + im.getExternalFilename() + "\', \'" + internalFilename + "\')";
+														 													
+								log.info("Executing query: " + query);						
+								stmt.execute(query);*/
+								
+								
+								// move the file to db\files directory
+								String newName = System.getProperty("user.dir")+System.getProperty("file.separator")+"data"+System.getProperty("file.separator")+"files"+System.getProperty("file.separator")+internalFilename;
+								// Boolean res = f.renameTo(new File(newName));
+								move(f, new File(newName));								
+							
+								// move(f, new File(newName));								
+								
+							}
+							
+							ACLMessage reply = request.createReply();
+							reply.setPerformative(ACLMessage.INFORM);
+							
+							Result r = new Result(im, internalFilename);
+							getContentManager().fillContent(reply, r);
+							
+							return reply;
+						}
 						else {
 							
+							String fileContent = im.getFileContent();
+							String fileName = im.getExternalFilename();
+							String internalFilename = DigestUtils.md5Hex(fileContent);
 							
-							stmt = db.createStatement();
+							Statement stmt = db.createStatement();
+							String query = "SELECT COUNT(*) AS num FROM fileMapping WHERE internalFilename = \'" + internalFilename + "\'";
+							log.info("Executing query " + query);
 							
-							log.info("Executing query: " + query);
-							query = "INSERT into fileMapping (userId, externalFilename, internalFilename) VALUES (" + im.getUserID() + ",\'" + im.getExternalFilename() + "\',\'" + internalFilename + "\')";
+							ResultSet rs = stmt.executeQuery(query);
 							
-							stmt.executeUpdate(query);
+							rs.next();
+							int count = rs.getInt("num");
+				
 							stmt.close();
-
 							
-							// insert the same file into the metadata table, 
-							// other values will be filled in when the file is read by a reader agent
-							stmt = db.createStatement();
+																			
+							if (count > 0) {
+								log.info("File " +  internalFilename + " already present in the database");
+							} 
+							else {
+								
+								stmt = db.createStatement();
+								
+								log.info("Executing query: " + query);
+								query = "INSERT into fileMapping (userId, externalFilename, internalFilename) VALUES (" + im.getUserID() + ",\'" + im.getExternalFilename() + "\',\'" + internalFilename + "\')";
+								
+								stmt.executeUpdate(query);
+								stmt.close();
+								
+								String newName = System.getProperty("user.dir")+System.getProperty("file.separator")+"data"+System.getProperty("file.separator")+"files"+System.getProperty("file.separator")+internalFilename;
+								
+								FileWriter file = new FileWriter(newName);
+								file.write(fileContent);
+								file.close();
+																
+								log.info("Created file: " + newName);
+							}
 							
-							query = "INSERT INTO metadata (externalFilename, internalFilename" +
-									// ", defaultTask, attributeType, missingValues
-									") VALUES (\'" + im.getExternalFilename() + "\', \'" + internalFilename + "\')";
-													 													
-							log.info("Executing query: " + query);						
-							stmt.executeUpdate(query);
+							ACLMessage reply = request.createReply();
+							reply.setPerformative(ACLMessage.INFORM);
 							
+							Result r = new Result(im, internalFilename);
+							getContentManager().fillContent(reply, r);
 							
-							// move the file to db\files directory
-							String newName = System.getProperty("user.dir")+System.getProperty("file.separator")+"data"+System.getProperty("file.separator")+"files"+System.getProperty("file.separator")+internalFilename;
-							// Boolean res = f.renameTo(new File(newName));
-							move(f, new File(newName));								
-						
-							// move(f, new File(newName));								
-							
+							return reply;
 						}
 						
-						
-						ACLMessage reply = request.createReply();
-						reply.setPerformative(ACLMessage.INFORM);
-						
-						Result r = new Result(im, internalFilename);
-						getContentManager().fillContent(reply, r);
-						
-						return reply;
 					}
 					if (a.getAction() instanceof TranslateFilename) {
 						
@@ -246,14 +339,18 @@ public class Agent_DataManager extends Agent {
 						
 						Statement stmt = db.createStatement();
 						
-						String query = "SELECT internalFilename FROM fileMapping WHERE userID=" + tf.getUserID() + " AND externalFilename=\'" + tf.getExternalFilename() + "\'";
+						String query = null;
+						if (tf.getInternalFilename() == null)
+							query = "SELECT internalFilename AS filename FROM fileMapping WHERE userID=" + tf.getUserID() + " AND externalFilename=\'" + tf.getExternalFilename() + "\'";
+						else 
+							query = "SELECT externalFilename AS filename FROM fileMapping WHERE userID=" + tf.getUserID() + " AND internalFilename=\'" + tf.getInternalFilename() + "\'";
 						
 						log.info("Executing query: " + query);
 						
 						ResultSet rs = stmt.executeQuery(query);
 						
 						if (rs.next()) { //should return single line (or none, if file does not exist)
-							String internalFilename = rs.getString("internalFilename");
+							String internalFilename = rs.getString("filename");
 							
 							ACLMessage reply = request.createReply();
 							reply.setPerformative(ACLMessage.INFORM);
@@ -388,6 +485,91 @@ public class Agent_DataManager extends Agent {
 						
 						return reply;						
 					}
+					if (a.getAction() instanceof GetFileInfo) {
+						
+						GetFileInfo gfi = (GetFileInfo)a.getAction();
+						
+						String query = "SELECT * FROM filemetadata WHERE userid = " + gfi.getUserID();
+						
+						Statement stmt = db.createStatement();
+						
+						log.info("Executing query: " + query);
+						
+						ResultSet rs = stmt.executeQuery(query);
+						
+						List fileInfos = new ArrayList();
+						
+						while (rs.next())  {
+							Metadata m = new Metadata();
+							m.setAttribute_type(rs.getString("attributeType"));
+							m.setDefault_task(rs.getString("defaultTask"));
+							m.setExternal_name(rs.getString("externalFilename"));
+							m.setInternal_name(rs.getString("internalFilename"));
+							m.setMissing_values(rs.getBoolean("missingValues"));
+							m.setNumber_of_attributes(rs.getInt("numberOfAttributes"));
+							m.setNumber_of_instances(rs.getInt("numberOfInstances"));	
+							fileInfos.add(m);
+						}
+						
+						Result r = new Result(a.getAction(), fileInfos);
+						ACLMessage reply = request.createReply();
+						reply.setPerformative(ACLMessage.INFORM);
+						
+						getContentManager().fillContent(reply, r);
+						
+						return reply;
+					}
+					
+					if (a.getAction() instanceof UpdateMetadata) {
+						
+						UpdateMetadata updateMetadata = (UpdateMetadata)a.getAction();
+						Metadata metadata = updateMetadata.getMetadata();
+						
+						Statement stmt = db.createStatement();
+
+						String query = "UPDATE metadata SET "; 												 						
+						query += "numberOfInstances=" + metadata.getNumber_of_instances()+ ", ";
+						query += "numberOfAttributes=" + metadata.getNumber_of_attributes() + ", ";
+						query += "defaultTask= \'" + metadata.getDefault_task() + "\', ";
+						query += "missingValues=" + metadata.getMissing_values() + ", ";
+						query += "attributetype= \'" + metadata.getAttribute_type() + "\'";
+						query += " WHERE internalFilename =\'"+metadata.getInternal_name() + "\'"; 						
+						
+						log.info("Executing query: " + query);
+					
+						stmt.executeUpdate(query);
+						
+						ACLMessage reply = request.createReply();
+						reply.setPerformative(ACLMessage.INFORM);
+						return reply;
+					}
+					if (a.getAction() instanceof GetFiles) {
+						
+						GetFiles gf = (GetFiles)a.getAction();
+						
+						String query = "SELECT * FROM filemapping WHERE userid = " + gf.getUserID();
+						
+						log.info("Executing query: " + query);
+						
+						Statement stmt = db.createStatement();
+						ResultSet rs = stmt.executeQuery(query);
+						
+						ArrayList files = new ArrayList(); 
+						
+						while (rs.next()) {
+							files.add(rs.getString("externalFilename"));
+						}
+						
+						Result r = new Result(a.getAction(), files);
+						ACLMessage reply = request.createReply();
+						reply.setPerformative(ACLMessage.INFORM);
+						
+						getContentManager().fillContent(reply, r);
+						
+						return reply;		
+					}
+				
+					
 				} catch (OntologyException e) {
 					e.printStackTrace();
 					log.error("Problem extracting content: " + e.getMessage());
@@ -411,6 +593,8 @@ public class Agent_DataManager extends Agent {
 				log.error("Failure responding to request: " + request.getContent());
 				return failure;
 			}
+			
+			
 			
 		});
 		

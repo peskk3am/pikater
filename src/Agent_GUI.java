@@ -61,7 +61,7 @@ public abstract class Agent_GUI extends GuiAgent {
 	private int agent_id = 0;
 	private int data_id = 0;
 	
-	private long timeout = 1000; 
+	private long timeout = 10000; 
 	
 	private int default_number_of_values_to_try = 10;
 	private float default_error_rate = (float) 0.3;
@@ -244,6 +244,7 @@ public abstract class Agent_GUI extends GuiAgent {
 
 				refreshOptions(agent, refuse.getPerformative());
 				checkProblems();
+				displayResult(refuse);
 			}
 			
 			protected void handleFailure(ACLMessage failure) {
@@ -267,6 +268,7 @@ public abstract class Agent_GUI extends GuiAgent {
 				
 				refreshOptions(agent, failure.getPerformative());
 				checkProblems();
+				displayResult(failure);
 
 			}
 
@@ -345,6 +347,7 @@ public abstract class Agent_GUI extends GuiAgent {
 			
 			protected void handleRefuse(ACLMessage refuse) {
 				System.out.println(getLocalName()+": Agent "+refuse.getSender().getName()+" refused to perform the requested action");
+				displayResult(refuse);
 			}
 			
 			protected void handleFailure(ACLMessage failure) {
@@ -356,6 +359,7 @@ public abstract class Agent_GUI extends GuiAgent {
 				else {
 					System.out.println("Agent "+failure.getSender().getName()+" failed to perform the requested action");
 				}
+				displayResult(failure);
 			}
 
 		};
@@ -383,6 +387,7 @@ public abstract class Agent_GUI extends GuiAgent {
 
 			protected void handleRefuse(ACLMessage refuse) {
 				System.out.println(getLocalName()+": Agent "+refuse.getSender().getName()+" refused to perform the requested action");
+				displayResult(refuse);
 			}
 			
 			protected void handleFailure(ACLMessage failure) {
@@ -390,12 +395,11 @@ public abstract class Agent_GUI extends GuiAgent {
 					// FAILURE notification from the JADE runtime: the receiver
 					// does not exist
 					System.out.println("Responder does not exist");
-					displayResult(failure);
 				}
 				else {
 					System.out.println("Agent "+failure.getSender().getName()+" failed to perform the requested action");
-					displayResult(failure);
 				}
+				displayResult(failure);
 			}	
 					
 		};
@@ -565,7 +569,16 @@ public abstract class Agent_GUI extends GuiAgent {
 						agent.setOptions(new ArrayList());
 					}
 					else {
-						agent.setOptions(agent.stringToOptions(optString));
+						List options = agent.stringToOptions(optString);
+						Iterator it = options.iterator();
+						
+						while (it.hasNext()) {
+							Option opt = (Option)it.next();
+							opt.setNumber_of_values_to_try(default_number_of_values_to_try);
+						}
+						
+						agent.setOptions(options);
+						
 					}
 					List agents = next_problem.getAgents();
 					agents.add(agent);
@@ -578,6 +591,7 @@ public abstract class Agent_GUI extends GuiAgent {
 	protected void addOptionToAgent(int _problem_id, int _agent_id, String option_name,
 			String option_value, String lower, String upper, String number_of_values_to_try, String set){
 		// TODO add interval ... 
+		System.err.println("Add option to agent");
 		for (Enumeration pe = problems.elements() ; pe.hasMoreElements() ;) {
 			Problem next_problem = (Problem)pe.nextElement();
 			if (!next_problem.getSent()){
@@ -646,8 +660,8 @@ public abstract class Agent_GUI extends GuiAgent {
 				if (Integer.parseInt(next_problem.getGui_id()) == _problem_id){
 					List data = next_problem.getData();
 					Data d = new Data();
-					d.setTrain_file_name("data" + System.getProperty("file.separator") + "files" + System.getProperty("file.separator") + DataManagerService.translateFilename(this, 1, _train));
-					d.setTest_file_name("data" + System.getProperty("file.separator") + "files" + System.getProperty("file.separator") + DataManagerService.translateFilename(this, 1, _test));
+					d.setTrain_file_name("data" + System.getProperty("file.separator") + "files" + System.getProperty("file.separator") + DataManagerService.translateFilename(this, 1, _train, null));
+					d.setTest_file_name("data" + System.getProperty("file.separator") + "files" + System.getProperty("file.separator") + DataManagerService.translateFilename(this, 1, _test, null));
 					if (_output != null){
 						d.setOutput(_output);
 					}
@@ -987,7 +1001,7 @@ public abstract class Agent_GUI extends GuiAgent {
 		File incomingFiles = new File(incomingFilesPath);
 		
 		for (String fileName : incomingFiles.list()) {
-			DataManagerService.importFile(this, 1, fileName);
+			DataManagerService.importFile(this, 1, fileName, null);
 		}
 		
 	  	System.out.println("GUI agent "+getLocalName()+" is alive and waiting...");
@@ -1112,4 +1126,5 @@ public abstract class Agent_GUI extends GuiAgent {
 			}
 		}
 	}
+
 }

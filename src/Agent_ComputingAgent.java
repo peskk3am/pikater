@@ -64,6 +64,9 @@ public abstract class Agent_ComputingAgent extends Agent{
 	 	 
 	 boolean working = false;  // TODO -> state?
 	
+	 LinkedList<ACLMessage> taskFIFO = new LinkedList<ACLMessage>();
+
+	 
 	 protected abstract void train() throws Exception;
 	 protected abstract ontology.messages.Evaluation evaluateCA();
 	 protected abstract DataInstances getPredictions(Instances test, DataInstances onto_test);
@@ -215,40 +218,8 @@ public abstract class Agent_ComputingAgent extends Agent{
 
 		getParameters();
 		 			
-			                
-	  		  	MessageTemplate template_inform = MessageTemplate.and(
-	  		  		MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST),
-	  		  		MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
-	  		  				MessageTemplate.and(MessageTemplate.MatchLanguage(codec.getName()), MessageTemplate.MatchOntology(ontology.getName()))
-	  		  				)
-	  		  	);
-
-
-	  		  		
-	  			AchieveREResponder resp =	
-	  		  	new AchieveREResponder(this, template_inform) {
-	  					protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException, RefuseException {
-	  						System.out.println("Agent "+getLocalName()+": REQUEST received from "+request.getSender().getName()); // +". Action is "+request.getContent());
-	  						if (!working) {
-	  							// We agree to perform the action. Note that in the FIPA-Request
-	  							// protocol the AGREE message is optional. Return null if you
-	  							// don't want to send it.						
-	  							
-	  							System.out.println("Agent "+getLocalName()+": Agree");
-	  							ACLMessage agree = request.createReply();
-	  							agree.setPerformative(ACLMessage.AGREE);
-	  							return agree;
-	  						}
-	  						else {
-	  							// We refuse to perform the action
-	  							System.out.println("Agent "+getLocalName()+": Refuse");
-	  							throw new RefuseException("check-failed");
-	  						}
-	  					}  // end prepareResponse
-	  				} ;
-	  			addBehaviour(resp);
-	  			resp.registerPrepareResultNotification( new ProcessAction(this) );
-
+		addBehaviour(new CompAgentResultsServer(this));
+		addBehaviour(new ProcessAction(this));
 	 
 	 } // end setup
 	 
@@ -376,6 +347,66 @@ public abstract class Agent_ComputingAgent extends Agent{
 
 	        send(msgOut);
 	    }
+	    protected class CompAgentResultsServer extends CyclicBehaviour{
+	    	private MessageTemplate resMsgTemplate = MessageTemplate.and(
+	    			MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST),
+	    			MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
+	    					MessageTemplate.and(MessageTemplate.MatchLanguage(codec.getName()), MessageTemplate.MatchOntology(ontology.getName()))
+	    			)
+	    	);
+	    	public CompAgentResultsServer(Agent agent) {
+	    		super(agent);
+	    	}
+	    	//TODO: will we accept or refuse the request? (working, size of taksFIFO, latency time...)
+	    	boolean acceptTask(){
+	    		return true/*taskFIFO.size()<=MAX_TASKS*/;
+	    	}
+
+	    	ACLMessage processExecute(ACLMessage req){
+	    		ACLMessage result_msg = req.createReply();
+	    		if(acceptTask()){
+	    			result_msg.setPerformative(ACLMessage.AGREE);
+	    			taskFIFO.addLast(req);        
+	    		}
+	    		else{
+	    			result_msg.setPerformative(ACLMessage.REFUSE);
+	    			result_msg.setContent("(Computing agent overloaded)");
+	    		}
+	    		return result_msg; 
+	    	}
+
+	    	@Override
+	    	public void action() {
+	    		ACLMessage req = receive(resMsgTemplate);
+	    		if (req != null) {
+	    			try{
+	    				ContentElement content = getContentManager().extractContent(req);
+	    				if (((Action)content).getAction() instanceof GetOptions){
+	    					ACLMessage result_msg = sendOptions(req);
+	    					send(result_msg);
+	    					return;
+	    				}
+	    				if (((Action)content).getAction() instanceof Execute){
+	    					send(processExecute(req));
+	    					//refuse/accept
+	    					return;
+	    				}
+	    			}
+	    			catch (CodecException ce) {
+	    				ce.printStackTrace();
+	    			}
+	    			catch (OntologyException oe) {
+	    				oe.printStackTrace();
+	    			}
+	    			ACLMessage result_msg = req.createReply();
+	    			result_msg.setPerformative(ACLMessage.NOT_UNDERSTOOD);
+	    			send(result_msg);
+	    			return;
+	    		}else{
+	    			block();
+	    		}
+	    	}
+	    }
 	    private class ProcessAction extends FSMBehaviour{
 	    	private static final String INIT_STATE = "Init";
 	    	private static final String GETTRAINDATA_STATE = "GetTrainingData";
@@ -393,157 +424,149 @@ public abstract class Agent_ComputingAgent extends Agent{
 	    	String test_fn;
 	    	String output;
 	    	String mode;
+
+	    	/*Resulting message: FAILURE*/
 	    	
 	    	void failureMsg(String desc){
 	    		result_msg = incoming_request.createReply();
 	    		result_msg.setPerformative(ACLMessage.FAILURE);
-	    		result_msg.setContent(desc);	    		
+	    		result_msg.setContent(desc);
 	    	}
 
-	    	void notUnderstoodMsg(){
-	    		result_msg = incoming_request.createReply();
-	    		result_msg.setPerformative(ACLMessage.NOT_UNDERSTOOD);
-	    		//TODO: add the description
-	    	}
-	    	
-	    	void getRequest(){
-	    		String incomingRequestKey = (String) ((AchieveREResponder) parent).REQUEST_KEY;
-				incoming_request = (ACLMessage) getDataStore().get(incomingRequestKey);
-	    	}
-	    	
-	    	void setResultMsg(){
-	    		String notificationkey = (String) ((AchieveREResponder) parent).RESULT_NOTIFICATION_KEY;
-				getDataStore().put(notificationkey, result_msg );				
-	    	}
-	    	
-	    	boolean processNonExecute(){
-	    		try{
-	    			ContentElement content = getContentManager().extractContent(incoming_request);
-	    			if (((Action)content).getAction() instanceof GetOptions){
-	    				result_msg = sendOptions(incoming_request);
+	    	/*Get a message from the FIFO of tasks*/
+	    	boolean getRequest(){
+	    		if(taskFIFO.size()>0){
+	    			incoming_request = taskFIFO.removeFirst();
+	    			try{
+	    				ContentElement content = getContentManager().extractContent(incoming_request);
+	    				execute_action = (Execute) ((Action)content).getAction();
 	    				return true;
 	    			}
-	    			if (((Action)content).getAction() instanceof Execute){
-	    				execute_action = (Execute) ((Action)content).getAction();
-	    				return false;
+	    			catch (CodecException ce) {
+	    				ce.printStackTrace();
+	    			}
+	    			catch (OntologyException oe) {
+	    				oe.printStackTrace();
 	    			}
 	    		}
-	    		catch (CodecException ce) {
-	    			ce.printStackTrace();
-	    		}
-	    		catch (OntologyException oe) {
-	    			oe.printStackTrace();
-	    		}
-	    		notUnderstoodMsg();
-	    		return true;
-
+	    		return false;
 	    	}
-	    	
+
+	    	/*Extract data from INFORM message (ARFF reader)*/
 	    	ontology.messages.DataInstances processGetData(ACLMessage inform){
 	    		ContentElement content;
-					try {
-						content = getContentManager().extractContent(inform);
-						if (content instanceof Result) {
-							Result result = (Result) content;
-							if (result.getValue() instanceof ontology.messages.DataInstances) {
-								return (ontology.messages.DataInstances)result.getValue();
-							}
-						}
-					} catch (UngroundedException e) {
-						e.printStackTrace();
-					} catch (CodecException e) {
-						e.printStackTrace();
-					} catch (OntologyException e) {
-						e.printStackTrace();
-					}
-					return null;
+	    		try {
+	    			content = getContentManager().extractContent(inform);
+	    			if (content instanceof Result) {
+	    				Result result = (Result) content;
+	    				if (result.getValue() instanceof ontology.messages.DataInstances) {
+	    					return (ontology.messages.DataInstances)result.getValue();
+	    				}
+	    			}
+	    		} catch (UngroundedException e) {
+	    			e.printStackTrace();
+	    		} catch (CodecException e) {
+	    			e.printStackTrace();
+	    		} catch (OntologyException e) {
+	    			e.printStackTrace();
+	    		}
+	    		return null;
 	    	}
-	    	
+
 	    	ProcessAction(Agent a){
 	    		super(a);
-	    		registerFirstState(new OneShotBehaviour(a){
-  					int next;
-  					public void action(){
-  						result_msg = null;
-  						execute_action = null;
-  						getRequest();
-  						if(processNonExecute()){
-  							next = LAST_JMP;
-  							return;
-  						}
-  						state = states.NEW;
-  						//Set options
-  						setOptions(execute_action.getTask());
-  						eval = null;
-  						success = true;
-  						Data data = execute_action.getTask().getData();
+	    		/*FSM: register states*/
+	    		//init state
+	    		registerFirstState(new Behaviour(a){
+	    			int next;
+	    			boolean cont;
+	    			@Override
+	    			public void action(){
+	    				result_msg = null;
+	    				execute_action = null;
+	    				if(!getRequest()){
+	    					//no task to execute
+	    					cont = true;
+	    					return;
+	    				}
+	    				cont = false;
+	    				state = states.NEW;
+	    				//Set options
+	    				setOptions(execute_action.getTask());
+	    				eval = null;
+	    				success = true;
+	    				Data data = execute_action.getTask().getData();
   						output = data.getOutput();
   						mode = data.getMode();
   						
-  						//Get training data
-  						train_fn = data.getTrain_file_name();  						  							  						
-  						AchieveREInitiator get_train_behaviour = (AchieveREInitiator) ((ProcessAction)parent).getState(GETTRAINDATA_STATE);
-  						if (!train_fn.equals(trainFileName)){
-  							get_train_behaviour.reset(sendGetDataReq(train_fn));
-  						}else{
-  							get_train_behaviour.reset(null);
-  						}  						
-  					
-  						//Get testing data
-						test_fn = data.getTest_file_name();
-						AchieveREInitiator get_test_behaviour = (AchieveREInitiator) ((ProcessAction)parent).getState(GETTESTDATA_STATE);
-  						if (!test_fn.equals(testFileName)){
-  							get_test_behaviour.reset(sendGetDataReq(test_fn));
-  						}else{
-  							get_test_behaviour.reset(null); 					
+  						train_fn = data.getTrain_file_name();
+						AchieveREInitiator get_train_behaviour = (AchieveREInitiator) ((ProcessAction)parent).getState(GETTRAINDATA_STATE);
+	    				if (!train_fn.equals(trainFileName)){
+	    					get_train_behaviour.reset(sendGetDataReq(train_fn));
+	    				}else{
+	    					//We have already the right data
+	    					get_train_behaviour.reset(null);
   						}
-  						next = NEXT_JMP;
-  					}
-  					public int onEnd(){
-  						return next;
-  					}
-  				}, INIT_STATE);
-  				
+  					
+	    				test_fn = data.getTest_file_name();
+	    				AchieveREInitiator get_test_behaviour = (AchieveREInitiator) ((ProcessAction)parent).getState(GETTESTDATA_STATE);
+	    				if (!test_fn.equals(testFileName)){
+	    					get_test_behaviour.reset(sendGetDataReq(test_fn));
+	    				}else{
+	    					//We have already the right data
+	    					get_test_behaviour.reset(null); 					
+	    				}
+	    			}
+	    			@Override
+	    			public boolean done() {
+	    				return !cont;
+	    			}
+	    		}, INIT_STATE);
+
+	    		//get train data state
 	    		registerState(new AchieveREInitiator(a, null){
-  					public int next = NEXT_JMP;
-  					
-  					protected void handleInform(ACLMessage inform) {
-  						ontology.messages.DataInstances _train = processGetData(inform);
-  						if(_train!=null){
-  							trainFileName = train_fn;
-  							onto_train= _train;
-  							train = onto_train.toWekaInstances();
-  							train.setClassIndex(train.numAttributes() - 1);
-  							next = NEXT_JMP;
-  							return;
-  						}else{
-  							next = LAST_JMP;
-  							failureMsg("No train data received from the reader agent: Wrong content.");
-  							return;
-  						}
-  					}
-  					
-  					protected void handleFailure(ACLMessage failure) {
-  						failureMsg("No train data received from the reader agent: Reader Failed.");
-  						next = LAST_JMP;
-  					}
-  					
-  					public int onEnd(){
-  						int next_val = next;
-  						next = NEXT_JMP;
-  						return next;
-  					}
-  				}, GETTRAINDATA_STATE);
-  				registerState(new AchieveREInitiator(a, null){
-  					public int next = NEXT_JMP;
-  					
-  					protected void handleInform(ACLMessage inform) {
-  						ontology.messages.DataInstances _test = processGetData(inform);
-  						if(_test!=null){
-  							testFileName = test_fn;
-  							onto_test= _test;
-  							test = onto_test.toWekaInstances();
-  							test.setClassIndex(test.numAttributes() - 1);
+	    			public int next = NEXT_JMP;
+	    			@Override
+	    			protected void handleInform(ACLMessage inform) {
+	    				ontology.messages.DataInstances _train = processGetData(inform);
+	    				if(_train!=null){
+	    					trainFileName = train_fn;
+	    					onto_train= _train;
+	    					train = onto_train.toWekaInstances();
+	    					train.setClassIndex(train.numAttributes() - 1);
+	    					next = NEXT_JMP;
+	    					return;
+	    				}else{
+	    					next = LAST_JMP;
+	    					failureMsg("No train data received from the reader agent: Wrong content.");
+	    					return;
+	    				}
+	    			}
+	    			@Override
+	    			protected void handleFailure(ACLMessage failure) {
+	    				failureMsg("No train data received from the reader agent: Reader Failed.");
+	    				next = LAST_JMP;
+	    			}
+	    			@Override
+	    			public int onEnd(){
+	    				int next_val = next;
+	    				next = NEXT_JMP;
+	    				return next;
+	    			}
+	    		}, GETTRAINDATA_STATE);
+
+	    		//get test data state
+	    		registerState(new AchieveREInitiator(a, null){
+	    			public int next = NEXT_JMP;
+	    			
+	    			@Override
+	    			protected void handleInform(ACLMessage inform) {
+	    				ontology.messages.DataInstances _test = processGetData(inform);
+	    				if(_test!=null){
+	    					testFileName = test_fn;
+	    					onto_test= _test;
+	    					test = onto_test.toWekaInstances();
+	    					test.setClassIndex(test.numAttributes() - 1);
   							
   							next = NEXT_JMP;
   							return;
@@ -552,25 +575,28 @@ public abstract class Agent_ComputingAgent extends Agent{
   							failureMsg("No test data received from the reader agent: Wrong content.");
   							return;
   						}  						 
-  					}
-  					
-  					protected void handleFailure(ACLMessage failure) {
-  						failureMsg("No test data received from the reader agent: Reader Failed.");
-  						next = LAST_JMP;
-  					}
-  					
-  					public int onEnd(){
-  						int next_val = next;
-  						next = NEXT_JMP;
-  						return next;
-  					}
-  				}, GETTESTDATA_STATE);
-  				
-  				registerState(new Behaviour(a){
-  					
-  					public void action(){  						
-  						//Train&test		  							
-  						try{
+  						 
+	    			}
+
+	    			@Override
+	    			protected void handleFailure(ACLMessage failure) {
+	    				failureMsg("No test data received from the reader agent: Reader Failed.");
+	    				next = LAST_JMP;
+	    			}
+	    			@Override
+	    			public int onEnd(){
+	    				int next_val = next;
+	    				next = NEXT_JMP;
+	    				return next;
+	    			}
+	    		}, GETTESTDATA_STATE);
+
+	    		//Train&test state
+	    		registerState(new Behaviour(a){
+
+	    			@Override
+	    			public void action(){		  							
+	    				try{
   						/*	if (mode.equals("test_only")){
   								eval = evaluateCA();
   		  						if (output.equals("predictions")){
@@ -586,59 +612,68 @@ public abstract class Agent_ComputingAgent extends Agent{
 	  	  		  						if (output.equals("predictions")){	  	  		  							
 	  	  		  							eval.setData_table(getPredictions(test, onto_test));
 	  	  								}
-	  								}
-	  							}
-  							  							
-  						}
-  						catch (Exception e){
-  							working = false;
-  							success = false;
+	  								}		
+  							}			
+	    				}
+	    				catch (Exception e){
+	    					success = false;
+	    					working = false;
   							failureMsg(e.getMessage()); 
   							System.out.println("Error: "+e.getMessage()+" ");
   							e.printStackTrace();
-  						}
-  					}
- 					
-  					@Override
-					public boolean done() {
-						return (state == states.TRAINED) || !success;
-					}
-  				}, TRAINTEST_STATE);
-  				
-  				registerLastState(new OneShotBehaviour(a){
-  					
-  					public void action(){
-  						if (success && (result_msg == null)) {
-   							result_msg = incoming_request.createReply();
-  							result_msg.setPerformative(ACLMessage.INFORM);
-  							try {
-  								// Prepare the content - Result with Evaluation instead of MyWekaEvaluation is sended!!!
-  								ContentElement content = getContentManager().extractContent(incoming_request); // TODO exception block?
-  								Result result = new Result((Action)content, eval);
-  								getContentManager().fillContent(result_msg, result);
-  							} catch (UngroundedException e) {
-  								e.printStackTrace();
-  							} catch (CodecException e) {
-  								e.printStackTrace();
-  							} catch (OntologyException e) {
-  								e.printStackTrace();
-  							}
-  						}
-  						setResultMsg();
-  					}
-  				}, SENDRESULTS_STATE);
-  				
-  				registerTransition(INIT_STATE,GETTRAINDATA_STATE,NEXT_JMP);
-  				registerTransition(INIT_STATE,SENDRESULTS_STATE,LAST_JMP);
-  				
-  				registerTransition(GETTRAINDATA_STATE,GETTESTDATA_STATE,NEXT_JMP);
-  				registerTransition(GETTRAINDATA_STATE,SENDRESULTS_STATE,LAST_JMP);
-  				
-  				registerTransition(GETTESTDATA_STATE,TRAINTEST_STATE,NEXT_JMP);
-  				registerTransition(GETTESTDATA_STATE,SENDRESULTS_STATE,LAST_JMP);
-  				
-  				registerDefaultTransition(TRAINTEST_STATE,SENDRESULTS_STATE);  				
+	    				}
+	    			}
+
+	    			@Override
+	    			public boolean done() {
+	    				return (state == states.TRAINED) || !success;
+	    			}
+	    		}, TRAINTEST_STATE);
+
+	    		//send results state
+	    		registerState(new OneShotBehaviour(a){
+	    			@Override
+	    			public void action(){
+	    				if (success && (result_msg == null)) {
+	    					result_msg = incoming_request.createReply();
+	    					result_msg.setPerformative(ACLMessage.INFORM);
+	    					try {
+	    						// Prepare the content - Result with Evaluation instead of MyWekaEvaluation is sended!!!
+	    						ContentElement content = getContentManager().extractContent(incoming_request); // TODO exception block?
+	    						Result result = new Result((Action)content, eval);
+	    						getContentManager().fillContent(result_msg, result);
+	    					} catch (UngroundedException e) {
+	    						e.printStackTrace();
+	    					} catch (CodecException e) {
+	    						e.printStackTrace();
+	    					} catch (OntologyException e) {
+	    						e.printStackTrace();
+	    					}
+	    				}
+	    				send(result_msg);
+	    			}
+	    		}, SENDRESULTS_STATE);
+
+	    		/*FSM: register transitions*/
+	    		//init state transition
+	    		registerDefaultTransition(INIT_STATE,GETTRAINDATA_STATE);
+
+	    		//get train data transitions
+	    		registerTransition(GETTRAINDATA_STATE,GETTESTDATA_STATE,NEXT_JMP);
+	    		registerTransition(GETTRAINDATA_STATE,SENDRESULTS_STATE,LAST_JMP);
+
+	    		//get test data transitions
+	    		registerTransition(GETTESTDATA_STATE,TRAINTEST_STATE,NEXT_JMP);
+	    		registerTransition(GETTESTDATA_STATE,SENDRESULTS_STATE,LAST_JMP);
+
+	    		//train&test state transition
+	    		registerDefaultTransition(TRAINTEST_STATE,SENDRESULTS_STATE);
+
+	    		//backward transition: reset all states
+	    		registerDefaultTransition(SENDRESULTS_STATE, INIT_STATE, 
+	    				new String[]{
+	    				INIT_STATE,GETTRAINDATA_STATE,GETTESTDATA_STATE,TRAINTEST_STATE,SENDRESULTS_STATE
+	    		});  				
 	    	}
 	    }
-
 }; 

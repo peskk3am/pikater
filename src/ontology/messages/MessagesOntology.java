@@ -140,10 +140,12 @@ public class MessagesOntology extends Ontology {
 	  public static final String IMPORT_FILE = "IMPORT_FILE";
 	  public static final String IMPORT_USER = "userID";
 	  public static final String IMPORT_FILENAME = "externalFilename";
+	  public static final String IMPORT_FILECONTENT = "fileContent";
 	  
 	  public static final String TRANSLATE = "TRANSLATE";
 	  public static final String TRANSLATE_USER = "userID";
-	  public static final String TRANSLATE_FILENAME = "externalFilename";
+	  public static final String TRANSLATE_EXTERNAL_FILENAME = "externalFilename";
+	  public static final String TRANSLATE_INTERNAL_FILENAME = "internalFilename";
 	  
 	  public static final String SOLVE = "SOLVE";
 	  public static final String SOLVE_PROBLEM = "problem";
@@ -163,6 +165,15 @@ public class MessagesOntology extends Ontology {
 	  	  
 	  public static final String GET_THE_BEST_AGENT = "GET-THE-BEST-AGENT";
 	  public static final String GET_THE_BEST_AGENT_NEAREST_FILE_NAME = "nearest_file_name";
+	  
+	  public static final String GET_FILE_INFO = "GET-FILE-INFO";
+	  public static final String GET_FILE_INFO_USERID = "userID";
+	  
+	  public static final String UPDATE_METADATA = "UPDATE-METADATA";
+	  public static final String UPDATE_METADATA_METADATA = "metadata";
+	  
+	  public static final String GET_FILES = "GET-FILES";
+	  public static final String GET_FILES_USERID = "userID";
 	  
 	  // public static final String SEND_OPTIONS = "SEND-OPTIONS";
 	  // public static final String SEND_OPTIONS_OPTIONS = "options";
@@ -214,8 +225,10 @@ public class MessagesOntology extends Ontology {
 			add(new AgentActionSchema(SAVE_METADATA), SaveMetadata.class);
 			add(new AgentActionSchema(GET_DATA), GetData.class);
 			add(new AgentActionSchema(GET_ALL_METADATA), GetAllMetadata.class);
-			add(new AgentActionSchema(GET_THE_BEST_AGENT), GetTheBestAgent.class);			
-			
+			add(new AgentActionSchema(GET_THE_BEST_AGENT), GetTheBestAgent.class);
+			add(new AgentActionSchema(GET_FILE_INFO), GetFileInfo.class);
+			add(new AgentActionSchema(UPDATE_METADATA), UpdateMetadata.class);
+			add(new AgentActionSchema(GET_FILES), GetFiles.class);
 			// add(new AgentActionSchema(SEND_OPTIONS), SendOptions.class);
 			
 			
@@ -347,11 +360,13 @@ public class MessagesOntology extends Ontology {
 	    	as = (AgentActionSchema)getSchema(IMPORT_FILE);
 	    	as.add(IMPORT_USER, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));
 	    	as.add(IMPORT_FILENAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	as.add(IMPORT_FILECONTENT, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 	    	as.setResult((PrimitiveSchema)getSchema(BasicOntology.STRING)); //the internal filename 
 	    	
 	    	as = (AgentActionSchema)getSchema(TRANSLATE);
 	    	as.add(TRANSLATE_USER, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));
-	    	as.add(TRANSLATE_FILENAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+	    	as.add(TRANSLATE_EXTERNAL_FILENAME, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+	    	as.add(TRANSLATE_INTERNAL_FILENAME, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 	    	as.setResult((PrimitiveSchema)getSchema(BasicOntology.STRING)); //the internal filename
 	    	
 	    	as = (AgentActionSchema)getSchema(SAVE_RESULTS);
@@ -367,6 +382,17 @@ public class MessagesOntology extends Ontology {
 			
 	    	as = (AgentActionSchema)getSchema(GET_THE_BEST_AGENT);
 	    	as.add(GET_THE_BEST_AGENT_NEAREST_FILE_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+	    	
+	    	as = (AgentActionSchema)getSchema(GET_FILE_INFO);
+	    	as.add(GET_FILE_INFO_USERID, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));
+	    	as.setResult((ConceptSchema)getSchema(METADATA), 0, ObjectSchema.UNLIMITED);
+	    	
+	    	as = (AgentActionSchema)getSchema(UPDATE_METADATA);
+	    	as.add(UPDATE_METADATA_METADATA, (ConceptSchema)getSchema(Metadata.class));
+	    	
+	    	as = (AgentActionSchema)getSchema(GET_FILES);
+	    	as.add(GET_FILES_USERID, (PrimitiveSchema)getSchema(BasicOntology.INTEGER));
+	    	as.setResult((PrimitiveSchema)getSchema(BasicOntology.STRING), 0, ObjectSchema.UNLIMITED);
 	    	
 			//as = (AgentActionSchema)getSchema(SEND_OPTIONS);
 			//as.add(SEND_OPTIONS_OPTIONS, (ConceptSchema)getSchema(OPTION), 1, ObjectSchema.UNLIMITED);

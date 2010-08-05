@@ -8,7 +8,16 @@ public class TranslateFilename extends Action {
 	
 	private int userID;
 	private String externalFilename;
+	private String internalFilename;
 	
+	public String getInternalFilename() {
+		return internalFilename;
+	}
+
+	public void setInternalFilename(String internalFilename) {
+		this.internalFilename = internalFilename;
+	}
+
 	public int getUserID() {
 		return userID;
 	}
