@@ -98,6 +98,10 @@ public class MainWindow extends JFrame {
 		initialize();
 	}
 
+	public void addFile(String name) {
+		experimentPanel.addFile(name);
+	}
+	
 	/**
 	 * This method initializes this
 	 * 

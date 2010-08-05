@@ -32,6 +32,13 @@ public class FilePanel extends JPanel {
 		initialize();
 	}
 	
+	public void addFile(String name) {
+		jComboBox1.addItem(name);
+		jComboBox1.setSelectedItem(name);
+		jComboBox.addItem(name);
+		jComboBox.setSelectedItem(name);
+	}
+	
 	public String getTestFile() {
 		return jComboBox1.getSelectedItem().toString();
 	}
@@ -85,7 +92,7 @@ public class FilePanel extends JPanel {
 	private JComboBox getJComboBox() {
 		if (jComboBox == null) {
 			jComboBox = new JComboBox(filesList);
-			jComboBox.setPreferredSize(new Dimension(100, 24));
+			jComboBox.setPreferredSize(new Dimension(130, 24));
 			jComboBox.setEditable(true);
 		}
 		return jComboBox;
@@ -99,7 +106,7 @@ public class FilePanel extends JPanel {
 	private JComboBox getJComboBox1() {
 		if (jComboBox1 == null) {
 			jComboBox1 = new JComboBox(filesList);
-			jComboBox1.setPreferredSize(new Dimension(100, 24));
+			jComboBox1.setPreferredSize(new Dimension(130, 24));
 			jComboBox1.setEditable(true);
 		}
 		return jComboBox1;
