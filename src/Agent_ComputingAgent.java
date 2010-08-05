@@ -66,6 +66,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 	
 	 LinkedList<ACLMessage> taskFIFO = new LinkedList<ACLMessage>();
 
+	 private Behaviour execution_behaviour = null;
 	 
 	 protected abstract void train() throws Exception;
 	 protected abstract ontology.messages.Evaluation evaluateCA();
@@ -218,8 +219,8 @@ public abstract class Agent_ComputingAgent extends Agent{
 
 		getParameters();
 		 			
-		addBehaviour(new CompAgentResultsServer(this));
-		addBehaviour(new ProcessAction(this));
+		addBehaviour(new RequestServer(this));
+		addBehaviour(execution_behaviour = new ProcessAction(this));
 	 
 	 } // end setup
 	 
@@ -347,14 +348,14 @@ public abstract class Agent_ComputingAgent extends Agent{
 
 	        send(msgOut);
 	    }
-	    protected class CompAgentResultsServer extends CyclicBehaviour{
+	    protected class RequestServer extends CyclicBehaviour{
 	    	private MessageTemplate resMsgTemplate = MessageTemplate.and(
 	    			MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST),
 	    			MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
 	    					MessageTemplate.and(MessageTemplate.MatchLanguage(codec.getName()), MessageTemplate.MatchOntology(ontology.getName()))
 	    			)
 	    	);
-	    	public CompAgentResultsServer(Agent agent) {
+	    	public RequestServer(Agent agent) {
 	    		super(agent);
 	    	}
 	    	//TODO: will we accept or refuse the request? (working, size of taksFIFO, latency time...)
@@ -366,7 +367,9 @@ public abstract class Agent_ComputingAgent extends Agent{
 	    		ACLMessage result_msg = req.createReply();
 	    		if(acceptTask()){
 	    			result_msg.setPerformative(ACLMessage.AGREE);
-	    			taskFIFO.addLast(req);        
+	    			taskFIFO.addLast(req);
+	    			if(!execution_behaviour.isRunnable())
+	    				execution_behaviour.restart();
 	    		}
 	    		else{
 	    			result_msg.setPerformative(ACLMessage.REFUSE);
@@ -450,7 +453,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 	    			}	    			
 	    		}
 	    		else{
-	    			block(100);
+	    			block();
 	    		}
 
 	    		return false;
