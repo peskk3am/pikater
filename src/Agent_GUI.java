@@ -61,7 +61,7 @@ public abstract class Agent_GUI extends GuiAgent {
 	private int agent_id = 0;
 	private int data_id = 0;
 	
-	private long timeout = 10000; 
+	private long timeout = 1000; 
 	
 	private int default_number_of_values_to_try = 10;
 	private float default_error_rate = (float) 0.3;
