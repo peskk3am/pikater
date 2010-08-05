@@ -4,7 +4,9 @@ import jade.content.Concept;
 
 public class Data implements Concept{
 	private String _train_file_name;
+	private String _external_train_file_name;
 	private String _test_file_name;
+	private String _external_test_file_name;
 	private Metadata _metadata;
 	private String _output = "evaluation_only"; // "predictions"
 	private String _mode = "train_test";  // test_only, train_test
@@ -46,6 +48,18 @@ public class Data implements Concept{
 	}
 	public String getMode() {
 		return _mode;
+	}
+	public void setExternal_train_file_name(String _external_train_file_name) {
+		this._external_train_file_name = _external_train_file_name;
+	}
+	public String getExternal_train_file_name() {
+		return _external_train_file_name;
+	}
+	public void setExternal_test_file_name(String _external_test_file_name) {
+		this._external_test_file_name = _external_test_file_name;
+	}
+	public String getExternal_test_file_name() {
+		return _external_test_file_name;
 	}
 
 }

@@ -28,6 +28,8 @@ public class MessagesOntology extends Ontology {
 	  public static final String DATA = "data";
 	  public static final String DATA_TRAIN_FILE_NAME = "train_file_name";
 	  public static final String DATA_TEST_FILE_NAME = "test_file_name";
+	  public static final String DATA_EXTERNAL_TRAIN_FILE_NAME = "external_train_file_name";
+	  public static final String DATA_EXTERNAL_TEST_FILE_NAME = "external_test_file_name";
 	  public static final String DATA_METADATA = "metadata";
 	  public static final String DATA_OUTPUT = "output";
 	  public static final String DATA_MODE = "mode";
@@ -265,6 +267,8 @@ public class MessagesOntology extends Ontology {
 			cs = (ConceptSchema)getSchema(DATA);
 			cs.add(DATA_TRAIN_FILE_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 			cs.add(DATA_TEST_FILE_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+			cs.add(DATA_EXTERNAL_TEST_FILE_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
+			cs.add(DATA_EXTERNAL_TRAIN_FILE_NAME, (PrimitiveSchema)getSchema(BasicOntology.STRING));
 			cs.add(DATA_METADATA, (ConceptSchema)getSchema(METADATA), ObjectSchema.OPTIONAL);
 			cs.add(DATA_OUTPUT, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);			
 			cs.add(DATA_MODE, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);

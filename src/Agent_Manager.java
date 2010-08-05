@@ -979,8 +979,8 @@ public class Agent_Manager extends Agent{
 				   }
 			   }
 			   Element newDataSet = new Element ("dataset");
-			   newDataSet.setAttribute("train", next_task.getData().getTrain_file_name());
-			   newDataSet.setAttribute("test", next_task.getData().getTest_file_name());
+			   newDataSet.setAttribute("train", next_task.getData().getExternal_train_file_name());
+			   newDataSet.setAttribute("test", next_task.getData().getExternal_test_file_name());
 	
 			   Element newEvaluation = new Element ("evaluation");
 			   Element newMetric1 = new Element ("metric");

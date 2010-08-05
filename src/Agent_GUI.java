@@ -660,6 +660,8 @@ public abstract class Agent_GUI extends GuiAgent {
 				if (Integer.parseInt(next_problem.getGui_id()) == _problem_id){
 					List data = next_problem.getData();
 					Data d = new Data();
+					d.setExternal_test_file_name(_test);
+					d.setExternal_train_file_name(_train);
 					d.setTrain_file_name("data" + System.getProperty("file.separator") + "files" + System.getProperty("file.separator") + DataManagerService.translateFilename(this, 1, _train, null));
 					d.setTest_file_name("data" + System.getProperty("file.separator") + "files" + System.getProperty("file.separator") + DataManagerService.translateFilename(this, 1, _test, null));
 					if (_output != null){
