@@ -7,6 +7,7 @@ import java.awt.Dimension;
 import javax.swing.JSplitPane;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.FlowLayout;
 
@@ -88,6 +89,13 @@ public class NewExperimentPanel extends JPanel {
 		addFileButton.setEnabled(true);
 		if (filesPanel.getComponentCount() == 0)
 			filesPanel.add(new FilePanel(filesList));
+	}
+	
+	public void addFile(String name) {
+		for (Component c : filesPanel.getComponents()) {
+			FilePanel fp = (FilePanel)c;
+			fp.addFile(name);
+		}
 	}
 	/**
 	 * This method initializes this

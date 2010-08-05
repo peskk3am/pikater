@@ -161,7 +161,7 @@ public class Agent_GUI_Java extends Agent_GUI {
 			int problemID = createNewProblem("10000");
 			
 			for (int i = 0; i < trainFiles.size(); i++) {
-				addDatasetToProblem(problemID, trainFiles.get(i), testFiles.get(i), null, null);
+				addDatasetToProblem(problemID, trainFiles.get(i), testFiles.get(i), "predictions", null);
 			}
 			
 			try {
@@ -200,6 +200,8 @@ public class Agent_GUI_Java extends Agent_GUI {
 			
 			FileManagerPanel fmp = (FileManagerPanel)ev.getSource();
 			fmp.reloadFileInfo();
+			
+			myGUI.addFile(fileName);
 			
 			break;
 		
