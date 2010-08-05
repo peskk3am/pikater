@@ -336,6 +336,7 @@ public class Agent_DataManager extends Agent {
 					if (a.getAction() instanceof TranslateFilename) {
 						
 						TranslateFilename tf = (TranslateFilename)a.getAction();
+						                        
 						
 						Statement stmt = db.createStatement();
 						
@@ -440,7 +441,15 @@ public class Agent_DataManager extends Agent {
 							m.setMissing_values(rs.getBoolean("missingValues"));
 							m.setNumber_of_attributes(rs.getInt("numberOfAttributes"));
 							m.setNumber_of_instances(rs.getInt("numberOfInstances"));
-							allMetadata.add(m);
+							
+							// get the number of task with this file as training set in the db
+							query = "SELECT COUNT(*) AS n FROM results WHERE dataFile=\'"+rs.getString("internalFilename")+"\'";	
+							System.out.println(query);							
+							ResultSet rs_number = stmt.executeQuery(query);
+							rs_number.next();							
+							
+							m.setNumber_of_tasks_in_db(rs_number.getInt("n"));
+							allMetadata.add(m);															
 						}
 						
 						log.info("Executing query: " + query);
@@ -467,7 +476,14 @@ public class Agent_DataManager extends Agent {
 															"WHERE dataFile =\'"+name+"\')";									
 						
 						ResultSet rs = stmt.executeQuery(query);
-						rs.next();
+						if (rs == null) {
+							ACLMessage reply = request.createReply();
+							reply.setPerformative(ACLMessage.FAILURE);
+							reply.setContent("There are no results for this file in the database.");
+																					
+							return reply;
+						}
+						rs.next();						
 						
 						ontology.messages.Agent agent = new ontology.messages.Agent(); 
 						agent.setName(rs.getString("agentName"));
@@ -529,10 +545,14 @@ public class Agent_DataManager extends Agent {
 
 						String query = "UPDATE metadata SET "; 												 						
 						query += "numberOfInstances=" + metadata.getNumber_of_instances()+ ", ";
-						query += "numberOfAttributes=" + metadata.getNumber_of_attributes() + ", ";
-						query += "defaultTask= \'" + metadata.getDefault_task() + "\', ";
-						query += "missingValues=" + metadata.getMissing_values() + ", ";
-						query += "attributetype= \'" + metadata.getAttribute_type() + "\'";
+						query += "numberOfAttributes=" + metadata.getNumber_of_attributes() + ", ";						
+						query += "missingValues=" + metadata.getMissing_values() + "";						
+						if (metadata.getAttribute_type() != null){
+                            query += ", attributeType=\'" + metadata.getAttribute_type()+"\' ";
+                        }
+                        if (metadata.getDefault_task() != null){
+                            query += ", defaultTask=\'" + metadata.getDefault_task()+"\' ";
+                        }						
 						query += " WHERE internalFilename =\'"+metadata.getInternal_name() + "\'"; 						
 						
 						log.info("Executing query: " + query);

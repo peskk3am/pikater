@@ -447,8 +447,12 @@ public abstract class Agent_ComputingAgent extends Agent{
 	    			}
 	    			catch (OntologyException oe) {
 	    				oe.printStackTrace();
-	    			}
+	    			}	    			
 	    		}
+	    		else{
+	    			block(100);
+	    		}
+
 	    		return false;
 	    	}
 
@@ -487,6 +491,7 @@ public abstract class Agent_ComputingAgent extends Agent{
 	    				if(!getRequest()){
 	    					//no task to execute
 	    					cont = true;
+	    					// block();
 	    					return;
 	    				}
 	    				cont = false;

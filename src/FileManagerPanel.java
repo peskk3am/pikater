@@ -26,6 +26,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Vector;
+import java.util.regex.Pattern;
 
 import javax.swing.JButton;
 import javax.swing.event.TableModelListener;
@@ -369,7 +370,7 @@ public class FileManagerPanel extends JPanel {
 						
 						GuiEvent ge = new GuiEvent(FileManagerPanel.this, MainWindow.IMPORT_FILE);
 						
-						String[] names = fileName.split(System.getProperty("file.separator"));
+						String[] names = fileName.split(Pattern.quote(System.getProperty("file.separator")));
 						ge.addParameter(names[names.length-1]);
 						ge.addParameter(data.toString());
 						myAgent.postGuiEvent(ge);

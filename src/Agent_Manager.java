@@ -540,28 +540,35 @@ public class Agent_Manager extends Agent{
 	} // end prepareComputations
 	
 	private List mergeOptions(List o1_CA, List o2){
-			
-			if (o1_CA != null) {
+			List new_options = new ArrayList();
+			if (o1_CA != null) {				
+				 
 				// if this type of agent has got some options
 				// update the options (merge them)
 		 			
-				// go through the options 
-	   		 	// and replace the options send by an computing agent
-				Iterator o1itr = o1_CA.iterator();	 		   		 
-	   		 	while (o1itr.hasNext()) {
-	   		 		Option next_CA_option = (Option) o1itr.next();	   		 			   		 	
-	   		 		Iterator o2itr = o2.iterator();		   		 	
-		   		 	while (o2itr.hasNext()) {
-		   		 		Option next_option = (Option) o2itr.next();
+				// go through the CA options 
+	   		 	// replace the value and add it to the new options			
+				Iterator o2itr = o2.iterator();	 		   		 
+	   		 	while (o2itr.hasNext()) {
+	   		 		Option next_option = (Option) o2itr.next();	   		 			   		 	
+	   		 		
+	   		 		Iterator o1CAitr = o1_CA.iterator();		   		 	
+		   		 	while (o1CAitr.hasNext()) {
+		   		 		Option next_CA_option = (Option) o1CAitr.next();
+		   		 		
 		   		 		if (next_option.getName().equals(next_CA_option.getName())){
-		   		 			// copy the value
+		   		 			// copy the value		   		 			
 		   		 			next_CA_option.setValue(next_option.getValue());
 		   		 			next_CA_option.setMutable(false);
+		   		 			
+		   		 			new_options.add(next_CA_option);
+		   		 			
 		   		 		}
 	   		 		}
-	   		 	}
+	   		 	}							
+				
 			}
-			return o1_CA;
+			return new_options;
 	}
 	
 	
@@ -1112,9 +1119,11 @@ public class Agent_Manager extends Agent{
 		while (itr.hasNext()) {
 	 		Metadata next_md = (Metadata) itr.next();
 	 		d_new = distance(metadata, next_md);
-	 		if (d_new < d_best){
-	 			d_best = d_new;
-	 			m_best = next_md;
+	 		if (next_md.getNumber_of_tasks_in_db() > 0){		 		
+		 		if (d_new < d_best){
+		 			d_best = d_new;
+		 			m_best = next_md;
+		 		}
 	 		}
 	 		System.out.println("    "+ next_md.getExternal_name()+	 				
 	 				" d: "+d_new);
@@ -1125,6 +1134,7 @@ public class Agent_Manager extends Agent{
 
 		// find the agent with the lowest error_rate
 		ontology.messages.Agent agent = DataManagerService.getTheBestAgent(this, nearestInternalName);
+		if (agent == null){ return null;}
 		agent.setName(null); // we want only the type, since the particular agent may not any longer  exist 
 
 		return agent;		

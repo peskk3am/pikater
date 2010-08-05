@@ -124,7 +124,8 @@ public class MessagesOntology extends Ontology {
 	  public static final String METADATA_NUMBER_OF_ATTRIBUTES = "number_of_attributes";
 	  public static final String METADATA_MISSING_VALUES = "missing_values";
 	  public static final String METADATA_DEFAULT_TASK = "default_task";
-	  public static final String METADATA_ATTRIBUTE_TYPE = "attribute_type";		
+	  public static final String METADATA_ATTRIBUTE_TYPE = "attribute_type";
+	  public static final String METADATA_NUMBER_OF_TASKS_IN_DB = "number_of_tasks_in_db";
 		
 	  // Predicates
 	  public static final String PARTIALRESULTS = "PARTIALRESULTS";
@@ -342,6 +343,7 @@ public class MessagesOntology extends Ontology {
 	    	cs.add(METADATA_MISSING_VALUES, (PrimitiveSchema)getSchema(BasicOntology.BOOLEAN), ObjectSchema.OPTIONAL);
 	    	cs.add(METADATA_DEFAULT_TASK, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 	    	cs.add(METADATA_ATTRIBUTE_TYPE, (PrimitiveSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+	    	cs.add(METADATA_NUMBER_OF_TASKS_IN_DB, (PrimitiveSchema)getSchema(BasicOntology.INTEGER), ObjectSchema.OPTIONAL);
 
 	    	
 			PredicateSchema ps = (PredicateSchema)getSchema(PARTIALRESULTS);

@@ -212,6 +212,10 @@ public class DataManagerService extends FIPAService {
 			agent.getContentManager().fillContent(request, a);
 			ACLMessage inform = FIPAService.doFipaRequestClient(agent, request); 
 			
+			if (inform.getPerformative() == ACLMessage.FAILURE){
+				return null;
+			}
+			
 			Result r = (Result)agent.getContentManager().extractContent(inform);
 			ontology.messages.Agent bestAgent = (ontology.messages.Agent) r.getValue();
 			return bestAgent;
