@@ -6,11 +6,15 @@
         <dataset train="iris.arff" test="iris.arff" />
         <!-- <dataset train="weather.arff" test="weather.arff" /> -->
         
-         
+        <agent name="rbf3">
+            <parameter name="B" value="3" />
+        </agent>
+        <!-- 
         <agent name="rbf1">
             <parameter name="B" value="?" lower="3" upper="5" number_of_values_to_try="5" />
             <parameter name="W" value="?" />
         </agent>
+        -->
        
         <!--
         <agent type="MultilayerPerceptron">
@@ -19,8 +23,10 @@
         </agent>
         -->
         
+        <!--
         <agent type="?">
         </agent>
+		-->
 		
         <!--
         <agent type="NaiveBayes">

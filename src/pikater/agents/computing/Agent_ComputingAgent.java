@@ -19,6 +19,7 @@ import jade.core.behaviours.OneShotBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPANames;
+import jade.domain.FIPAService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
@@ -26,6 +27,10 @@ import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREInitiator;
 import jade.util.leap.List;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.util.Date;
 import java.util.LinkedList;
 
@@ -46,7 +51,7 @@ public abstract class Agent_ComputingAgent extends Agent {
 	private static final long serialVersionUID = -7927583436579620995L;
 	private Codec codec = new SLCodec();
 	private Ontology ontology = MessagesOntology.getInstance();
-
+	
 	public enum states {
 		NEW, TRAINED
 	}
@@ -90,9 +95,8 @@ public abstract class Agent_ComputingAgent extends Agent {
 
 	public abstract String getAgentType();
 
-	public abstract boolean saveAgent();
 
-	public abstract boolean loadAgent(String agentName);
+	// public boolean loadAgent(String agentName);
 
 	protected abstract void getParameters();
 
@@ -209,7 +213,7 @@ public abstract class Agent_ComputingAgent extends Agent {
 
 		if (args != null && args.length > 0) {
 			if (args[0].equals("load")) {
-				loadAgent(getLocalName());
+				// loadAgent(getLocalName());
 				args = new String[0];
 			} else {
 
@@ -654,6 +658,7 @@ public abstract class Agent_ComputingAgent extends Agent {
 								}
 							}
 						}
+												
 					} catch (Exception e) {
 						success = false;
 						working = false;
@@ -678,7 +683,7 @@ public abstract class Agent_ComputingAgent extends Agent {
 						result_msg.setPerformative(ACLMessage.INFORM);
 						try {
 							// Prepare the content - Result with Evaluation
-							// instead of MyWekaEvaluation is sended!!!
+							// instead of MyWekaEvaluation is sent!!!
 							ContentElement content = getContentManager()
 									.extractContent(incoming_request); // TODO
 																		// exception
@@ -694,6 +699,23 @@ public abstract class Agent_ComputingAgent extends Agent {
 						}
 					}
 					send(result_msg);
+					
+					// save agent every time it executes a task
+					try {
+						save();
+					} catch (CodecException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (OntologyException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (FIPAException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			}, SENDRESULTS_STATE);
 
@@ -719,4 +741,41 @@ public abstract class Agent_ComputingAgent extends Agent {
 							SENDRESULTS_STATE });
 		}
 	}
+	
+	public void save() throws IOException, CodecException, OntologyException, FIPAException {
+		pikater.ontology.messages.SaveAgent saveAgent = new pikater.ontology.messages.SaveAgent();
+		
+		saveAgent.setData(current_task.getData());
+		saveAgent.setAgent(current_task.getAgent());
+		
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		ObjectOutputStream oos = new ObjectOutputStream(bos);
+
+		// empty taskFIFO just for a moment
+		LinkedList<ACLMessage> _taskFIFO = taskFIFO;
+		taskFIFO = new LinkedList<ACLMessage>();
+		
+		oos.writeObject(this);
+		oos.flush();
+		oos.close();
+		
+		taskFIFO = _taskFIFO;
+		
+		byte [] data = bos.toByteArray();		
+		saveAgent.setObject(data);
+						
+		ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
+		request.addReceiver(new AID("agentManager", false));
+		request.setOntology(MessagesOntology.getInstance().getName());
+		request.setLanguage(codec.getName());
+		request.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+
+		Action a = new Action();
+		a.setActor(this.getAID());
+		a.setAction(saveAgent);
+		
+		getContentManager().fillContent(request, a);
+		FIPAService.doFipaRequestClient(this, request);
+	}
+	
 };

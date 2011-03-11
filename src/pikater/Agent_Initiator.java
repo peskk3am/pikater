@@ -1,25 +1,47 @@
 package pikater;
 
+import jade.content.lang.Codec;
+import jade.content.lang.Codec.CodecException;
+import jade.content.lang.sl.SLCodec;
+import jade.content.onto.Ontology;
+import jade.content.onto.OntologyException;
+import jade.content.onto.basic.Action;
+import jade.core.AID;
 import jade.core.Agent;
+import jade.domain.FIPAException;
+import jade.domain.FIPANames;
+import jade.domain.FIPAService;
+import jade.lang.acl.ACLMessage;
 import jade.wrapper.AgentController;
 import jade.wrapper.ControllerException;
 import jade.wrapper.PlatformController;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
+
+import pikater.ontology.messages.MessagesOntology;
 
 public class Agent_Initiator extends Agent {
 	/**
 	 * 
 	 */
+	private Codec codec = new SLCodec();
+	private Ontology ontology = MessagesOntology.getInstance();
+	
 	private static final long serialVersionUID = -3908734088006529947L;
 	private String path = System.getProperty("user.dir")
 			+ System.getProperty("file.separator");
 
 	@Override
 	protected void setup() {
-
+		//Register the SL content language
+		getContentManager().registerLanguage(new SLCodec(), FIPANames.ContentLanguage.FIPA_SL);
+		getContentManager().registerLanguage(codec);
+		getContentManager().registerOntology(ontology);
+		
 		// read agents from file
 		try {
 			/* Sets up a file reader to read the init file */
@@ -67,6 +89,8 @@ public class Agent_Initiator extends Agent {
 			}
 
 			bufRead.close();
+			
+			// loadAgent("rbf3", 1);
 
 		} catch (ArrayIndexOutOfBoundsException e) {
 			/*
@@ -84,13 +108,8 @@ public class Agent_Initiator extends Agent {
 	}
 
 	public int CreateAgent(String type, String name, Object[] args) {
-		PlatformController container = getContainerController(); // get a
-																	// container
-																	// controller
-																	// for
-																	// creating
-																	// new
-																	// agents
+		// get a container controller for creating new agents
+		PlatformController container = getContainerController();
 
 		try {
 			AgentController agent = container.createNewAgent(name, type, args);
@@ -105,5 +124,4 @@ public class Agent_Initiator extends Agent {
 
 		return 1;
 	}
-
 }

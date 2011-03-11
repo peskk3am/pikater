@@ -15,6 +15,7 @@ import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPANames;
+import jade.domain.FIPAService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.FailureException;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
@@ -55,6 +56,7 @@ import pikater.ontology.messages.Metadata;
 import pikater.ontology.messages.Method;
 import pikater.ontology.messages.Option;
 import pikater.ontology.messages.Problem;
+import pikater.ontology.messages.Results;
 import pikater.ontology.messages.Solve;
 
 public abstract class Agent_GUI extends GuiAgent {
@@ -1242,6 +1244,90 @@ public abstract class Agent_GUI extends GuiAgent {
 				next_problem.setId(id);
 			}
 		}
+	}
+		
+	protected void loadAgent(String _filename) throws FIPAException {
+		// protected void loadAgent(String _name, int _userID, String _timestamp) {
+		pikater.ontology.messages.LoadAgent _loadAgent = new pikater.ontology.messages.LoadAgent();
+		
+		_loadAgent.setFilename(_filename);
+		// _loadAgent.setName(_name);
+		// _loadAgent.setUserID(_userID);
+		// _loadAgent.setTimestamp(_timestamp);
+		
+		ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
+		request.addReceiver(new AID("agentManager", false));
+		request.setOntology(MessagesOntology.getInstance().getName());
+		request.setLanguage(codec.getName());
+		request.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+
+		Action a = new Action();
+		a.setActor(this.getAID());
+		a.setAction(_loadAgent);
+		
+		try {
+			getContentManager().fillContent(request, a);
+		} catch (CodecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (OntologyException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		FIPAService.doFipaRequestClient(this, request);
+	}
+	
+	protected List getSavedAgents(int userID) {
+		pikater.ontology.messages.GetSavedAgents gsa = new pikater.ontology.messages.GetSavedAgents();
+		
+		gsa.setUserID(1);
+		
+		ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
+		request.addReceiver(new AID("agentManager", false));
+		request.setOntology(MessagesOntology.getInstance().getName());
+		request.setLanguage(codec.getName());
+		request.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+
+		Action a = new Action();
+		a.setActor(this.getAID());
+		a.setAction(gsa);
+		
+		try {
+			getContentManager().fillContent(request, a);
+			
+		} catch (CodecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (OntologyException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		List listOfResults = null; 
+		try {
+			ACLMessage result = FIPAService.doFipaRequestClient(this, request);			
+			
+			ContentElement content = getContentManager().extractContent(result);			
+			if (content instanceof Result) {				
+				Result _result = (Result) content;
+				listOfResults = (List) _result.getValue();				
+			}
+		}catch (FIPAException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UngroundedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (CodecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (OntologyException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return listOfResults;
 	}
 
 }

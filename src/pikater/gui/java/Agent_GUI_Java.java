@@ -12,6 +12,7 @@ import jade.util.leap.Iterator;
 import jade.util.leap.List;
 
 import java.util.Vector;
+import java.util.regex.Pattern;
 
 import pikater.Agent_GUI;
 import pikater.DataManagerService;
@@ -74,12 +75,12 @@ public class Agent_GUI_Java extends Agent_GUI {
 				String testInternalFilename = t.getData().getTest_file_name();
 				String trainInternalFilename = t.getData().getTrain_file_name();
 
-				String[] path = testInternalFilename.split(System
-						.getProperty("file.separator"));
+				String[] path = testInternalFilename.split(Pattern.quote(
+						System.getProperty("file.separator")));
 				testInternalFilename = path[path.length - 1];
 
-				path = trainInternalFilename.split(System
-						.getProperty("file.separator"));
+				path = trainInternalFilename.split(Pattern.quote(
+						System.getProperty("file.separator")));
 				trainInternalFilename = path[path.length - 1];
 
 				t.getData().setTest_file_name(

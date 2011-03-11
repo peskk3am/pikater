@@ -6,7 +6,6 @@ import jade.util.leap.List;
 
 import java.util.Random;
 
-import pikater.agents.computing.Agent_OptionsManager;
 import pikater.ontology.messages.Evaluation;
 import pikater.ontology.messages.Option;
 
