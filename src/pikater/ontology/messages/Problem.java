@@ -16,6 +16,7 @@ public class Problem implements Concept {
 	private List _data;
 	private int _timeout;
 	private Method _method;
+	private String _start;
 
 	public void setAgents(List agents) {
 		_agents = agents;
@@ -71,5 +72,13 @@ public class Problem implements Concept {
 
 	public void setMethod(Method method) {
 		_method = method;
+	}
+
+	public void setStart(String _start) {
+		this._start = _start;
+	}
+
+	public String getStart() {
+		return _start;
 	}
 }

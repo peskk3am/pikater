@@ -30,7 +30,10 @@ public class MessagesOntology extends Ontology {
 	public static final String TASK_AGENT = "agent";
 	public static final String TASK_DATA = "data";
 	public static final String TASK_RESULT = "result";
-
+	public static final String TASK_USERID = "userID";
+	public static final String TASK_START = "start";
+	public static final String TASK_FINISH = "finish";	
+	
 	public static final String DATA = "data";
 	public static final String DATA_TRAIN_FILE_NAME = "train_file_name";
 	public static final String DATA_TEST_FILE_NAME = "test_file_name";
@@ -47,6 +50,7 @@ public class MessagesOntology extends Ontology {
 	public static final String COMPUTATION_DATA = "data";
 	public static final String COMPUTATION_TIMEOUT = "timeout";
 	public static final String COMPUTATION_METHOD = "method";
+	public static final String COMPUTATION_START = "start";
 
 	public static final String PROBLEM = "PROBLEM";
 	public static final String PROBLEM_ID = "id";
@@ -56,7 +60,8 @@ public class MessagesOntology extends Ontology {
 	public static final String PROBLEM_DATA = "data";
 	public static final String PROBLEM_TIMEOUT = "timeout";
 	public static final String PROBLEM_METHOD = "method";
-
+	public static final String PROBLEM_START = "start";
+	
 	public static final String METHOD = "METHOD";
 	public static final String METHOD_NAME = "name";
 	public static final String METHOD_ERROR_RATE = "error_rate";
@@ -70,6 +75,8 @@ public class MessagesOntology extends Ontology {
 	public static final String EVALUATION_RELATIVE_ABSOLUTE_ERROR = "relative_absolute_error";
 	public static final String EVALUATION_RELATIVE_SQUARED_ERROR = "root_relative_squared_error";
 	public static final String EVALUATION_DATA_TABLE = "data_table";
+	public static final String EVALUATION_DURATION = "duration";
+	public static final String EVALUATION_OBJECT_FILENAME = "object_filename";
 
 	public static final String RESULTS = "RESULTS";
 	public static final String RESULTS_COMPUTATION_ID = "computation_id";
@@ -81,7 +88,7 @@ public class MessagesOntology extends Ontology {
 	public static final String RESULTS_AVG_MEAN_SQUARED_ERROR = "avg_root_mean_squared_error";
 	public static final String RESULTS_AVG_RELATIVE_ABSOLUTE_ERROR = "avg_relative_absolute_error";
 	public static final String RESULTS_AVG_RELATIVE_SQUARED_ERROR = "avg_root_relative_squared_error";
-
+		
 	public static final String OPTION = "OPTION";
 	public static final String OPTION_MUTABLE = "mutable";
 	public static final String OPTION_RANGE = "range";
@@ -102,9 +109,6 @@ public class MessagesOntology extends Ontology {
 	public static final String AGENT_TYPE = "type";
 	public static final String AGENT_GUI_ID = "gui_id";
 	public static final String AGENT_OPTIONS = "options";
-	public static final String AGENT_SAVED_TRAIN_FILENAME = "saved_train_filename";
-	public static final String AGENT_SAVED_OBJECT_FILENAME = "saved_object_filename";
-	public static final String AGENT_SAVED_TIMESTAMP = "saved_timestamp";
 		
 	public static final String INTERVAL = "INTERVAL";
 	public static final String INTERVAL_MIN = "min";
@@ -187,14 +191,13 @@ public class MessagesOntology extends Ontology {
 	public static final String GET_FILES = "GET-FILES";
 	public static final String GET_FILES_USERID = "userID";
 	
+	public static final String LOAD_AGENT = "LOAD-AGENT";
+	public static final String LOAD_AGENT_FILENAME = "filename";
+	
 	public static final String SAVE_AGENT = "SAVE-AGENT";
 	public static final String SAVE_AGENT_USERID = "userID";
 	public static final String SAVE_AGENT_AGENT = "agent";
-	public static final String SAVE_AGENT_DATA = "data";
-	public static final String SAVE_AGENT_OBJECT = "object";
-	
-	public static final String LOAD_AGENT = "LOAD-AGENT";
-	public static final String LOAD_AGENT_FILENAME = "filename";
+	public static final String SAVE_AGENT_OBJECT = "object"; 
 	
 	public static final String GET_SAVED_AGENTS = "GET-SAVED-AGENTS";
 	public static final String GET_SAVED_AGENTS_USERID = "userID";
@@ -252,8 +255,8 @@ public class MessagesOntology extends Ontology {
 			add(new AgentActionSchema(GET_FILE_INFO), GetFileInfo.class);
 			add(new AgentActionSchema(UPDATE_METADATA), UpdateMetadata.class);
 			add(new AgentActionSchema(GET_FILES), GetFiles.class);
-			add(new AgentActionSchema(SAVE_AGENT), SaveAgent.class);
 			add(new AgentActionSchema(LOAD_AGENT), LoadAgent.class);
+			add(new AgentActionSchema(SAVE_AGENT), SaveAgent.class);
 			add(new AgentActionSchema(GET_SAVED_AGENTS), GetSavedAgents.class);
 			// add(new AgentActionSchema(SEND_OPTIONS), SendOptions.class);
 
@@ -267,6 +270,8 @@ public class MessagesOntology extends Ontology {
 			cs.add(COMPUTATION_TIMEOUT,
 					(PrimitiveSchema) getSchema(BasicOntology.INTEGER));
 			cs.add(COMPUTATION_METHOD, (ConceptSchema) getSchema(METHOD));
+			cs.add(COMPUTATION_START,
+					(PrimitiveSchema) getSchema(BasicOntology.STRING));
 
 			cs = (ConceptSchema) getSchema(PROBLEM);
 			cs.add(PROBLEM_ID,
@@ -284,7 +289,9 @@ public class MessagesOntology extends Ontology {
 			cs.add(PROBLEM_TIMEOUT,
 					(PrimitiveSchema) getSchema(BasicOntology.INTEGER));
 			cs.add(PROBLEM_METHOD, (ConceptSchema) getSchema(METHOD));
-
+			cs.add(PROBLEM_START,
+					(PrimitiveSchema) getSchema(BasicOntology.STRING));
+			
 			cs = (ConceptSchema) getSchema(METHOD);
 			cs.add(METHOD_NAME,
 					(PrimitiveSchema) getSchema(BasicOntology.STRING));
@@ -305,6 +312,12 @@ public class MessagesOntology extends Ontology {
 			cs.add(TASK_DATA, (ConceptSchema) getSchema(DATA));
 			cs.add(TASK_RESULT, (ConceptSchema) getSchema(EVALUATION),
 					ObjectSchema.OPTIONAL);
+			cs.add(TASK_USERID,
+					(PrimitiveSchema) getSchema(BasicOntology.INTEGER));			
+			cs.add(TASK_START,
+					(PrimitiveSchema) getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+			cs.add(TASK_FINISH,
+					(PrimitiveSchema) getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 
 			cs = (ConceptSchema) getSchema(DATA);
 			cs.add(DATA_TRAIN_FILE_NAME,
@@ -387,6 +400,10 @@ public class MessagesOntology extends Ontology {
 			cs.add(EVALUATION_DATA_TABLE,
 					(ConceptSchema) getSchema(DATA_INSTANCES),
 					ObjectSchema.OPTIONAL);
+			cs.add(EVALUATION_DURATION,
+					(PrimitiveSchema) getSchema(BasicOntology.INTEGER), ObjectSchema.OPTIONAL);
+			cs.add(EVALUATION_OBJECT_FILENAME,
+					(PrimitiveSchema) getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
 
 			cs = (ConceptSchema) getSchema(RESULTS);
 			cs.add(RESULTS_COMPUTATION_ID,
@@ -412,7 +429,7 @@ public class MessagesOntology extends Ontology {
 					ObjectSchema.OPTIONAL);
 			cs.add(RESULTS_RESULTS, (ConceptSchema) getSchema(TASK), 0,
 					ObjectSchema.UNLIMITED);
-
+			
 			cs = (ConceptSchema) getSchema(AGENT);
 			cs.add(AGENT_NAME,
 					(PrimitiveSchema) getSchema(BasicOntology.STRING),
@@ -424,15 +441,6 @@ public class MessagesOntology extends Ontology {
 					ObjectSchema.OPTIONAL);
 			cs.add(AGENT_OPTIONS, (ConceptSchema) getSchema(OPTION), 0,
 					ObjectSchema.UNLIMITED);
-			cs.add(AGENT_SAVED_TRAIN_FILENAME,
-					(PrimitiveSchema) getSchema(BasicOntology.STRING),
-					ObjectSchema.OPTIONAL);
-			cs.add(AGENT_SAVED_OBJECT_FILENAME,
-					(PrimitiveSchema) getSchema(BasicOntology.STRING),
-					ObjectSchema.OPTIONAL);
-			cs.add(AGENT_SAVED_TIMESTAMP,
-					(PrimitiveSchema) getSchema(BasicOntology.STRING),
-					ObjectSchema.OPTIONAL);
 				
 			cs = (ConceptSchema) getSchema(DATA_INSTANCES);
 			cs.add(DATA_INSTANCES_ATTRIBUTES,
@@ -571,20 +579,19 @@ public class MessagesOntology extends Ontology {
 					(PrimitiveSchema) getSchema(BasicOntology.INTEGER));
 			as.setResult((PrimitiveSchema) getSchema(BasicOntology.STRING), 0,
 					ObjectSchema.UNLIMITED);
-
+			
+			
+			as = (AgentActionSchema) getSchema(LOAD_AGENT);
+			as.add(LOAD_AGENT_FILENAME,
+					(PrimitiveSchema) getSchema(BasicOntology.STRING));
+						
 			as = (AgentActionSchema) getSchema(SAVE_AGENT);
 			as.add(SAVE_AGENT_USERID,
 					(PrimitiveSchema) getSchema(BasicOntology.INTEGER));
 			as.add(SAVE_AGENT_AGENT,
 					(ConceptSchema) getSchema(AGENT));
-			as.add(SAVE_AGENT_DATA,
-					(ConceptSchema) getSchema(DATA));
 			as.add(SAVE_AGENT_OBJECT,
 					(PrimitiveSchema) getSchema(BasicOntology.BYTE_SEQUENCE));
-			
-			as = (AgentActionSchema) getSchema(LOAD_AGENT);
-			as.add(LOAD_AGENT_FILENAME,
-					(PrimitiveSchema) getSchema(BasicOntology.STRING));
 			
 			as = (AgentActionSchema) getSchema(GET_SAVED_AGENTS);
 			as.add(GET_SAVED_AGENTS_USERID,

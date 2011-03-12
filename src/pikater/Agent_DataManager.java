@@ -15,6 +15,8 @@ import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREResponder;
 import jade.util.leap.ArrayList;
 import jade.util.leap.List;
+import java.sql.Timestamp;
+import java.util.Calendar;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -29,6 +31,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+
 import java.util.LinkedList;
 import java.util.regex.Pattern;
 
@@ -168,17 +171,26 @@ public class Agent_DataManager extends Agent {
 			if (!tableNames.contains("RESULTS")) {
 				log.info("Creating table RESULTS");
 				db.createStatement().executeUpdate(
-						"CREATE TABLE results (" + "agentName VARCHAR (256), "
+						"CREATE TABLE results ("
+								+ "userID INTEGER NOT NULL, "
+								+ "agentName VARCHAR (256), "
 								+ "agentType VARCHAR (256), "
 								+ "options VARCHAR (256), "
 								+ "dataFile VARCHAR (50), "
 								+ "testFile VARCHAR (50), "
+								
 								+ "errorRate DOUBLE, "
 								+ "kappaStatistic DOUBLE, "
 								+ "meanAbsoluteError DOUBLE, "
 								+ "rootMeanSquaredError DOUBLE, "
 								+ "relativeAbsoluteError DOUBLE, "
-								+ "rootRelativeSquaredError DOUBLE)");
+								+ "rootRelativeSquaredError DOUBLE, "
+								
+								+ "objectFilename VARCHAR(256), "
+								
+								+ "start TIMESTAMP, "
+								+ "finish TIMESTAMP, " 
+								+ "duration INTEGER )");
 			}
 		} catch (SQLException e) {
 			log.fatal("Error creating table RESULTS: " + e.getMessage());
@@ -427,9 +439,9 @@ public class Agent_DataManager extends Agent {
 
 						Statement stmt = db.createStatement();
 
-						String query = "INSERT INTO results (agentName, agentType, options, dataFile, testFile,"
+						String query = "INSERT INTO results (userID, agentName, agentType, options, dataFile, testFile,"
 								+ "errorRate, kappaStatistic, meanAbsoluteError, rootMeanSquaredError, relativeAbsoluteError,"
-								+ "rootRelativeSquaredError) VALUES (";
+								+ "rootRelativeSquaredError, start, finish, duration, objectFilename) VALUES ( 1, ";
 
 						query += "\'" + res.getAgent().getName() + "\',";
 						query += "\'" + res.getAgent().getType() + "\',";
@@ -454,9 +466,21 @@ public class Agent_DataManager extends Agent {
 						query += res.getResult().getRelative_absolute_error()
 								+ ",";
 						query += res.getResult()
-								.getRoot_relative_squared_error()
-								+ ")";
+								.getRoot_relative_squared_error();
 
+						
+						if (res.getResult().getObject_filename() != null){
+							Timestamp currentTimestamp = 
+								new java.sql.Timestamp(Calendar.getInstance().getTime().getTime());							
+							
+							query += ",";
+							query += "\'" + java.sql.Timestamp.valueOf(res.getStart()) + "\',";
+							query += "\'" + currentTimestamp + "\',";
+							query += "\'" + res.getResult().getDuration() + "\',";						
+							query += "\'" + res.getResult().getObject_filename() + "\'";
+						}
+						query += ")";
+						
 						log.info("Executing query: " + query);
 
 						stmt.executeUpdate(query);

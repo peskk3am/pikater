@@ -36,6 +36,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -332,7 +334,9 @@ public abstract class Agent_GUI extends GuiAgent {
 		if (problem == null) { // TODO exception
 			return;
 		}
-
+		
+		problem.setStart(getDateTime());
+		
 		// create a request message with SendProblem content
 		ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
 		msg.addReceiver(new AID("manager", AID.ISLOCALNAME));
@@ -1278,6 +1282,7 @@ public abstract class Agent_GUI extends GuiAgent {
 		FIPAService.doFipaRequestClient(this, request);
 	}
 	
+/*
 	protected List getSavedAgents(int userID) {
 		pikater.ontology.messages.GetSavedAgents gsa = new pikater.ontology.messages.GetSavedAgents();
 		
@@ -1329,5 +1334,12 @@ public abstract class Agent_GUI extends GuiAgent {
 		
 		return listOfResults;
 	}
+	*/
+	
+    private String getDateTime() {
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS");
+        Date date = new Date();
+        return dateFormat.format(date);
+    }
 
 }

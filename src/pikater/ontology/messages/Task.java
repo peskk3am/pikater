@@ -14,6 +14,11 @@ public class Task implements Concept {
 	private Agent _agent;
 	private Data _data;
 
+	private int userID;
+	private String start;
+	private String finish;
+
+	
 	public void setAgent(Agent agent) {
 		_agent = agent;
 	}
@@ -60,5 +65,30 @@ public class Task implements Concept {
 
 	public Evaluation getResult() {
 		return _result;
+	}	
+
+	public void setUserID(int userID) {
+		this.userID = userID;
 	}
+
+	public int getUserID() {
+		return userID;
+	}
+
+	public void setStart(String start) {
+		this.start = start;
+	}
+
+	public String getStart() {
+		return start;
+	}
+
+	public void setFinish(String finish) {
+		this.finish = finish;
+	}
+
+	public String getFinish() {
+		return finish;
+	}
+
 }

@@ -15,10 +15,6 @@ public class Agent implements Concept {
 	private List _options;
 	private String _gui_id;
 	
-	private String _saved_train_filename;
-	private String _saved_object_filename;   // file with the saved agent (without extension)
-	private String _saved_timestamp;
-	
 	// Methods required to use this class to represent the OPTIONS role
 	public void setOptions(List options) {
 		_options = options;
@@ -50,30 +46,6 @@ public class Agent implements Concept {
 
 	public String getGui_id() {
 		return _gui_id;
-	}
-
-	public void setSaved_train_filename(String _saved_train_filename) {
-		this._saved_train_filename = _saved_train_filename;
-	}
-
-	public String getSaved_train_filename() {
-		return _saved_train_filename;
-	}
-
-	public void setSaved_object_filename(String _saved_object_filename) {
-		this._saved_object_filename = _saved_object_filename;
-	}
-
-	public String getSaved_object_filename() {
-		return _saved_object_filename;
-	}
-
-	public void setSaved_timestamp(String _saved_timestamp) {
-		this._saved_timestamp = _saved_timestamp;
-	}
-
-	public String getSaved_timestamp() {
-		return _saved_timestamp;
 	}
 	
 	// -----------------------------

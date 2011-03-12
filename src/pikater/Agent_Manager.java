@@ -572,6 +572,7 @@ public class Agent_Manager extends Agent {
 							computation.setId(problemId + "_" + computation_i);
 							computation.setTimeout(problem.getTimeout());
 							computation.setMethod(problem.getMethod());
+							computation.setStart(problem.getStart());
 							computation_i++;
 
 							msgVector.add(Compute(computation));

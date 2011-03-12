@@ -14,6 +14,9 @@ public class Evaluation implements Concept {
 	private float _relative_absolute_error = -1; // percent
 	private float _root_relative_squared_error = -1; // percent
 
+	private int duration;  // integer miliseconds
+	private String object_filename;
+	
 	private DataInstances data_table;
 
 	public void setError_rate(float error_rate) {
@@ -71,5 +74,20 @@ public class Evaluation implements Concept {
 	public void setData_table(DataInstances dataTable) {
 		data_table = dataTable;
 	}
+	
+	public void setDuration(int duration) {
+		this.duration = duration;
+	}
 
+	public int getDuration() {
+		return duration;
+	}
+
+	public void setObject_filename(String object_filename) {
+		this.object_filename = object_filename;
+	}
+
+	public String getObject_filename() {
+		return object_filename;
+	}
 }

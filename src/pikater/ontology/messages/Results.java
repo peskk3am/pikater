@@ -20,7 +20,7 @@ public class Results implements Concept {
 	private float _avg_root_relative_squared_error = -1;
 
 	private List _results;
-
+	
 	public void setProblem_id(String problem_id) {
 		_problem_id = problem_id;
 	}
@@ -93,4 +93,5 @@ public class Results implements Concept {
 	public float getAvg_root_relative_squared_error() {
 		return _avg_root_relative_squared_error;
 	}
+	
 }

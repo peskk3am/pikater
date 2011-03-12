@@ -113,7 +113,7 @@ public class Agent_AgentManager extends Agent {
 
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
-
+/*
 		LinkedList<String> tableNames = new LinkedList<String>();
 
 		try {
@@ -130,7 +130,6 @@ public class Agent_AgentManager extends Agent {
 			e.printStackTrace();
 		}
 
-		
 		try {
 			if (!tableNames.contains("AGENTS")) {
 				log.info("Creating table AGENTS");
@@ -149,7 +148,8 @@ public class Agent_AgentManager extends Agent {
 			log.fatal("Error creating table AGENTS: " + e.getMessage());
 			e.printStackTrace();
 		}
-
+	 */
+		
 		MessageTemplate mt = MessageTemplate.and(MessageTemplate
 				.MatchOntology(ontology.getName()), MessageTemplate
 				.MatchPerformative(ACLMessage.REQUEST));
@@ -231,7 +231,7 @@ public class Agent_AgentManager extends Agent {
 							SaveAgent sa = (SaveAgent) a.getAction();
 
 							int userID = sa.getUserID();
-							pikater.ontology.messages.Data data = sa.getData();
+							// pikater.ontology.messages.Data data = sa.getData();
 							
 							pikater.ontology.messages.Agent agent = sa.getAgent();							
 							
@@ -256,38 +256,34 @@ public class Agent_AgentManager extends Agent {
 							oos.close();
 							log.info("Agent "+ name +" saved to file" + filename + ".model");
 																					
-							
-							String query = "INSERT into agents (userId, name, timestamp, " +
-									"type, trainFilename, objectFilename) " +
-									"VALUES ("
-								+ "\'" + userID + "\',"
-								+ "\'" + name + "\',"
+							/*
+							String query = "INSERT into results (finish, objectFilename) " +
+									"VALUES ("								
 								+ "\'" + currentTimestamp + "\',"								
-								+ "\'" + agent.getType() + "\',"
-								+ "\'" + data.getTrain_file_name()
-								+ "\',\'"								
-								// + object
-								+ filename
-								+ "\')";  
+								+ "\'" + filename
+								+ "\')";  						
 												
 							Statement stmt = db.createStatement();
 							log.info("Executing query: " + query);							
 
 							stmt.executeUpdate(query);
+							*/							
 							
 							ACLMessage reply = request.createReply();
+							reply.setContent(filename);
 							reply.setPerformative(ACLMessage.INFORM);
 
 							return reply;
 							
 					} // end of SaveAgent
 
-					if (a.getAction() instanceof GetSavedAgents){
+					/* 
+					 	if (a.getAction() instanceof GetSavedAgents){
 						GetSavedAgents gsa = (GetSavedAgents) a.getAction();
 						
 						int userID = gsa.getUserID();
 													
-						String query = "SELECT * FROM agents WHERE userID = " + userID;
+						String query = "SELECT * FROM results WHERE userID = " + userID;
 						log.info("Executing query " + query);
 
 						Statement stmt = db.createStatement();
@@ -298,7 +294,7 @@ public class Agent_AgentManager extends Agent {
 						while( rs.next() ){
 							pikater.ontology.messages.Agent agent = new pikater.ontology.messages.Agent();
 							agent.setName(rs.getString("name"));
-							agent.setSaved_timestamp(rs.getString("timestamp"));
+							agent.setSaved_timestamp(rs.getString("finish"));
 							agent.setSaved_object_filename(rs.getString("objectFilename"));
 							agent.setType(rs.getString("type"));
 							agent.setSaved_train_filename(rs.getString("trainFilename"));
@@ -315,9 +311,9 @@ public class Agent_AgentManager extends Agent {
 						Result r = new Result(a.getAction(), agents); 
 						getContentManager().fillContent(reply, r);
 
-						return reply;
-												
-					}										
+						return reply;												
+					}	
+					*/									
 				
 				} catch (OntologyException e) {
 					e.printStackTrace();
@@ -325,9 +321,6 @@ public class Agent_AgentManager extends Agent {
 				} catch (CodecException e) {
 					e.printStackTrace();
 					log.error("Codec problem: " + e.getMessage());
-				} catch (SQLException e) {
-					e.printStackTrace();
-					log.error("SQL error: " + e.getMessage());
 				} catch (FileNotFoundException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
