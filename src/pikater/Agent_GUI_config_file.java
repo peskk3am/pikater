@@ -5,6 +5,7 @@ import jade.content.lang.Codec.CodecException;
 import jade.content.onto.OntologyException;
 import jade.content.onto.UngroundedException;
 import jade.content.onto.basic.Result;
+import jade.domain.FIPAException;
 import jade.gui.GuiEvent;
 import jade.lang.acl.ACLMessage;
 import jade.util.leap.Iterator;
@@ -27,16 +28,6 @@ public class Agent_GUI_config_file extends Agent_GUI {
 	private String path = System.getProperty("user.dir")
 			+ System.getProperty("file.separator");
 	private String configFileName;
-
-	@Override
-	protected void displayOptions(Problem problem, int performative) {
-		String msg = "Failed";
-		if (performative == ACLMessage.INFORM) {
-			msg = "OK";
-		}
-		System.out.println("Agent :" + getName()
-				+ ": Displaying the options ;) " + msg);
-	} // end displayOptions
 
 	@Override
 	protected void displayResult(ACLMessage inform) {
@@ -101,6 +92,19 @@ public class Agent_GUI_config_file extends Agent_GUI {
 
 		doWait(1000);
 
+		try {
+			System.out.println("J48 options: "+getOptions("J48"));
+		} catch (CodecException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (OntologyException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (FIPAException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
 		/*
 		 * // test: int newId = createNewProblem("1000"); try {
 		 * //addAgentToProblem(newId, null, "MultilayerPerceptron",

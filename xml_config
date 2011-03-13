@@ -6,7 +6,8 @@
         <dataset train="iris.arff" test="iris.arff" />
         <!-- <dataset train="weather.arff" test="weather.arff" /> -->
         
-        <agent name="rbf3">
+        
+        <agent type="RBFNetwork">
             <parameter name="B" value="3" />
         </agent>
         <!-- 

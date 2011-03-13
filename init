@@ -14,7 +14,7 @@ $a pikater.Agent_AgentManager agentManager
 
 # get a Problem from "config" file
 # $a Agent_GUI_WS very_simple_GUI
-$a pikater.gui.java.Agent_GUI_Java very_simple_GUI
-# $a pikater.Agent_GUI_config_file very_simple_GUI xml_config
+# $a pikater.gui.java.Agent_GUI_Java very_simple_GUI
+$a pikater.Agent_GUI_config_file very_simple_GUI xml_config
 
 $a  jade.tools.sniffer.Sniffer sniffer01 very_simple_GUI

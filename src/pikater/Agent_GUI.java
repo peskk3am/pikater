@@ -104,12 +104,11 @@ public abstract class Agent_GUI extends GuiAgent {
 
 	/* returns the string with agent type */
 
-	protected abstract void displayOptions(Problem problem, int performative);
+	// protected abstract void displayOptions(Problem problem, int performative);
 
 	/*
 	 * method should be used to display agent options, it is called
 	 * automatically after receiving the message from a computing agent
-	 * performative ... ACLMessage.getPerformative
 	 */
 
 	protected abstract void displayResult(ACLMessage inform);
@@ -199,6 +198,72 @@ public abstract class Agent_GUI extends GuiAgent {
 
 	} // end getComputingAgents
 
+	protected List getOptions(String agentType) throws 
+			CodecException, OntologyException, FIPAException {
+		
+		long _timeout = System.currentTimeMillis() + 2000; 
+		AID aid = null;
+		String newName = null;
+		
+		while (aid == null && System.currentTimeMillis() < _timeout) {
+			// try until you find agent of the given type or you manage to
+			// create it
+
+			aid = getAgentByType(agentType);
+			if (aid == null) {
+				// agent of given type doesn't exist
+				newName = generateName(agentType);
+				
+				if (agentTypes == null) {
+					createAgentTypesHashMap();
+				}
+				
+				System.out.println("Creating agent " + newName + ", type: "+ agentType);
+
+				aid = createAgent(agentTypes.get(agentType), newName);
+				doWait(100);
+			}
+		}
+		if (aid == null) {
+			throw new FailureException("Agent of the " + agentType
+					+ " type could not be found or created.");
+		}
+		
+		ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+		msg.addReceiver(aid);
+		msg.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+		msg.setLanguage(codec.getName());
+		msg.setOntology(ontology.getName());
+		msg.setConversationId("options only");
+		// We want to receive a reply in 5 secs
+		msg.setReplyByDate(new Date(System.currentTimeMillis() + 2000));
+
+		// Prepare the content.
+		GetOptions get = new GetOptions();
+		Action a = new Action();
+		a.setAction(get);
+		a.setActor(this.getAID());
+
+		// Let JADE convert from Java objects to string
+		getContentManager().fillContent(msg, a);
+
+		ACLMessage reply = FIPAService.doFipaRequestClient(this, msg);
+
+		List options = null;
+		ContentElement content = getContentManager().extractContent(reply);
+		if (content instanceof Result) {
+			Result result = (Result) content;
+			if (result.getValue() instanceof pikater.ontology.messages.Agent) {
+				pikater.ontology.messages.Agent agent = 
+					(pikater.ontology.messages.Agent) result.getValue();
+				options = agent.getOptions();
+			}
+		}
+		
+		return options;
+		
+	} // end getAgentOptions
+			
 	protected void getAgentOptions(String receiver) {
 		// returns the ontology class Agent (containing agent options) for an
 		// agent "receiver", specified by its localName
@@ -242,6 +307,8 @@ public abstract class Agent_GUI extends GuiAgent {
 						+ inform.getSender().getName() + " replied.");
 				// we've just received the Options in an inform message
 
+				System.out.println("Conversation id:" + inform.getConversationId());
+				
 				ContentElement content;
 				try {
 					content = getContentManager().extractContent(inform);
@@ -282,6 +349,7 @@ public abstract class Agent_GUI extends GuiAgent {
 				refreshOptions(agent, refuse.getPerformative());
 				checkProblems();
 				displayResult(refuse);
+
 			}
 
 			protected void handleFailure(ACLMessage failure) {
@@ -306,10 +374,10 @@ public abstract class Agent_GUI extends GuiAgent {
 							+ " failed to perform the requested action");
 				}
 
-				refreshOptions(agent, failure.getPerformative());
+				// refreshOptions(agent, failure.getPerformative());
 				checkProblems();
 				displayResult(failure);
-
+				
 			}
 
 		};
@@ -889,8 +957,6 @@ public abstract class Agent_GUI extends GuiAgent {
 					removeAgentFromAllProblems(Integer.parseInt(agent
 							.getGui_id()));
 				}
-				// display the options for a selected problem
-				displayOptions(next_problem, performative);
 			} // end if ! sent
 		}
 	} // end refreshOptions
@@ -993,34 +1059,38 @@ public abstract class Agent_GUI extends GuiAgent {
 		return newOptions;
 	} // end function refreshOption
 
-	protected Vector<String> offerAgentTypes() {
+	protected void createAgentTypesHashMap(){
 		// read agent types from file
 
-		if (agentTypes == null) {
-			// Sets up a file reader to read the agent_types file
-			
-			agentTypes = new HashMap<String, String>();
-			FileReader input;
-			try {
-				input = new FileReader(path + "agent_types");
-				// Filter FileReader through a Buffered read to read a line at a
-				// time
-				BufferedReader bufRead = new BufferedReader(input);
-				String line = bufRead.readLine();
+		// Sets up a file reader to read the agent_types file
+		
+		agentTypes = new HashMap<String, String>();
+		FileReader input;
+		try {
+			input = new FileReader(path + "agent_types");
+			// Filter FileReader through a Buffered read to read a line at a
+			// time
+			BufferedReader bufRead = new BufferedReader(input);
+			String line = bufRead.readLine();
 
-				// Read through file one line at time
-				while (line != null) {
-					agentTypes.put(line.split(":")[0], line.split(":")[1]);
-					line = bufRead.readLine();
-				}
-
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			// Read through file one line at time
+			while (line != null) {
+				agentTypes.put(line.split(":")[0], line.split(":")[1]);
+				line = bufRead.readLine();
 			}
+
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
+	}
+	
+	protected Vector<String> offerAgentTypes() {
+		if (agentTypes == null) {
+			createAgentTypesHashMap();
 		}
 		
 		Vector<String> agents = new Vector<String>();
