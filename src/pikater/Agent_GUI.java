@@ -51,6 +51,7 @@ import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
 
 import pikater.ontology.messages.Data;
+import pikater.ontology.messages.Execute;
 import pikater.ontology.messages.GetOptions;
 import pikater.ontology.messages.Interval;
 import pikater.ontology.messages.MessagesOntology;
@@ -717,8 +718,8 @@ public abstract class Agent_GUI extends GuiAgent {
 				if (Integer.parseInt(next_problem.getGui_id()) == _problem_id) {
 					Iterator itr = next_problem.getAgents().iterator();
 					while (itr.hasNext()) {
-						pikater.ontology.messages.Agent next_agent = (pikater.ontology.messages.Agent) itr
-								.next();
+						pikater.ontology.messages.Agent next_agent =
+							(pikater.ontology.messages.Agent) itr.next();
 						// find the right agent
 						if (Integer.parseInt(next_agent.getGui_id()) == _agent_id) {
 
@@ -738,19 +739,20 @@ public abstract class Agent_GUI extends GuiAgent {
 									interval.setMin(Float.valueOf(lower));
 									interval.setMax(Float.valueOf(upper));
 									option.setRange(interval);
+									option.setIs_a_set(false);
+								}
+								if (set != null) {
+									String[] set_array = (set.replace(" ", ""))
+											.split(",");
+									List set_list = new ArrayList();
+									for (int i = 0; i < set_array.length; i++) {
+										set_list.add(set_array[i]);
+									}
+									option.setSet(set_list);
+									option.setIs_a_set(true);
 								}
 							}
 							option.setValue(option_value);
-
-							if (set != null) {
-								String[] set_array = (set.replace(" ", ""))
-										.split(",");
-								List set_list = new ArrayList();
-								for (int i = 0; i < set_array.length; i++) {
-									set_list.add(set_array[i]);
-								}
-								option.setSet(set_list);
-							}
 
 							if (next_problem.getMethod().getName().equals(
 									"ChooseXValues")) {
@@ -977,7 +979,7 @@ public abstract class Agent_GUI extends GuiAgent {
 				Option o = new Option();
 				o.setData_type(next_option.getData_type());
 				o.setDefault_value(next_option.getDefault_value());
-				o.setIs_a_set(next_option.getIs_a_set());
+				// o.setIs_a_set(next_option.getIs_a_set());
 				o.setName(next_option.getName());
 				o.setNumber_of_args(next_option.getNumber_of_args());
 				o.setRange(next_option.getRange());
@@ -1003,19 +1005,19 @@ public abstract class Agent_GUI extends GuiAgent {
 						// copy all the parameters (problem -> merged)
 						if (next_problem_option.getMutable()) {
 							next_merged_option.setMutable(true);
-							next_merged_option
-									.setUser_value(next_problem_option
-											.getValue());
-							if (next_problem_option.getRange() != null) {
-								next_merged_option.getRange()
-										.setMin(
-												next_problem_option.getRange()
-														.getMin());
-								next_merged_option.getRange()
-										.setMax(
-												next_problem_option.getRange()
-														.getMax());
+							next_merged_option.setUser_value(
+									next_problem_option.getValue());
+							if (next_problem_option.getIs_a_set()){
+								next_merged_option.setIs_a_set(true);
 							}
+
+							if (next_problem_option.getRange() != null) {
+								next_merged_option.getRange().setMin(
+									next_problem_option.getRange().getMin());
+								next_merged_option.getRange().setMax(
+									next_problem_option.getRange().getMax());
+								next_merged_option.setIs_a_set(false);
+							}							
 							next_merged_option
 									.setNumber_of_values_to_try(next_problem_option
 											.getNumber_of_values_to_try());
@@ -1057,7 +1059,7 @@ public abstract class Agent_GUI extends GuiAgent {
 			newOptions = mergedOptionsArrayList;
 		} // end if (empty option list)
 		return newOptions;
-	} // end function refreshOption
+	} // end function _refreshOption
 
 	protected void createAgentTypesHashMap(){
 		// read agent types from file
@@ -1295,12 +1297,12 @@ public abstract class Agent_GUI extends GuiAgent {
 				java.util.Iterator o_itr = _options.iterator();
 				while (o_itr.hasNext()) {
 					Element next_option = (Element) o_itr.next();
-					addOptionToAgent(p_id, a_id, next_option
-							.getAttributeValue("name"), next_option
-							.getAttributeValue("value"), next_option
-							.getAttributeValue("lower"), next_option
-							.getAttributeValue("upper"), next_option
-							.getAttributeValue("number_of_values_to_try"),
+					addOptionToAgent(p_id, a_id, 
+							next_option.getAttributeValue("name"),
+							next_option.getAttributeValue("value"),
+							next_option.getAttributeValue("lower"),
+							next_option.getAttributeValue("upper"),
+							next_option.getAttributeValue("number_of_values_to_try"),
 							next_option.getAttributeValue("set"));
 				}
 			}
@@ -1320,11 +1322,12 @@ public abstract class Agent_GUI extends GuiAgent {
 		}
 	}
 		
-	protected void loadAgent(String _filename) throws FIPAException {
+	protected void loadAgent(String _filename, Execute action) throws FIPAException {
 		// protected void loadAgent(String _name, int _userID, String _timestamp) {
 		pikater.ontology.messages.LoadAgent _loadAgent = new pikater.ontology.messages.LoadAgent();
 		
 		_loadAgent.setFilename(_filename);
+		_loadAgent.setFirst_action(action);
 		// _loadAgent.setName(_name);
 		// _loadAgent.setUserID(_userID);
 		// _loadAgent.setTimestamp(_timestamp);
