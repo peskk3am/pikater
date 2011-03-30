@@ -45,7 +45,7 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
 		int numArgs = values.length;
 
 		if (!next.getIs_a_set()) {
-			if (next.getData_type().equals("INT")) {
+			if (next.getData_type().equals("INT") || next.getData_type().equals("MIXED")) {
 				int x = next.getNumber_of_values_to_try();
 				int range = (int) (next.getRange().getMax()
 						- next.getRange().getMin() + 1);
@@ -57,14 +57,24 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
 				for (int i = 0; i < x; i++) {
 					String si = "";
 					for (int j = 1; j < numArgs; j++) {
+						if (values[j - 1].equals("?")) {
+							int vInt = (int) (next.getRange().getMin() + i
+									* (range / x));
+							si += Integer.toString(vInt) + ",";
+						}
+						else {
+							si += values[j - 1] + ",";
+						}
+					}
+					if (values[numArgs - 1].equals("?")) {
 						int vInt = (int) (next.getRange().getMin() + i
 								* (range / x));
-						si += Integer.toString(vInt) + ",";
+						si += Integer.toString(vInt);
 					}
-					int vInt = (int) (next.getRange().getMin() + i
-							* (range / x));
-					si += Integer.toString(vInt);
-
+					else {
+						si += values[numArgs - 1] + ",";
+					}
+					
 					a[i] = optionName + si;
 				}
 				return a;
@@ -78,12 +88,22 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
 				for (int i = 0; i < x; i++) {
 					String sf = "";
 					for (int j = 1; j < numArgs; j++) {
-						float vFloat = next.getRange().getMin() + i * dv;
-						sf += Float.toString(vFloat) + ",";
+						if (values[j - 1].equals("?")) {
+							float vFloat = next.getRange().getMin() + i * dv;
+							sf += Float.toString(vFloat) + ",";
+						}
+						else {
+							sf += values[j - 1] + ",";
+						}
 					}
-					float vFloat = next.getRange().getMin() + i * dv;
-					sf += Float.toString(vFloat);
-
+					if (values[numArgs - 1].equals("?")) {
+						float vFloat = next.getRange().getMin() + i * dv;
+						sf += Float.toString(vFloat);
+					}
+					else {
+						sf += values[numArgs - 1] + ",";
+					}
+					
 					a[i] = optionName + sf;
 				}
 				return a;
@@ -206,13 +226,10 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
 
 	private void sub_generate(int j, String str,
 			Object[] possible_options_array, String[] values) {
-		System.out.println("888888str" + str);
 		if ((str.split("[, ]+")).length > values.length + 1) {
 			sub_options_vector.add(str);
 			return;
 		}
-		System.out.println("333333333333333j:" + j);
-		System.out.println("3333333333333333 :" + values[j]);
 
 		if (!values[j].equals("?")) {
 			if (str.startsWith("-")) {
@@ -226,9 +243,6 @@ public class Agent_ChooseXValues extends Agent_OptionsManager {
 			// pocet argumentu (aspon to tak vyada)
 		} else {
 			for (int i = 0; i < possible_options_array.length; i++) {
-				System.out.println("44444444444444i:" + i);
-				System.out.println("44444444444444 :"
-						+ possible_options_array[i]);
 				if (str.startsWith("-")) {
 					sub_generate(++j, " " + str + possible_options_array[i],
 							possible_options_array, values);

@@ -58,7 +58,7 @@ public class Agent_Random extends Agent_OptionsManager {
 				int numArgs = values.length;
 
 				if (!next.getIs_a_set()) {
-					if (next.getData_type().equals("INT")) {
+					if (next.getData_type().equals("INT") || next.getData_type().equals("MIXED")) {
 
 						String si = "";
 						for (int i = 1; i < numArgs; i++) {
