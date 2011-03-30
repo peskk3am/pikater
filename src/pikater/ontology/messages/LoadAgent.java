@@ -7,6 +7,7 @@ public class LoadAgent extends Action {
 	private static final long serialVersionUID = -2890249253440084L;
 
 	private String filename;
+	private Execute first_action = null;
 	
 	public String getFilename() {
 		return filename;
@@ -14,4 +15,11 @@ public class LoadAgent extends Action {
 	public void setFilename(String filename) {
 		this.filename = filename;
 	}
+	public void setFirst_action(Execute first_action) {
+		this.first_action = first_action;
+	}
+	public Execute getFirst_action() {
+		return first_action;
+	}
+
 }

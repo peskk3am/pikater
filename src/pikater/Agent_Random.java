@@ -62,33 +62,52 @@ public class Agent_Random extends Agent_OptionsManager {
 
 						String si = "";
 						for (int i = 1; i < numArgs; i++) {
+							if (values[i - 1].equals("?")) {
+								int rInt = (int) (next.getRange().getMin() + generator
+										.nextInt((int) (next.getRange().getMax() - next
+												.getRange().getMin())));
+								si += Integer.toString(rInt) + ",";
+							}
+							else {
+								si += values[i - 1] + ",";
+							}							
+						}
+						if (values[numArgs - 1].equals("?")) {
 							int rInt = (int) (next.getRange().getMin() + generator
 									.nextInt((int) (next.getRange().getMax() - next
 											.getRange().getMin())));
-							si += Integer.toString(rInt) + ",";
+							si += Integer.toString(rInt);
 						}
-						int rInt = (int) (next.getRange().getMin() + generator
-								.nextInt((int) (next.getRange().getMax() - next
-										.getRange().getMin())));
-						si += Integer.toString(rInt);
-
+						else {
+							si += values[numArgs - 1] + ",";
+						}							
+						
 						next.setValue(si);
 					}
 					if (next.getData_type().equals("FLOAT")) {
 						String sf = "";
 						for (int i = 1; i < numArgs; i++) {
+							if (values[i - 1].equals("?")) {							
+								float rFloat = next.getRange().getMin()
+										+ (float) (generator.nextDouble())
+										* (next.getRange().getMax() - next
+												.getRange().getMin());
+								sf += Float.toString(rFloat) + ",";
+							}
+							else {
+								sf += values[i - 1] + ",";
+							}
+						}
+						if (values[numArgs - 1].equals("?")) {
 							float rFloat = next.getRange().getMin()
 									+ (float) (generator.nextDouble())
-									* (next.getRange().getMax() - next
-											.getRange().getMin());
-							sf += Float.toString(rFloat) + ",";
+									* (next.getRange().getMax() - next.getRange()
+											.getMin());
+							sf += Float.toString(rFloat);
 						}
-						float rFloat = next.getRange().getMin()
-								+ (float) (generator.nextDouble())
-								* (next.getRange().getMax() - next.getRange()
-										.getMin());
-						sf += Float.toString(rFloat);
-
+						else {
+							sf += values[numArgs - 1];
+						}
 						next.setValue(sf);
 					}
 					if (next.getData_type().equals("BOOLEAN")) {
