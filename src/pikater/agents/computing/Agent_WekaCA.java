@@ -75,7 +75,7 @@ public abstract class Agent_WekaCA extends Agent_ComputingAgent {
 		double pre[] = new double[test.numInstances()];
 		for (int i = 0; i < test.numInstances(); i++) {
 			try {
-				pre[i] = eval.evaluateModelOnce(getModelObject(), test
+				pre[i] = eval.evaluateModelOnce((Classifier)getModelObject(), test
 						.instance(i));
 			} catch (Exception e) {
 				pre[i] = Integer.MAX_VALUE;
@@ -94,73 +94,6 @@ public abstract class Agent_WekaCA extends Agent_ComputingAgent {
 		return onto_test;
 	}
 
-	@Override
-	public boolean saveAgent() {
-		try {
-			ObjectOutputStream oos = new ObjectOutputStream(
-					new FileOutputStream("saved/" + getLocalName() + ".model"));
-
-			// save model + header
-			Vector v = new Vector();
-			v.add(getModelObject());
-			v.add(new Instances(data, 0));
-			v.add(trainFileName);
-			v.add(testFileName);
-			v.add(state);
-
-			oos.writeObject(v);
-			oos.flush();
-			oos.close();
-			System.out.println("Saving... : Description:" + this.toString());
-			return true;
-
-		} catch (Exception e) {
-			System.out.println(e);
-			return false;
-		}
-	} // end saveAgent
-
-	@Override
-	public boolean loadAgent(String agentName) {
-		try {
-			// deserialize model + header
-			ObjectInputStream ois = new ObjectInputStream(new FileInputStream(
-					"saved/" + agentName + ".model"));
-			Vector v = (Vector) ois.readObject();
-
-			Classifier cls = (Classifier) v.get(0); // TODO this isn't general
-													// enough - cls doesn't have
-													// to be derived from
-													// Classifier
-			Instances header = (Instances) v.get(1); // TODO this is not used so
-														// far
-			// System.out.println(agentName+" Header: "+header);
-			trainFileName = (String) v.get(2);
-			testFileName = (String) v.get(3);
-			state = (states) v.get(4);
-
-			// TODO watch "working" variable
-			setModelObject(cls);
-			ois.close();
-
-			System.out.println("Loading... : Description: " + this.toString());
-			System.out.println("                          trainFileName: "
-					+ trainFileName);
-			System.out.println("                          testFileName: "
-					+ testFileName);
-			System.out.println("                          state: " + state);
-
-			// re-register with DF
-			// TODO what if it fails?
-			// deregisterWithDF();
-			// registerWithDF();
-
-			return true;
-		} catch (Exception e) {
-			System.out.println(e);
-			return false;
-		}
-	} // end loadAgent
 
 	private pikater.ontology.messages.Option convertOption(
 			MyWekaOption _weka_opt) {
@@ -253,9 +186,9 @@ public abstract class Agent_WekaCA extends Agent_ComputingAgent {
 						dt = MyWekaOption.dataType.MIXED;
 					}
 
-					String[] default_options = getModelObject().getOptions();
+					String[] default_options = ((Classifier)getModelObject()).getOptions();
 
-					Enumeration en = getModelObject().listOptions();
+					Enumeration en = ((Classifier)getModelObject()).listOptions();
 					while (en.hasMoreElements()) {
 
 						Option next = (weka.core.Option) en.nextElement();
