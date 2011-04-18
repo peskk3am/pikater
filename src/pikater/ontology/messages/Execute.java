@@ -1,8 +1,8 @@
 package pikater.ontology.messages;
 
-import jade.content.Concept;
+import jade.content.onto.basic.Action;
 
-public class Execute implements Concept {
+public class Execute extends Action {
 	/**
 	 * 
 	 */

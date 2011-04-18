@@ -35,7 +35,9 @@ import java.text.SimpleDateFormat;
 
 import com.sun.org.apache.bcel.internal.classfile.InnerClass;
 
+import pikater.agents.computing.Agent_ComputingAgent;
 import pikater.agents.computing.Agent_ComputingAgent.states;
+import pikater.ontology.messages.Execute;
 import pikater.ontology.messages.GetAllMetadata;
 import pikater.ontology.messages.GetFileInfo;
 import pikater.ontology.messages.GetFiles;
@@ -63,6 +65,9 @@ import jade.content.onto.basic.Result;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.domain.AMSService;
+import jade.domain.FIPAException;
+import jade.domain.FIPANames;
+import jade.domain.FIPAService;
 import jade.domain.FIPAAgentManagement.NotUnderstoodException;
 import jade.domain.FIPAAgentManagement.RefuseException;
 import jade.domain.persistence.*;
@@ -171,7 +176,8 @@ public class Agent_AgentManager extends Agent {
 
 					if (a.getAction() instanceof LoadAgent) {
 						LoadAgent la = (LoadAgent) a.getAction();
-
+							Action fa = la.getFirst_action();
+							
 							/* int userID = la.getUserID();
 							String name = la.getName();
 							String timestamp = la.getTimestamp();
@@ -190,7 +196,7 @@ public class Agent_AgentManager extends Agent {
 							stmt.close();																		
 							*/												
 							
-							Agent newAgent = null;
+							Agent_ComputingAgent newAgent = null;
 							
 							// read agent from file 
 						    String filename = "saved" + System.getProperty("file.separator") 
@@ -200,7 +206,9 @@ public class Agent_AgentManager extends Agent {
 						    //Construct the ObjectInputStream object
 						    ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(filename));
 						            
-							newAgent = (Agent) inputStream.readObject();
+							newAgent = (Agent_ComputingAgent) inputStream.readObject();
+							
+							// newAgent.changeStateTo(newLifeCycle);
 						    						    						    
 						    //Close the ObjectInputStream
 						    if (inputStream != null) {
@@ -217,12 +225,76 @@ public class Agent_AgentManager extends Agent {
 						    else {
 						    	throw new ControllerException("Agent not created.");
 						    }
-													
+							
+						    System.out.println("State of the resurected agent: " + newAgent.getAgentState());
+						    
+							doWait(1000);
+							System.out.println("State of the resurected agent 2: " + newAgent.getState());
+							// newAgent.doActivate();
+							
+							ContainerController cc = getContainerController();
+							AgentController aco = cc.getAgent(la.getFilename());
+							// aco.suspend();
+							aco.activate();
+							
+							/* Hi,
+
+							doSuspend(), as all doXXX() methods of the Agent class, just sets an internal flag.
+							The actual suspension occurs only when the action() method of the currently running behaviour returns.
+
+							Bye,
+
+							Giovanni
+							*/
+
+							
+						    System.out.println("State of the resurected agent: " + newAgent.getAgentState());
+						    System.out.println("State of the resurected agent 2: " + newAgent.getState());
+
+							doWait(1000);
+						    newAgent.afterLoad();							
+							
 							log.info("Loaded agent: " + la.getFilename());
-
-							ACLMessage reply = request.createReply();
+							
+							doWait(1000);
+							
+							ACLMessage reply = null;								
+							
+							if (fa != null){
+								System.out.println("pokus ");
+								// send message with fa action to the loaded agent
+								Action ac = new Action();
+								ac.setAction(fa);
+								// ac.setActor(request.getSender());								
+								ac.setActor(myAgent.getAID());
+								
+								ACLMessage first_message = new ACLMessage(ACLMessage.REQUEST);								
+								first_message.setLanguage(codec.getName());
+								first_message.setOntology(ontology.getName());
+								first_message.addReceiver(new AID(la.getFilename(), AID.ISLOCALNAME));
+								System.out.println("AID agentManager "+new AID(la.getFilename(), AID.ISLOCALNAME));
+								first_message.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+								// first_message.clearAllReplyTo();
+								// first_message.addReplyTo(request.getSender());
+								
+								getContentManager().fillContent(first_message, ac);
+								
+								ACLMessage result = FIPAService.doFipaRequestClient(myAgent, first_message);
+								System.out.println("result "+result);
+								reply = result;																
+							}
+							else{							
+								reply = request.createReply();
+								reply.setContent("Agent "+newAgent.getAgentState()+" resurected.");
+								reply.setPerformative(ACLMessage.INFORM);
+							}
+							
+							/* 
+							reply = request.createReply();
 							reply.setPerformative(ACLMessage.INFORM);
-
+							reply.setContent("OK");
+							*/
+							
 							return reply;
 					}
 					
@@ -334,6 +406,9 @@ public class Agent_AgentManager extends Agent {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (ClassNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (FIPAException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}

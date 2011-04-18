@@ -400,8 +400,7 @@ public abstract class Agent_OptionsManager extends Agent {
 				msg.addReceiver(new AID(receiver, AID.ISLOCALNAME));
 				msg.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
 				// We want to receive a reply in 30 secs
-				msg
-						.setReplyByDate(new Date(
+				msg.setReplyByDate(new Date(
 								System.currentTimeMillis() + 30000));
 
 				Execute execute = new Execute();

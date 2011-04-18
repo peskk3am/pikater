@@ -85,6 +85,7 @@ public abstract class Agent_ComputingAgent extends Agent {
 	LinkedList<ACLMessage> taskFIFO = new LinkedList<ACLMessage>();
 
 	private Behaviour execution_behaviour = null;
+	private Behaviour send_options_behaviour = null;
 
 	protected abstract void train() throws Exception;
 
@@ -144,6 +145,8 @@ public abstract class Agent_ComputingAgent extends Agent {
 
 		// register synchronously registers us with the DF, we may
 		// prefer to do this asynchronously using a behaviour.
+		// System.out.println("DF: "+DFService.);
+		
 		try {
 			DFService.register(this, description);
 			System.out.println(getLocalName()
@@ -200,7 +203,7 @@ public abstract class Agent_ComputingAgent extends Agent {
 
 	@Override
 	protected void setup() {
-
+		
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
 
@@ -228,16 +231,50 @@ public abstract class Agent_ComputingAgent extends Agent {
 				}
 
 			}
-		}
-
+		}		
+		
 		registerWithDF();
 
 		getParameters();
 
-		addBehaviour(new RequestServer(this));
+		addBehaviour(send_options_behaviour = new RequestServer(this));
 		addBehaviour(execution_behaviour = new ProcessAction(this));
 
 	} // end setup
+	
+	public void afterLoad(){
+		// setup();
+		registerWithDF();
+		getParameters();
+		working = false;
+		
+		removeBehaviour(execution_behaviour);
+		removeBehaviour(send_options_behaviour);		
+		
+		addBehaviour(send_options_behaviour = new RequestServer(this));		
+		addBehaviour(execution_behaviour = new ProcessAction(this));
+		System.out.println("Is runnable? " + execution_behaviour.isRunnable());
+		// execution_behaviour.reset();
+		// execution_behaviour.action();	
+		
+		System.out.println("State of execution_behaviour: "+execution_behaviour.getExecutionState());
+		execution_behaviour.setExecutionState("init");
+		System.out.println("State of execution_behaviour: "+execution_behaviour.getExecutionState());
+		// send_options_behaviour.reset();
+		
+		System.out.println("typ: " +getAgentType());
+		System.out.println("jmeno: " +this.getLocalName());
+		
+		System.out.println("state: "+state);
+		System.out.println(hasGotRightData);
+		System.out.println(current_task);
+		System.out.println("AID: "+this.getAID());
+		System.out.println("boot properties "+getBootProperties());
+		System.out.println("AMS: "+getAMS());
+		current_task = null;
+		taskFIFO = new LinkedList<ACLMessage>();
+		
+	}
 
 	public boolean setOptions(pikater.ontology.messages.Task task) {
 		/*
@@ -378,7 +415,7 @@ public abstract class Agent_ComputingAgent extends Agent {
 										MessageTemplate.MatchOntology(ontology
 												.getName()))));
 
-		public RequestServer(Agent agent) {
+		public RequestServer(Agent agent) {			
 			super(agent);
 		}
 
@@ -389,6 +426,7 @@ public abstract class Agent_ComputingAgent extends Agent {
 		}
 
 		ACLMessage processExecute(ACLMessage req) {
+			System.out.println("jsem tady");
 			ACLMessage result_msg = req.createReply();
 			if (acceptTask()) {
 				result_msg.setPerformative(ACLMessage.AGREE);
@@ -405,6 +443,7 @@ public abstract class Agent_ComputingAgent extends Agent {
 
 		@Override
 		public void action() {
+			System.out.println("jsem tady 2");
 			ACLMessage req = receive(resMsgTemplate);
 			if (req != null) {
 				try {
@@ -512,6 +551,8 @@ public abstract class Agent_ComputingAgent extends Agent {
 			super(a);
 			/* FSM: register states */
 			// init state
+			System.out.println("jsem v konstruktoru");
+			
 			registerFirstState(new Behaviour(a) {
 				int next;
 				boolean cont;
@@ -717,6 +758,7 @@ public abstract class Agent_ComputingAgent extends Agent {
 							e.printStackTrace();
 						}
 					}
+					System.out.println ("jsem v poslednim stavu");
 					send(result_msg);										
 					
 				}
@@ -747,6 +789,8 @@ public abstract class Agent_ComputingAgent extends Agent {
 	
 	public String save() throws IOException, CodecException, OntologyException, FIPAException {
 		
+		// this.getHelper(PersistenceService.NAME);
+		
 		pikater.ontology.messages.SaveAgent saveAgent = new pikater.ontology.messages.SaveAgent();
 		
 		saveAgent.setAgent(current_task.getAgent());
@@ -755,14 +799,16 @@ public abstract class Agent_ComputingAgent extends Agent {
 		ObjectOutputStream oos = new ObjectOutputStream(bos);
 
 		// empty taskFIFO just for a moment
-		LinkedList<ACLMessage> _taskFIFO = taskFIFO;
-		taskFIFO = new LinkedList<ACLMessage>();
+		// LinkedList<ACLMessage> _taskFIFO = taskFIFO;
+		// taskFIFO = new LinkedList<ACLMessage>();
 		
+		this.doSuspend();
 		oos.writeObject(this);
 		oos.flush();
 		oos.close();
-		
-		taskFIFO = _taskFIFO;
+		this.doActivate();
+		System.out.println("je aktivni");
+		// taskFIFO = _taskFIFO;		
 		
 		byte [] data = bos.toByteArray();		
 		saveAgent.setObject(data);
