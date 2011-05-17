@@ -1,3 +1,4 @@
+# $a pikater.pokusnej_kralik Karlik
 $a pikater.Agent_ARFFReader Reader
 $a pikater.agents.computing.Agent_RBFNetwork rbf3
 # $a Agent_RBFNetwork rbf2 -B 1
@@ -17,4 +18,4 @@ $a pikater.Agent_AgentManager agentManager
 # $a pikater.gui.java.Agent_GUI_Java very_simple_GUI
 $a pikater.Agent_GUI_config_file very_simple_GUI xml_config
 
-$a  jade.tools.sniffer.Sniffer sniffer01 manager
+$a  jade.tools.sniffer.Sniffer sniffer01 agentManager

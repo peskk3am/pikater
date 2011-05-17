@@ -64,6 +64,8 @@ import jade.content.onto.basic.Action;
 import jade.content.onto.basic.Result;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.AgentContainer;
+import jade.core.LifeCycle;
 import jade.domain.AMSService;
 import jade.domain.FIPAException;
 import jade.domain.FIPANames;
@@ -196,7 +198,8 @@ public class Agent_AgentManager extends Agent {
 							stmt.close();																		
 							*/												
 							
-							Agent_ComputingAgent newAgent = null;
+//							Agent_ComputingAgent newAgent = null;
+pokusnej_kralik newAgent = null;
 							
 							// read agent from file 
 						    String filename = "saved" + System.getProperty("file.separator") 
@@ -206,21 +209,51 @@ public class Agent_AgentManager extends Agent {
 						    //Construct the ObjectInputStream object
 						    ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(filename));
 						            
-							newAgent = (Agent_ComputingAgent) inputStream.readObject();
-							
-							// newAgent.changeStateTo(newLifeCycle);
+//							newAgent = (Agent_ComputingAgent) inputStream.readObject();
+newAgent = (pokusnej_kralik) inputStream.readObject();
+
+							//newAgent = new pokusnej_kralik();
+						    //newAgent.restore(inputStream);
+						    //newAgent.setup();
+						    //newAgent.doWake();
+						    // newAgent.changeStateTo(newLifeCycle);
 						    						    						    
 						    //Close the ObjectInputStream
-						    if (inputStream != null) {
+						   /* if (inputStream != null) {
 						         inputStream.close();
 						    }
+						    */
 						    
+						    System.out.print("Ozivenej: "+newAgent);
+						    System.out.print("CCCCCCCCCCCCCCCCCCCcc: "+newAgent.c);
 						    // TODO kdyz se ozivuje 2x ten samej -> chyba
 						    
+						    
 						    if (newAgent != null){
-								// get a container controller for creating new agents
+								// get a container controller for creating new agents						    	
+						    	
 						    	ContainerController container = getContainerController();
-							    container.acceptNewAgent(la.getFilename(), newAgent);
+						    	AgentController controller = container.acceptNewAgent(la.getFilename(), newAgent);
+						    	controller.start();						    	
+						    							    	
+						    						    	
+						    	// AgentContainer container = getContainerController().getPlatformController();
+						    	// container.addLocalAgent(new AID("ozivlej", AID.ISLOCALNAME), (Agent)newAgent);
+						    	
+						    	// napady: null pointer - mozna chybi proxy; public AgentControllerImpl(AID id, ContainerProxy cp, jade.core.AgentContainer ac) {
+						    	// prozkoumat agentControllerImpl, zvlast start()
+						    							    	
+							    // AgentController controller = ac.acceptNewAgent("myAgent", myAgent);
+								// controller.start();
+
+							    
+							    //container.getPlatformController().getAgent(la.getFilename()).start();							    							    
+
+							    //container.getPlatformController().getAgent(la.getFilename()).activate();
+							    
+							    
+								//AgentController agent = container.createNewAgent(name, type, args);
+								//agent.start();
 							}
 						    else {
 						    	throw new ControllerException("Agent not created.");
@@ -230,12 +263,38 @@ public class Agent_AgentManager extends Agent {
 						    
 							doWait(1000);
 							System.out.println("State of the resurected agent 2: " + newAgent.getState());
-							// newAgent.doActivate();
 							
-							ContainerController cc = getContainerController();
-							AgentController aco = cc.getAgent(la.getFilename());
+							
+							//newAgent.ticker.done();
+							//newAgent.removeBehaviour(newAgent.ticker);
+														
+							// newAgent.ticker.action();
+							//newAgent.removeBehaviour(newAgent.ticker);
+							doWait(2000);
+							newAgent.cyclic.restart();
+							
+														
+							System.out.println(newAgent.ticker.getExecutionState());
+							// newAgent.cyclic.action();
+							System.out.println(newAgent.cyclic.getExecutionState());
+							// newAgent.doWake();
+							
+							// doWait(2000);
+							
+							// System.out.print(newAgent.getContainerController());
+							
+							// doWait(2000);
+							
+							// newAgent.run();
+							
+							// newAgent.restore(inputStream);
+//							newAgent.run();
+							// newAgent.notifyAll();
+							
+//							ContainerController cc = getContainerController();
+//							AgentController aco = cc.getAgent(la.getFilename());
 							// aco.suspend();
-							aco.activate();
+//							aco.activate();
 							
 							/* Hi,
 
@@ -252,13 +311,24 @@ public class Agent_AgentManager extends Agent {
 						    System.out.println("State of the resurected agent 2: " + newAgent.getState());
 
 							doWait(1000);
-						    newAgent.afterLoad();							
+						    // newAgent.afterLoad();
 							
-							log.info("Loaded agent: " + la.getFilename());
+//newAgent.doActivate();
+//newAgent.restoreBufferedState();
+							// newAgent.cyclic.reset();
+
+							log.info("Loaded agent:   " + la.getFilename());
 							
-							doWait(1000);
+							doWait(1000);														
 							
 							ACLMessage reply = null;								
+							
+							ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+							msg.setContent("ahoj Karliku");
+							msg.addReceiver(new AID(la.getFilename(), AID.ISLOCALNAME));
+							send(msg);
+							
+							System.out.print("zprava pro Karlika odeslana");
 							
 							if (fa != null){
 								System.out.println("pokus ");
@@ -285,7 +355,7 @@ public class Agent_AgentManager extends Agent {
 							}
 							else{							
 								reply = request.createReply();
-								reply.setContent("Agent "+newAgent.getAgentState()+" resurected.");
+								reply.setContent("Agent "+newAgent.getLocalName()+" resurected.");
 								reply.setPerformative(ACLMessage.INFORM);
 							}
 							

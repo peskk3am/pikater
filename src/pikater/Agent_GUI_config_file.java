@@ -171,6 +171,23 @@ public class Agent_GUI_config_file extends Agent_GUI {
 		}
 		/* */
 	// end test of loading
+
+	// test of loading Karlik
+	
+		Agent a = new Agent();
+		a.setName("1_Karlik_2011-05-17_03-32-45.532");
+		a.setGui_id("pokusny oziveny agent");
+				
+		try {
+			loadAgent("1_Karlik_2011-05-17_03-32-45.532", null);
+		} catch (FIPAException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+		/* */
+	// end test of loading
+		
+		
 		
 	} // end mySetup
 

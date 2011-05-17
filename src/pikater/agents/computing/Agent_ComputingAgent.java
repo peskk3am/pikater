@@ -803,6 +803,7 @@ public abstract class Agent_ComputingAgent extends Agent {
 		// taskFIFO = new LinkedList<ACLMessage>();
 		
 		this.doSuspend();
+		System.out.println("stav po suspend: "+this.getAgentState());
 		oos.writeObject(this);
 		oos.flush();
 		oos.close();
