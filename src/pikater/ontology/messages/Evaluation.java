@@ -18,6 +18,9 @@ public class Evaluation implements Concept {
 	private String object_filename;
 	
 	private DataInstances data_table;
+	
+	private byte [] object;  // saved agent
+	
 
 	public void setError_rate(float error_rate) {
 		_error_rate = error_rate;
@@ -89,5 +92,12 @@ public class Evaluation implements Concept {
 
 	public String getObject_filename() {
 		return object_filename;
+	}
+	
+	public void setObject(byte [] object) {
+		this.object = object;
+	}
+	public byte [] getObject() {
+		return object;
 	}
 }

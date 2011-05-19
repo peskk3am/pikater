@@ -8,7 +8,6 @@ public class SaveAgent extends Action {
 
 	private int userID = 1;
 	private Agent agent;
-	private byte [] object;
 	
 	public Agent getAgent() {
 		return agent;
@@ -22,13 +21,6 @@ public class SaveAgent extends Action {
 	}
 	public void setUserID(int userID) {
 		this.userID = userID;
-	}
-	
-	public void setObject(byte [] object) {
-		this.object = object;
-	}
-	public byte [] getObject() {
-		return object;
-	}
+	}	
 
 }

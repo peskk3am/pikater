@@ -1322,12 +1322,13 @@ public abstract class Agent_GUI extends GuiAgent {
 		}
 	}
 		
-	protected void loadAgent(String _filename, Execute action) throws FIPAException {
+	protected void loadAgent(String _filename, Execute action, byte [] object) throws FIPAException {
 		// protected void loadAgent(String _name, int _userID, String _timestamp) {
 		pikater.ontology.messages.LoadAgent _loadAgent = new pikater.ontology.messages.LoadAgent();
 		
 		_loadAgent.setFilename(_filename);
 		_loadAgent.setFirst_action(action);
+		_loadAgent.setObject(object);
 		// _loadAgent.setName(_name);
 		// _loadAgent.setUserID(_userID);
 		// _loadAgent.setTimestamp(_timestamp);

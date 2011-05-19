@@ -180,6 +180,12 @@ public class Agent_AgentManager extends Agent {
 						LoadAgent la = (LoadAgent) a.getAction();
 							Action fa = la.getFirst_action();
 							
+							Agent newAgent = null;
+							
+							if (la.getObject() != null){
+								newAgent = (Agent) toObject(la.getObject());
+							}
+							else {
 							/* int userID = la.getUserID();
 							String name = la.getName();
 							String timestamp = la.getTimestamp();
@@ -199,7 +205,8 @@ public class Agent_AgentManager extends Agent {
 							*/												
 							
 //							Agent_ComputingAgent newAgent = null;
-pokusnej_kralik newAgent = null;
+// pokusnej_kralik newAgent = null;
+							
 							
 							// read agent from file 
 						    String filename = "saved" + System.getProperty("file.separator") 
@@ -210,8 +217,8 @@ pokusnej_kralik newAgent = null;
 						    ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(filename));
 						            
 //							newAgent = (Agent_ComputingAgent) inputStream.readObject();
-newAgent = (pokusnej_kralik) inputStream.readObject();
-
+						    newAgent = (Agent) inputStream.readObject();
+							} 
 							//newAgent = new pokusnej_kralik();
 						    //newAgent.restore(inputStream);
 						    //newAgent.setup();
@@ -225,7 +232,7 @@ newAgent = (pokusnej_kralik) inputStream.readObject();
 						    */
 						    
 						    System.out.print("Ozivenej: "+newAgent);
-						    System.out.print("CCCCCCCCCCCCCCCCCCCcc: "+newAgent.c);
+						    //  System.out.print("CCCCCCCCCCCCCCCCCCCcc: "+newAgent.c);
 						    // TODO kdyz se ozivuje 2x ten samej -> chyba
 						    
 						    
@@ -271,12 +278,12 @@ newAgent = (pokusnej_kralik) inputStream.readObject();
 							// newAgent.ticker.action();
 							//newAgent.removeBehaviour(newAgent.ticker);
 							doWait(2000);
-							newAgent.cyclic.restart();
+							//	newAgent.cyclic.restart();
 							
 														
-							System.out.println(newAgent.ticker.getExecutionState());
+							// System.out.println(newAgent.ticker.getExecutionState());
 							// newAgent.cyclic.action();
-							System.out.println(newAgent.cyclic.getExecutionState());
+							// System.out.println(newAgent.cyclic.getExecutionState());
 							// newAgent.doWake();
 							
 							// doWait(2000);
@@ -322,36 +329,39 @@ newAgent = (pokusnej_kralik) inputStream.readObject();
 							doWait(1000);														
 							
 							ACLMessage reply = null;								
-							
+							/*
 							ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
 							msg.setContent("ahoj Karliku");
 							msg.addReceiver(new AID(la.getFilename(), AID.ISLOCALNAME));
 							send(msg);
 							
 							System.out.print("zprava pro Karlika odeslana");
-							
+							/* */
+														
 							if (fa != null){
 								System.out.println("pokus ");
 								// send message with fa action to the loaded agent
+								
 								Action ac = new Action();
 								ac.setAction(fa);
-								// ac.setActor(request.getSender());								
-								ac.setActor(myAgent.getAID());
+								ac.setActor(request.getSender());								
+								// ac.setActor(myAgent.getAID());
 								
 								ACLMessage first_message = new ACLMessage(ACLMessage.REQUEST);								
 								first_message.setLanguage(codec.getName());
 								first_message.setOntology(ontology.getName());
 								first_message.addReceiver(new AID(la.getFilename(), AID.ISLOCALNAME));
-								System.out.println("AID agentManager "+new AID(la.getFilename(), AID.ISLOCALNAME));
-								first_message.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
-								// first_message.clearAllReplyTo();
-								// first_message.addReplyTo(request.getSender());
+								first_message.clearAllReplyTo();
+								first_message.addReplyTo(request.getSender());
+								first_message.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);								
+								first_message.setConversationId(request.getConversationId());
 								
 								getContentManager().fillContent(first_message, ac);
 								
-								ACLMessage result = FIPAService.doFipaRequestClient(myAgent, first_message);
-								System.out.println("result "+result);
-								reply = result;																
+								// ACLMessage result = FIPAService.doFipaRequestClient(myAgent, first_message);								
+								// System.out.println(myAgent.getLocalName() + " result: "+result);
+								// reply = result;
+								send(first_message);
 							}
 							else{							
 								reply = request.createReply();
@@ -387,7 +397,7 @@ newAgent = (pokusnej_kralik) inputStream.readObject();
 							
 							
 							// save serialized object to file
-							byte [] object = sa.getObject();
+							byte [] object = sa.getAgent().getObject();
 							ObjectOutputStream oos = new ObjectOutputStream(
 									new FileOutputStream("saved" + System.getProperty("file.separator") + filename + ".model"));												
 							
@@ -478,9 +488,9 @@ newAgent = (pokusnej_kralik) inputStream.readObject();
 				} catch (ClassNotFoundException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
-				} catch (FIPAException e) {
+				// } catch (FIPAException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+				//	e.printStackTrace();
 				}
 
 				ACLMessage failure = request.createReply();

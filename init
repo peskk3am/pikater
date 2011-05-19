@@ -18,4 +18,4 @@ $a pikater.Agent_AgentManager agentManager
 # $a pikater.gui.java.Agent_GUI_Java very_simple_GUI
 $a pikater.Agent_GUI_config_file very_simple_GUI xml_config
 
-$a  jade.tools.sniffer.Sniffer sniffer01 agentManager
+$a  jade.tools.sniffer.Sniffer sniffer01 manager

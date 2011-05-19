@@ -3,14 +3,14 @@
         <!-- <method name="Random" error_rate="0.001" maximum_tries="4" />  -->
         <method name="ChooseXValues" />
         
-        <dataset train="iris.arff" test="iris.arff" />
-        <!-- <dataset train="weather.arff" test="weather.arff" /> -->
+        <!-- <dataset train="iris.arff" test="iris.arff" /> -->
+        <dataset train="weather.arff" test="weather.arff" />
         
-        <!--
+        
         <agent type="RBFNetwork">
             <parameter name="W" value="?" set="0.01,0.3" />            
         </agent>
-        -->
+        
         
         <!--               
         <agent name="rbf3">

@@ -8,6 +8,8 @@ public class LoadAgent extends Action {
 
 	private String filename;
 	private Execute first_action = null;
+	private byte [] object;
+	
 	
 	public String getFilename() {
 		return filename;
@@ -22,4 +24,11 @@ public class LoadAgent extends Action {
 		return first_action;
 	}
 
+	public void setObject(byte [] object) {
+		this.object = object;
+	}
+	public byte [] getObject() {
+		return object;
+	}
+	
 }

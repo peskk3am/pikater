@@ -30,6 +30,7 @@ public class MessagesOntology extends Ontology {
 	public static final String TASK_AGENT = "agent";
 	public static final String TASK_DATA = "data";
 	public static final String TASK_RESULT = "result";
+	public static final String TASK_SAVE_MODE = "save_mode";	
 	public static final String TASK_USERID = "userID";
 	public static final String TASK_START = "start";
 	public static final String TASK_FINISH = "finish";	
@@ -77,7 +78,8 @@ public class MessagesOntology extends Ontology {
 	public static final String EVALUATION_DATA_TABLE = "data_table";
 	public static final String EVALUATION_DURATION = "duration";
 	public static final String EVALUATION_OBJECT_FILENAME = "object_filename";
-
+	public static final String EVALUATION_OBJECT = "object";
+	
 	public static final String RESULTS = "RESULTS";
 	public static final String RESULTS_COMPUTATION_ID = "computation_id";
 	public static final String RESULTS_PROBLEM_ID = "problem_id";
@@ -109,6 +111,7 @@ public class MessagesOntology extends Ontology {
 	public static final String AGENT_TYPE = "type";
 	public static final String AGENT_GUI_ID = "gui_id";
 	public static final String AGENT_OPTIONS = "options";
+	public static final String AGENT_OBJECT = "object";
 		
 	public static final String INTERVAL = "INTERVAL";
 	public static final String INTERVAL_MIN = "min";
@@ -194,11 +197,11 @@ public class MessagesOntology extends Ontology {
 	public static final String LOAD_AGENT = "LOAD-AGENT";
 	public static final String LOAD_AGENT_FILENAME = "filename";
 	public static final String LOAD_AGENT_FIRST_ACTION = "first_action";	
+	public static final String LOAD_AGENT_OBJECT = "object";
 	
 	public static final String SAVE_AGENT = "SAVE-AGENT";
 	public static final String SAVE_AGENT_USERID = "userID";
-	public static final String SAVE_AGENT_AGENT = "agent";
-	public static final String SAVE_AGENT_OBJECT = "object"; 
+	public static final String SAVE_AGENT_AGENT = "agent"; 
 	
 	public static final String GET_SAVED_AGENTS = "GET-SAVED-AGENTS";
 	public static final String GET_SAVED_AGENTS_USERID = "userID";
@@ -313,6 +316,9 @@ public class MessagesOntology extends Ontology {
 			cs.add(TASK_DATA, (ConceptSchema) getSchema(DATA));
 			cs.add(TASK_RESULT, (ConceptSchema) getSchema(EVALUATION),
 					ObjectSchema.OPTIONAL);
+			cs.add(TASK_SAVE_MODE,
+					(PrimitiveSchema) getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+			
 			cs.add(TASK_USERID,
 					(PrimitiveSchema) getSchema(BasicOntology.INTEGER));			
 			cs.add(TASK_START,
@@ -404,7 +410,10 @@ public class MessagesOntology extends Ontology {
 			cs.add(EVALUATION_DURATION,
 					(PrimitiveSchema) getSchema(BasicOntology.INTEGER), ObjectSchema.OPTIONAL);
 			cs.add(EVALUATION_OBJECT_FILENAME,
-					(PrimitiveSchema) getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+					(PrimitiveSchema) getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);			
+			cs.add(EVALUATION_OBJECT,
+					(PrimitiveSchema) getSchema(BasicOntology.BYTE_SEQUENCE),
+					ObjectSchema.OPTIONAL);
 
 			cs = (ConceptSchema) getSchema(RESULTS);
 			cs.add(RESULTS_COMPUTATION_ID,
@@ -443,6 +452,9 @@ public class MessagesOntology extends Ontology {
 					ObjectSchema.OPTIONAL);
 			cs.add(AGENT_OPTIONS, (ConceptSchema) getSchema(OPTION), 0,
 					ObjectSchema.UNLIMITED);
+			cs.add(AGENT_OBJECT,
+					(PrimitiveSchema) getSchema(BasicOntology.BYTE_SEQUENCE),
+					ObjectSchema.OPTIONAL);
 				
 			cs = (ConceptSchema) getSchema(DATA_INSTANCES);
 			cs.add(DATA_INSTANCES_ATTRIBUTES,
@@ -588,14 +600,15 @@ public class MessagesOntology extends Ontology {
 					(PrimitiveSchema) getSchema(BasicOntology.STRING));
 			as.add(LOAD_AGENT_FIRST_ACTION,
 					(ConceptSchema) getSchema(EXECUTE), ObjectSchema.OPTIONAL);
+			as.add(LOAD_AGENT_OBJECT,
+					(PrimitiveSchema) getSchema(BasicOntology.BYTE_SEQUENCE),
+					ObjectSchema.OPTIONAL);
 			
 			as = (AgentActionSchema) getSchema(SAVE_AGENT);
 			as.add(SAVE_AGENT_USERID,
 					(PrimitiveSchema) getSchema(BasicOntology.INTEGER));
 			as.add(SAVE_AGENT_AGENT,
 					(ConceptSchema) getSchema(AGENT));
-			as.add(SAVE_AGENT_OBJECT,
-					(PrimitiveSchema) getSchema(BasicOntology.BYTE_SEQUENCE));
 			
 			as = (AgentActionSchema) getSchema(GET_SAVED_AGENTS);
 			as.add(GET_SAVED_AGENTS_USERID,
