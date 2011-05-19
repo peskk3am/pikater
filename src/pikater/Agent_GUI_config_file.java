@@ -141,7 +141,7 @@ public class Agent_GUI_config_file extends Agent_GUI {
 
 		String agentName = "1_RBFNetwork0_2011-05-19_03-49-16.21";
 	// test of loading an agent
-	
+	 
 		Agent a = new Agent();
 		a.setName(agentName);
 		a.setGui_id("pokusny oziveny agent");

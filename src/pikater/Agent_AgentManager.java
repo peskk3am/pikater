@@ -120,42 +120,7 @@ public class Agent_AgentManager extends Agent {
 
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
-/*
-		LinkedList<String> tableNames = new LinkedList<String>();
 
-		try {
-			String[] types = { "TABLE", "VIEW" };
-			ResultSet tables = db.getMetaData().getTables(null, null, "%",
-					types);
-			while (tables.next()) {
-				tableNames.add(tables.getString(3));
-			}
-
-
-		} catch (SQLException e) {
-			log.error("Error getting tables list: " + e.getMessage());
-			e.printStackTrace();
-		}
-
-		try {
-			if (!tableNames.contains("AGENTS")) {
-				log.info("Creating table AGENTS");
-				db.createStatement().executeUpdate(
-					"CREATE TABLE agents (" +
-					"userID INTEGER NOT NULL," +
-					"name VARCHAR(256) NOT NULL," +
-					"timestamp TIMESTAMP NOT NULL," +
-					"type VARCHAR(256) NOT NULL," +
-					"trainFilename VARCHAR(256) NOT NULL," +  // internal filename
-					// "object OTHER NOT NULL," + // serialized object
-					"objectFilename VARCHAR(256) NOT NULL," +
-					"PRIMARY KEY (userID, name, timestamp))");
-			}
-		} catch (SQLException e) {
-			log.fatal("Error creating table AGENTS: " + e.getMessage());
-			e.printStackTrace();
-		}
-	 */
 		
 		MessageTemplate mt = MessageTemplate.and(MessageTemplate
 				.MatchOntology(ontology.getName()), MessageTemplate
@@ -186,53 +151,19 @@ public class Agent_AgentManager extends Agent {
 								newAgent = (Agent) toObject(la.getObject());
 							}
 							else {
-							/* int userID = la.getUserID();
-							String name = la.getName();
-							String timestamp = la.getTimestamp();
 														
-							String query = "SELECT objectFileName FROM agents WHERE name = \'"
-									+ name + "\' AND userID = " + userID
-									+ " AND timestamp = \'" + timestamp + "\'";							
-							log.info("Executing query " + query);
-
-							Statement stmt = db.createStatement();
-							ResultSet rs = stmt.executeQuery(query);
-
-							rs.next();
-							String _objectFileName = rs.getString("objectFileName");
-							
-							stmt.close();																		
-							*/												
-							
-//							Agent_ComputingAgent newAgent = null;
-// pokusnej_kralik newAgent = null;
-							
-							
-							// read agent from file 
-						    String filename = "saved" + System.getProperty("file.separator") 
-						    	+  la.getFilename() + ".model";
-						    System.out.println(filename);						  
-						        
-						    //Construct the ObjectInputStream object
-						    ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(filename));
-						            
-//							newAgent = (Agent_ComputingAgent) inputStream.readObject();
-						    newAgent = (Agent) inputStream.readObject();
+								// read agent from file 
+							    String filename = "saved" + System.getProperty("file.separator") 
+							    	+  la.getFilename() + ".model";
+							    System.out.println(filename);						  
+							        
+							    //Construct the ObjectInputStream object
+							    ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(filename));
+							            
+							    newAgent = (Agent) inputStream.readObject();
 							} 
-							//newAgent = new pokusnej_kralik();
-						    //newAgent.restore(inputStream);
-						    //newAgent.setup();
-						    //newAgent.doWake();
-						    // newAgent.changeStateTo(newLifeCycle);
-						    						    						    
-						    //Close the ObjectInputStream
-						   /* if (inputStream != null) {
-						         inputStream.close();
-						    }
-						    */
 						    
 						    System.out.print("Ozivenej: "+newAgent);
-						    //  System.out.print("CCCCCCCCCCCCCCCCCCCcc: "+newAgent.c);
 						    // TODO kdyz se ozivuje 2x ten samej -> chyba
 						    
 						    
@@ -243,109 +174,21 @@ public class Agent_AgentManager extends Agent {
 						    	AgentController controller = container.acceptNewAgent(la.getFilename(), newAgent);
 						    	controller.start();						    	
 						    							    	
-						    						    	
-						    	// AgentContainer container = getContainerController().getPlatformController();
-						    	// container.addLocalAgent(new AID("ozivlej", AID.ISLOCALNAME), (Agent)newAgent);
-						    	
-						    	// napady: null pointer - mozna chybi proxy; public AgentControllerImpl(AID id, ContainerProxy cp, jade.core.AgentContainer ac) {
-						    	// prozkoumat agentControllerImpl, zvlast start()
-						    							    	
-							    // AgentController controller = ac.acceptNewAgent("myAgent", myAgent);
-								// controller.start();
-
-							    
-							    //container.getPlatformController().getAgent(la.getFilename()).start();							    							    
-
-							    //container.getPlatformController().getAgent(la.getFilename()).activate();
-							    
-							    
-								//AgentController agent = container.createNewAgent(name, type, args);
-								//agent.start();
 							}
 						    else {
 						    	throw new ControllerException("Agent not created.");
 						    }
-							
-						    System.out.println("State of the resurected agent: " + newAgent.getAgentState());
-						    
-							doWait(1000);
-							System.out.println("State of the resurected agent 2: " + newAgent.getState());
-							
-							
-							//newAgent.ticker.done();
-							//newAgent.removeBehaviour(newAgent.ticker);
-														
-							// newAgent.ticker.action();
-							//newAgent.removeBehaviour(newAgent.ticker);
-							doWait(2000);
-							//	newAgent.cyclic.restart();
-							
-														
-							// System.out.println(newAgent.ticker.getExecutionState());
-							// newAgent.cyclic.action();
-							// System.out.println(newAgent.cyclic.getExecutionState());
-							// newAgent.doWake();
-							
-							// doWait(2000);
-							
-							// System.out.print(newAgent.getContainerController());
-							
-							// doWait(2000);
-							
-							// newAgent.run();
-							
-							// newAgent.restore(inputStream);
-//							newAgent.run();
-							// newAgent.notifyAll();
-							
-//							ContainerController cc = getContainerController();
-//							AgentController aco = cc.getAgent(la.getFilename());
-							// aco.suspend();
-//							aco.activate();
-							
-							/* Hi,
-
-							doSuspend(), as all doXXX() methods of the Agent class, just sets an internal flag.
-							The actual suspension occurs only when the action() method of the currently running behaviour returns.
-
-							Bye,
-
-							Giovanni
-							*/
-
-							
-						    System.out.println("State of the resurected agent: " + newAgent.getAgentState());
-						    System.out.println("State of the resurected agent 2: " + newAgent.getState());
-
-							doWait(1000);
-						    // newAgent.afterLoad();
-							
-//newAgent.doActivate();
-//newAgent.restoreBufferedState();
-							// newAgent.cyclic.reset();
-
+																					
 							log.info("Loaded agent:   " + la.getFilename());
-							
-							doWait(1000);														
-							
+														
 							ACLMessage reply = null;								
-							/*
-							ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
-							msg.setContent("ahoj Karliku");
-							msg.addReceiver(new AID(la.getFilename(), AID.ISLOCALNAME));
-							send(msg);
-							
-							System.out.print("zprava pro Karlika odeslana");
-							/* */
 														
 							if (fa != null){
-								System.out.println("pokus ");
 								// send message with fa action to the loaded agent
 								
 								Action ac = new Action();
 								ac.setAction(fa);
 								ac.setActor(request.getSender());								
-								// ac.setActor(myAgent.getAID());
 								
 								ACLMessage first_message = new ACLMessage(ACLMessage.REQUEST);								
 								first_message.setLanguage(codec.getName());
@@ -357,10 +200,7 @@ public class Agent_AgentManager extends Agent {
 								first_message.setConversationId(request.getConversationId());
 								
 								getContentManager().fillContent(first_message, ac);
-								
-								// ACLMessage result = FIPAService.doFipaRequestClient(myAgent, first_message);								
-								// System.out.println(myAgent.getLocalName() + " result: "+result);
-								// reply = result;
+
 								send(first_message);
 							}
 							else{							
@@ -368,13 +208,7 @@ public class Agent_AgentManager extends Agent {
 								reply.setContent("Agent "+newAgent.getLocalName()+" resurected.");
 								reply.setPerformative(ACLMessage.INFORM);
 							}
-							
-							/* 
-							reply = request.createReply();
-							reply.setPerformative(ACLMessage.INFORM);
-							reply.setContent("OK");
-							*/
-							
+														
 							return reply;
 					}
 					
@@ -409,7 +243,7 @@ public class Agent_AgentManager extends Agent {
 							log.info("Agent "+ name +" saved to file" + filename + ".model");
 																					
 							/*
-							String query = "INSERT into results (finish, objectFilename) " +
+							String query = "UPDATE results SET (finish, objectFilename) " +
 									"VALUES ("								
 								+ "\'" + currentTimestamp + "\',"								
 								+ "\'" + filename
